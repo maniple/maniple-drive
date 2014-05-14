@@ -1,0 +1,60 @@
+#!/usr/bin/env php
+<?php
+
+$argv = $_SERVER['argv'];
+$SELF = basename($argv[0]);
+
+if (empty($argv[1])) {
+    fprintf(STDOUT, "Usage: %s FILE\n", $SELF);
+    exit(1);
+}
+
+$INPUT = $argv[1];
+
+if (!is_file($INPUT)) {
+    fprintf(STDERR, "%s: %s: File not found\n", $SELF, $INPUT);
+    exit(1);
+}
+
+$path = pathinfo($INPUT);
+$OUTPUT = empty($argv[2])
+    ? dirname($INPUT) . '/' . $path['filename'] . '.js'
+    : $_SERVER['argv'][2];
+
+$doc = new DOMDocument;
+if (false === @$doc->loadXML(file_get_contents($INPUT))) {
+    fprintf(STDERR, "%s: %s: Invalid XML file\n", $SELF, $INPUT);
+    exit(1);
+}
+
+
+$xpath = new DOMXPath($doc);
+$templates = $xpath->query('//template');
+
+function esc($x) {
+    return '"' . str_replace('"', '\"', $x) . '"';
+}
+
+$indent = str_repeat(' ', 4);
+
+$t = array();
+foreach ($templates as $template) {
+    $str = implode('\n',
+        array_map(
+            'ltrim',
+            explode(
+                "\n", trim($template->textContent)
+            )
+        )
+    );
+    $t[] = $indent . esc($template->getAttribute('id')) . ': ' . esc($str);
+}
+
+ob_start();
+
+echo "var {$path['filename']} = {\n";
+echo implode(",\n", $t), "\n";
+echo "};\n";
+
+file_put_contents($OUTPUT, ob_get_clean());
+

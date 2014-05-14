@@ -1,0 +1,148 @@
+#!/usr/bin/env php
+<?php
+
+$argv = $_SERVER['argv'];
+$SELF = basename($argv[0]);
+
+$OUTPUT = null;
+$INPUTS = array();
+
+function print_help($SELF) {
+    echo "Usage: {$SELF} NAME [OPTION]... [FILE]...\n";
+    echo "Compile multiple JavaScript files into a single library.\n";
+    echo "\n";
+    echo "Options:\n";
+    echo "    -h, --help               show this help and exit\n";
+    echo "    -i SIZE                  indent size (number of spaces)\n";
+    echo "    -o OUTPUT                write output to file\n";
+    exit(1);
+}
+
+function is_option($str) {
+    return strlen($str) > 1 && !strncmp('-', $str, 1);
+}
+
+function option_arg($SELF, $opts, $i) {
+    if ($i + 1 >= count($opts) || !strlen($opts[$i + 1]) || is_option($opts[$i + 1])) {
+        fprintf(STDERR, "%s: Missing argument for option '%s'\n", $SELF, $opts[$i]);
+        exit(1);
+    }
+    return $opts[$i + 1];
+}
+
+if (count($argv) < 3) {
+    print_help($SELF);
+}
+
+$NAME = $argv[1];
+$SIZE = 4;
+
+if (!preg_match('/^[_a-z][_a-z0-9]*$/i', $NAME)) {
+    fprintf(STDERR, "%s: %s: Invalid library container name\n", $SELF, $NAME);
+    exit(1);
+}
+
+for ($i = 2, $n = count($argv); $i < $n; ++$i) {
+    switch ($argv[$i]) {
+        case '-h':
+        case '--help':
+            print_help($SELF);
+            break;
+
+        case '-o':
+            $OUTPUT = option_arg($SELF, $argv, $i);
+            ++$i;
+            break;
+
+        case '-i':
+            $SIZE = option_arg($SELF, $argv, $i);
+            if (!ctype_digit($SIZE)) {
+                fprintf(STDERR, "%s: %s: Invalid indent size\n", $SELF, $SIZE);
+                exit(1);
+            }
+            ++$i;
+            break;
+
+        default:
+            if (is_option($argv[$i])) {
+                fprintf(STDERR, "%s: Unrecognized option '%s'\n", $SELF, $argv[$i]);
+                exit(1);
+            }
+
+            $input = $argv[$i];
+            if (!is_file($input)) {
+                fprintf(STDERR, "%s: %s: File not found\n", $SELF, $input);
+                exit(1);
+            }
+            $INPUTS[] = $input;
+            break;
+    }
+}
+
+if (empty($INPUTS)) {
+    fprintf(STDERR, "%s: No input files\n", $SELF);
+    exit(1);
+}
+
+$indent = $SIZE ? str_repeat(' ', $SIZE) : '';
+
+ob_start();
+
+$JS_IDENT_RX = '/^[_a-z][_a-z0-9]*$/i';
+
+echo "var {$NAME} = {\n";
+for ($i = 0, $n = count($INPUTS); $i < $n; ++$i) {
+    $input = $INPUTS[$i];
+    $property = null;
+
+    // filename.js:target_property
+    if ($pos = strpos($input, ':')) {
+        $property = substr($input, $pos + 1);
+        $input = substr($input, $pos);
+
+        if (!preg_match($JS_IDENT_RX, $property)) {
+            ob_clean();
+            fprintf(STDERR, "%s: %s: Target property is not a valid JavaScript identifier\n", $SELF, $property);
+            exit(1);
+        }
+    }
+
+    if (!is_file($input)) {
+        ob_clean();
+        fprintf(STDERR, "%s: %s: Input file not found\n", $SELF, $input);
+        exit(1);
+    }
+
+    if (null === $property) {
+        $property = pathinfo($input, PATHINFO_FILENAME);
+
+        if (!preg_match($JS_IDENT_RX, $property)) {
+            ob_clean();
+            fprintf(STDERR, "%s: %s: Filename without extension must be a valid JavaScript identifier\n", $SELF, $input);
+            exit(1);
+        }
+    }
+
+    $c = file_get_contents($input);
+    $c = str_replace(array("\r\n", "\r"), "\n", $c);
+    $c = str_replace("\n", "\n" . $indent . $indent, $c);
+    $c = trim($c);
+
+    $c = implode(
+        "\n",
+        array_map(
+            'rtrim',
+            explode("\n", $c)
+        )
+    );
+
+    echo $indent, $property, ": (function() {\n";
+    echo $indent, $indent, $c, "\n";
+    echo $indent, $indent, "return ", $property, ";\n";
+    echo $indent, "})()", ($i < $n - 1 ? ",\n" : "\n");
+}
+echo "};\n";
+
+if ($OUTPUT) {
+    file_put_contents($OUTPUT, ob_get_clean());
+}

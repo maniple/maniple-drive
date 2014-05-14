@@ -1,0 +1,43 @@
+<h1>Zarządzanie dyskami</h1>
+<div id="subh1">
+<a href="#!" class="oplink" id="drive-add" data-url="<?= $this->url_create ?>">Nowy dysk</a>
+</div>
+
+<div id="drive-list" data-url="<?= $this->url_list ?>">
+Wczytywanie danych...
+</div>
+
+<script type="text/javascript">/*<![CDATA[*//* @compile */
+$(function() {
+    function load_drive_list(drive_id) {
+        var j = $('#drive-list');
+        j.load(j.attr('data-url'), function() {
+            j.find('.drive-edit[data-url]')
+             .click(open_drive_modal('Edycja dysku', 'Zapisz zmiany'));
+
+            if (drive_id) {
+                // App.traits.hilight('#drive-' + drive_id);
+            }
+        });
+    }
+    function open_drive_modal(title, submitLabel) {
+        return function() {
+            App.traits.modalForm({
+                width: 600,
+                height: 300,
+                url: this.getAttribute('data-url'),
+                title: title,
+                submitLabel: submitLabel,
+                complete: function(params) {
+                    App.modal.close();
+                    load_drive_list(params.id);
+                }
+            });
+            return false;
+        }
+    }
+
+    $('#drive-add').click(open_drive_modal('Nowy dysk', 'Utwórz dysk'));
+    load_drive_list();
+});
+/* @end *//*]]>*/</script>

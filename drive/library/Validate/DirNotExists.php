@@ -1,0 +1,91 @@
+<?php
+
+/**
+ * Walidator nazwy dysku.
+ *
+ * @version 2012-12-13
+ * @author xemlock
+ */
+class Drive_Validate_DirNotExists extends Zend_Validate_Abstract
+{
+    const DIR_EXISTS = 'dirExists';
+
+    protected $_messageTemplates = array(
+        self::DIR_EXISTS => 'Katalog o podanej nazwie już istnieje',
+    );
+
+    /**
+     * Wartosc poprawna, automatycznie przechodzaca walidacje.
+     * Przydatne podczas edycji.
+     * @var mixed
+     */
+    protected $_allowed;
+    protected $_parentId;
+    protected $_db;
+
+    public function __construct(array $options = null)
+    {
+        if ($options) {
+            $this->_setOptions($options);
+        }
+    }
+
+    public function setAllowed($allowed)
+    {
+        $this->_allowed = $allowed;
+        return $this;
+    }
+
+    public function setParentId($parentId)
+    {
+        $this->_parentId = $parentId;
+        return $this;
+    }
+
+    public function setAdapter($db)
+    {
+        $this->_db = $db;
+        return $this;
+    }
+
+    public function isValid($value)
+    {
+        if (null !== $this->_allowed && $value === $this->_allowed) {
+            return true;
+        }
+
+        // Nazwa dysku przechowywana jest jako nazwa katalogu podpietego
+        // jako korzen dysku. UNIQUE jest ustawiony w tabeli drive_dirs
+        // na kolumnach (parent_id, name). Stad wystarczy sprawdzic czy
+        // istnieje katalog o takiej samej nazwie i pustym katalogu
+        // nadrzednym.
+        $valid = true;
+        $table = Zefram_Db::getTable('Drive_Model_DbTable_Dirs', $this->_db);
+
+        $cond = array('name = ?' => $value);
+
+        if (null === $this->_parentId) {
+            $cond[] = 'parent_id IS NULL';
+        } else {
+            $cond['parent_id = ?'] = $this->_parentId;
+        }
+
+        if ($table->countAll($cond)) {
+            $valid = false;
+            $this->_error(self::DIR_EXISTS);
+        }
+
+        return $valid;
+    }
+
+    protected function _setOptions(array $options)
+    {
+        foreach ($options as $key => $value) {
+            $method = 'set' . $key;
+            if (method_exists($this, $method)) {
+                $this->$method($value);
+            }
+        }
+        return $this;
+    }
+}

@@ -1,0 +1,34 @@
+<style>
+body {
+  font-size: .9em;
+}
+</style>
+
+<p>Czy na pewno usunąć katalog <strong><?= $this->escape($this->name) ?></strong>?
+Wszystkie zawarte w nim pliki i katalogi zostaną bezpowrotnie usunięte.</p>
+
+<p>
+<?php if ($this->fileCount) { ?>
+<?php   if (1 == $this->fileCount) { ?>
+W katalogu znajduje się jeden plik o rozmiarze <?= $this->fileSize($this->size) ?>.
+<?php   } else { ?>
+<?= sprintf($this->plural(
+    'W katalogu znajduje się 1 plik',
+    'W katalogu znajdują się %d pliki',
+    'W katalogu znajduje się %d plików', $this->fileCount),
+    $this->fileCount) ?> o łącznym rozmiarze <?= $this->fileSize($this->size) ?>.
+<?php   } ?>
+<?php } else if ($this->dirCount) { ?>
+<?= sprintf($this->plural(
+    'W katalogu znajduje się 1 pusty katalog.',
+    'W katalogu znajdują się %d puste katalogi.',
+    'W katalogu znajduje się %d pustych katalogów.', $this->dirCount),
+    $this->dirCount) ?>
+<?php } else { ?>
+Katalog nie zawiera plików ani innych katalogów.
+<?php } ?>
+</p>
+
+<p><strong>Tej operacji nie można cofnąć.</strong></p>
+
+<?= $this->form ?>

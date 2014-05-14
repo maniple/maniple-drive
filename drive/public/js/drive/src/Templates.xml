@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+<template id="Uploader">
+<![CDATA[
+<div id="drive-uploader">
+ <div id="drive-uploader-dialog" data-hook="dialog-content">
+  <div id="drive-uploader-dropzone" data-hook="drop-zone-pane">
+   <div class="uploader" data-hook="drop-zone">
+    <div class="drop-here" data-hook="drop-zone-text"></div>
+   </div>
+  </div>
+  <div id="drive-uploader-queue" data-hook="queue-pane">
+   <table id="drive-uploader-queue-items">
+    <tbody data-hook="items"></tbody>
+   </table>
+   <div class="no-items-message">{{ str.noItems }}</div>
+  </div>
+ </div>
+ <div id="drive-uploader-status">
+  <div id="drive-uploader-status-icon"></div>
+  <div id="drive-uploader-status-content">
+   <h3>
+    <span class="name" data-hook="item-name"></span>
+    <span class="size" data-hook="item-size"></span>
+   </h3>
+   <p data-hook="status-message"></p>
+  </div>
+  <div id="drive-uploader-status-button">
+   <button class="seamless" data-hook="open-button">{{ str.openButtonText }}</button>
+  </div>
+ </div>
+</div>
+]]>
+</template>
+<template id="Uploader.queueItem">
+<![CDATA[
+<tr>
+ <td class="col-filename">
+  <span class="filename">{{ file.name }}</span>
+  <span class="error-message" data-hook="error-message"></span>
+ </td>
+ <td class="col-size">{{ file.size | Viewtils.fsize }}</td>
+ <td class="col-progress">
+  <span class="progress-text" data-hook="progress-text"></span>
+  <span class="progress-bar"><span class="bar" data-hook="progress-bar"></span></span>
+ </td>
+ <td class="col-cancel">
+  <button class="seamless" data-hook="cancel-button" title="{{ str.cancelButtonTooltip }}"></button>
+ </td>
+</tr>
+]]>
+</template>
+<template id="DirBrowser">
+<![CDATA[
+<div data-hook="disk-usage"></div>
+<h1 id="title"><span class="drive-dir-renamable" data-hook="title"></span></h1>
+<div id="opnav">
+ <div id="drive-loading" class="abs" data-hook="message-area"></div>
+ <div id="drive-dir-menu" data-hook="aux-menu"></div>
+</div>
+<div data-hook="dir-contents"></div>
+<div data-hook="uploader"></div>
+]]>
+</template>
+<template id="DirBrowser.diskUsage">
+<![CDATA[
+<div id="drive-du">
+ <div class="pane">
+  <div class="progress-bar">
+   <div class="bar" data-hook="progress-bar" data-level-template="bar-{level}"></div>
+  </div>
+  <dl class="used">
+   <dt>{{ str.used }}</dt>
+   <dd>
+    <span data-hook="used">{{ used | Viewtils.fsize }}</span>
+    <span class="percent">(<span data-hook="percent"></span>%)</span>
+   </dd>
+  </dl>
+  <dl class="available">
+   <dt>{{ str.available }}</dt>
+   <dd data-hook="available"></dd>
+  </dl>
+ </div>
+</div>
+]]>
+</template>
+<template id="DirBrowser.dirContents">
+<![CDATA[
+<div id="drive-dir-contents">
+ <table>
+  <thead data-hook="header"></thead>
+  <tbody data-hook="updir"></tbody>
+  <tbody data-hook="subdirs"></tbody>
+  <tbody data-hook="files"></tbody>
+ </table>
+ <div class="no-items-message">{{ str.noItems }}</div>
+</div>
+]]>
+</template>
+<template id="DirBrowser.dirContents.header">
+<![CDATA[
+<tr>
+ <th class="col-grab"></th>
+ <th class="col-icon"></th>
+ <th class="col-name">{{ str.name }}</th>
+ <th class="col-owner">{{ str.owner }}</th>
+ <th class="col-size">{{ str.size }}</th>
+ <th class="col-mtime">{{ str.mtime }}</th>
+ <th class="col-ops"></th>
+</tr>
+]]>
+</template>
+<template id="DirBrowser.dirContents.updir">
+<![CDATA[
+<tr>
+ <td class="col-grab"></td>
+ <td class="col-icon"></td>
+ <td class="col-name" colspan="5">
+  <span title="{{ dir.name }}" class="dir" data-hook="name">..</span>
+ </td>
+</tr>
+]]>
+</template>
+
+<template id="DirBrowser.dirContents.subdir">
+<![CDATA[
+    <tr>
+        <td class="col-grab" data-hook="grab"></td>
+        <td class="col-icon"><span class="drive-icon drive-icon-folder"></span></td>
+        <td class="col-name">
+            <span title="{{ dir.name }}" data-hook="name">{{ dir.name }}</span>
+        </td>
+        <td class="col-owner">{{ dir.owner.name }}</td>
+        <td class="col-size"></td>
+        <td class="col-mtime">
+            <div class="full">{{ dir.mtime.short }}</div>
+            <div class="date-only">{{ dir.mtime.date }}</div>
+        </td>
+        <td class="col-ops" data-hook="ops"></td>
+    </tr>
+]]>
+</template>
+
+<template id="DirBrowser.dirContents.file">
+<![CDATA[
+    <tr>
+        <td class="col-grab" data-hook="grab"></td>
+        <td class="col-icon"><span class="drive-icon drive-icon-{{ file.filter }}" data-hook="icon"></span></td>
+        <td class="col-name">
+            <span title="{{ file.name }}" data-hook="name">{{ file.name }}</span>
+        </td>
+        <td class="col-owner">{{ file.owner.name }}</td>
+        <td class="col-size">{{ file.size | Viewtils.fsize }}</td>
+        <td class="col-mtime">
+            <div class="full">{{ file.mtime.short }}</div>
+            <div class="date-only">{{ file.mtime.date }}</div>
+        </td>
+        <td class="col-ops" data-hook="ops"></td>
+    </tr>
+]]>
+</template>
+
+<template id="DirBrowser.opShareDir">
+<![CDATA[
+<div id="drive-dir-share">
+ <form class="form">
+  <div id="drive-dir-share-vis">
+   <label for="drive-dir-share-visibility">{{ str.visLabel }}</label>
+   <table>
+    <tr>
+     <td>
+      <select name="visibility" id="drive-dir-share-visibility">
+       <option value="private">{{ str.visOptPrivate }}</option>
+       <option value="usersonly">{{ str.visOptUsersonly }}</option>
+       <option value="public">{{ str.visOptPublic }}</option>
+       <option value="inherited">{{ str.visOptInherited }}</option>
+      </select>
+     </td>
+     <td style="padding-left:6px">
+      <div id="drive-dir-share-vis-desc-private" class="vis-desc">{{ str.visDescPrivate }}</div>
+      <div id="drive-dir-share-vis-desc-usersonly" class="vis-desc">{{ str.visDescUsersonly }}</div>
+      <div id="drive-dir-share-vis-desc-public" class="vis-desc">{{ str.visDescPublic }}</div>
+      <div id="drive-dir-share-vis-desc-inherited" class="vis-desc">{{ str.visDescInherited }}</div>
+     </td>
+    </tr>
+   </table>
+  </div>
+  <div id="drive-dir-share-acl">
+   <label for="drive-dir-share-acl-search-user">{{ str.aclLabel }}</label>
+   <div id="drive-dir-share-acl-users">
+    <div class="highlight"></div>
+    <table>
+     <tbody data-hook="user-list">
+      <tr data-hook="empty-list-message">
+       <td colspan="3" class="no-users">{{ str.aclNoUsers }}</td>
+      </tr>
+     </tbody>
+    </table>
+   </div>
+   <div id="drive-dir-share-acl-search">
+    <table>
+     <tr>
+      <td>
+       <input type="text" id="drive-dir-share-acl-search-user" data-hook="user-search" placeholder="{{ str.userSearch }}" />
+      </td>
+      <td>
+       <button type="button" class="btn btn-primary disabled" data-hook="user-add">{{ str.userAdd }}</button>
+      </td>
+     </tr>
+    </table>
+    <div class="hint">{{ str.searchHint }}</div>
+   </div>
+  </div>
+ </form>
+</div>
+]]>
+</template>
+<template id="DirBrowser.opShareDir.user">
+<![CDATA[
+<tr>
+ <td class="user-name">
+  <div class="user-name-fn">{{ user.first_name }} {{ user.last_name }}</div>
+  <div class="user-name-un">{{ user.username }}</div>
+ </td>
+ <td class="user-perms">
+  <select name="shares[{{ user.id }}]">
+   <option value="0">{{ str.aclRead }}</option>
+   <option value="1"{{# user.can_write }}selected{{/ user.can_write }}>{{ str.aclReadWrite }}</option>
+  </select>
+ </td>
+ <td class="user-delete">
+  <button type="button" data-hook="user-delete" title="{{ str.userDelete }}">&times;</button>
+ </td>
+</tr>
+]]>
+</template>
+<template id="DirBrowser.opDirDetails">
+<![CDATA[
+<div id="drive-dir-details">
+ <dl>
+  <dt>{{ str.name }}</dt>
+  <dd>{{ dir.name }}</dd>
+  <dt>{{ str.owner }}</dt>
+  <dd><span class="owner">{{ dir.owner.id }} ({{ dir.owner.name }})</span></dd>
+  <dt>{{ str.mtime }}</dt>
+  <dd>
+    <div class="mtime timelog">
+      <span class="time">{{ dir.mtime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ dir.modified_by.name }}</span>
+    </div>
+  </dd>
+  <dt>{{ str.ctime }}</dt>
+  <dd>
+    <div class="ctime timelog">
+      <span class="time">{{ dir.ctime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ dir.created_by.name }}</span>
+    </div>
+  </dd>
+ </dl>
+</div>
+]]>
+</template>
+<template id="DirBrowser.opFileDetails">
+<![CDATA[
+<div id="drive-file-details">
+ <dl>
+  <dt>{{ str.name }}</dt>
+  <dd>{{ file.name }}</dd>
+  <dt>{{ str.owner }}</dt>
+  <dd><span class="owner">{{ file.owner.id }} ({{ file.owner.name }})</span></dd>
+  <dt>{{ str.mtime }}</dt>
+  <dd>
+    <div class="mtime timelog">
+      <span class="time">{{ file.mtime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ file.modified_by.name }}</span>
+    </div>
+  </dd>
+  <dt>{{ str.ctime }}</dt>
+  <dd>
+    <div class="ctime timelog">
+      <span class="time">{{ file.ctime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ file.created_by.name }}</span>
+    </div>
+  </dd>
+  <dt>ID</dt>
+  <dd>{{ file.id }}</dd>
+  <dt>{{ str.size }}</dt>
+  <dd>{{ file.size | Viewtils.fsize }}</dd>
+  <dt>{{ str.mimetype }}</dt>
+  <dd>{{ file.mimetype }}</dd>
+  <dt>{{ str.md5sum }}</dt>
+  <dd>{{ file.md5sum }}</dd>
+  <dt>{{ str.url }}</dt>
+  <dd><code>{{ file.url }}</code></dd>
+ </dl>
+</div>
+]]>
+</template>
+</templates>
