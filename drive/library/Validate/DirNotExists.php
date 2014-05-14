@@ -21,12 +21,12 @@ class Drive_Validate_DirNotExists extends Zend_Validate_Abstract
      */
     protected $_allowed;
     protected $_parentId;
-    protected $_db;
+    protected $_tableProvider;
 
     public function __construct(array $options = null)
     {
         if ($options) {
-            $this->_setOptions($options);
+            $this->setOptions($options);
         }
     }
 
@@ -42,14 +42,16 @@ class Drive_Validate_DirNotExists extends Zend_Validate_Abstract
         return $this;
     }
 
-    public function setAdapter($db)
+    public function setTableProvider($tableProvider)
     {
-        $this->_db = $db;
+        $this->_tableProvider = $tableProvider;
         return $this;
     }
 
     public function isValid($value)
     {
+        $table_provider = $this->_tableProvider;
+
         if (null !== $this->_allowed && $value === $this->_allowed) {
             return true;
         }
@@ -60,7 +62,7 @@ class Drive_Validate_DirNotExists extends Zend_Validate_Abstract
         // istnieje katalog o takiej samej nazwie i pustym katalogu
         // nadrzednym.
         $valid = true;
-        $table = Zefram_Db::getTable('Drive_Model_DbTable_Dirs', $this->_db);
+        $table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
 
         $cond = array('name = ?' => $value);
 
@@ -78,7 +80,7 @@ class Drive_Validate_DirNotExists extends Zend_Validate_Abstract
         return $valid;
     }
 
-    protected function _setOptions(array $options)
+    public function setOptions(array $options)
     {
         foreach ($options as $key => $value) {
             $method = 'set' . $key;

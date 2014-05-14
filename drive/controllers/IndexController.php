@@ -1,12 +1,12 @@
 <?php
 
-class Drive_IndexController extends Controller_Action
+class Drive_IndexController extends Drive_Controller_Action
 {
     public function indexAction()
     {
         $path = explode('/', $this->getScalarParam('path'));
 
-        $dirs = Zefram_Db::getTable('Drive_Model_DbTable_Dirs');
+        $dirs = $this->getTable('Drive_Model_DbTable_Dirs');
         $name = array_shift($path);
 
         $dir = $dirs->fetchRow(array(
@@ -15,7 +15,7 @@ class Drive_IndexController extends Controller_Action
         ));
 
         if ($dir) {
-            $file = Zefram_Db::getTable('Drive_Model_DbTable_Drives')->fetchByPath(
+            $file = $this->getTable('Drive_Model_DbTable_Drives')->fetchByPath(
                 $dir->Drive, implode('/', $path)
             );
             if ($file) {
@@ -28,7 +28,7 @@ class Drive_IndexController extends Controller_Action
                         )
                     );
                 } else {
-                    if (App::get('user')->isAuthenticated()) {
+                    if ($this->getSecurity()->isAuthenticated()) {
                         echo 'Nie masz uprawnień do oglądania tego pliku';
                         exit;
                     } else {

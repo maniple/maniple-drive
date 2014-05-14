@@ -34,7 +34,7 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
         $dir = $this->RootDir;
 
         if (empty($dir)) {
-            $dirs = Zefram_Db::getTable('Drive_Model_DbTable_Dirs', $this->getAdapter());
+            $dirs = $this->_getTable('Drive_Model_DbTable_Dirs');
             $dir = $dirs->createRow();
 
             // nowo tworzony katalog bedacy korzeniem dysku jest prywatny
@@ -43,7 +43,7 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
             $dir->created_by = $this->created_by;
         }
 
-        $dir->drive_id    = $this->id;
+        $dir->drive_id    = $this->drive_id;
         $dir->parent_id   = null;
         $dir->name        = $this->getName();
         $dir->owner       = $this->owner;
@@ -90,8 +90,8 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
         $dir = $this->_saveRootDir();
 
         // podepnij katalog jako korzen dysku
-        $this->getTable()->update(array('root_dir' => $dir->id), array('id = ?' => $this->id));
-        $this->root_dir = $dir->id;
+        $this->getTable()->update(array('root_dir' => $dir->dir_id), array('drive_id = ?' => $this->drive_id));
+        $this->root_dir = $dir->dir_id;
 
         return parent::_postInsert();
     } // }}}
@@ -100,7 +100,7 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
     {
         $dir = $this->_saveRootDir();
 
-        $this->root_dir = $dir->id;
+        $this->root_dir = $dir->dir_id;
         $this->modify_time = date('Y-m-d H:i:s');
 
         return parent::_update();

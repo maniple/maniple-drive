@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Model_HierarchicalRow extends Zefram_Drive_Model_Row
+class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
 {
     const SQL_WILDCARD = '*';
 

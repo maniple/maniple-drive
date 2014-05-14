@@ -1,13 +1,13 @@
 <?php
 
-class Drive_DriveController extends Controller_Action
+class Drive_DriveController extends Drive_Controller_Action
 {
     public function indexAction() // {{{
     {
         $this->view->url_create = $this->_helper->url('create');
         $this->view->url_list = $this->_helper->url('list');
         $this->view->breadcrumbs = array(
-            array('title' => 'Dyski'),
+            array('title' => $this->view->translate('Drives')),
         );
     } // }}}
 
@@ -15,28 +15,28 @@ class Drive_DriveController extends Controller_Action
     {
         $db = $this->getResource('db');
 
-        $dirs_table = $db->getTable('Drive_Model_DbTable_Dirs', $db);
+        $dirs_table = $this->getTable('Drive_Model_DbTable_Dirs');
 
-        $drives = $db->getTable('Drive_Model_DbTable_Drives')
+        $drives = $this->getTable('Drive_Model_DbTable_Drives')
             ->select(array('d' => '*'))
             ->setIntegrityCheck(false)
-            ->joinLeft(array('dirs' => $dirs_table->getName()), 'd.root_dir = dirs.id', array('name'))
+            ->joinLeft(array('dirs' => $dirs_table->getName()), 'd.root_dir = dirs.dir_id', array('name'))
             ->order('name')
             ->fetchAll();
 
-        $user_ids = new DbUtils_ValueSet($db);
-        $user_ids->collect($drives, array('owner', 'created_by'));
+        $user_ids = array();
+        foreach ($drives as $drive) {
+            $user_ids[$drive['owner']] = true;
+            $user_ids[$drive['created_by']] = true;
+        }
+        $user_ids = array_keys($user_ids);
 
-        $users = $db->getTable('Model_Core_Users')
-            ->select(array('id', 'first_name', 'last_name'))
-            ->where($user_ids->in('id'))
-            ->indexBy('id')
-            ->fetchAll();
+        $users = $this->getResource('profile.mapper')->getUsers($user_ids);
 
         foreach ($drives as &$drive) {
             // uzupelnij rekord dysku adresami akcji
-            $drive['url_edit']   = $this->view->url(array('id' => $drive['id']), 'drive_edit');
-            $drive['url_browse'] = $this->view->url(array('id' => $drive['root_dir']), 'drive_dir');
+            $drive['url_edit']   = $this->view->routeUrl('drive.drive.edit', array('drive_id' => $drive['drive_id']));
+            $drive['url_browse'] = $this->view->routeUrl('drive.dir.contents', array('dir_id' => $drive['root_dir']));
 
             // dodaj rekordy uzytkownikow odpowiadajace wlascicielowi
             // i osobie, ktora utworzyla dysk

@@ -19,12 +19,12 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
         'ParentDir' => array(
             'columns'       => 'parent_id',
             'refTableClass' => 'Drive_Model_DbTable_Dirs',
-            'refColumns'    => 'id',
+            'refColumns'    => 'dir_id',
         ),
         'Drive' => array(
             'columns'       => 'drive_id',
             'refTableClass' => 'Drive_Model_DbTable_Drives',
-            'refColumns'    => 'id',
+            'refColumns'    => 'drive_id',
         ),
     );
 

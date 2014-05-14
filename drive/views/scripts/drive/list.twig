@@ -1,0 +1,49 @@
+{% if drives %}
+<ul class="stdl">
+    {% for drive in drives %}
+    <li id="drive-{{ drive.drive_id }}">
+        <div class="data">
+            <h4 class="title">{{ drive.name }}</h4>
+            {% if drive.description %}
+            <div class="desc">{{ drive.description }}</div>
+            {% endif %}
+            <dl class="meta">
+                <dt>Właściciel:</dt>
+                <dd>{{ fn(drive.owner) }}</dd>
+                <dt>Utworzony:</dt>
+                <dd class="timelog">
+                    <span class="tm">{{ drive.create_time | date("j M Y, H:i") }}</span>
+                    <span class="sep">przez</span>
+                    <span class="user">{{ fn(drive.created_by) }}</span>
+                </dd>
+                <dt>Zajęte miejsce:</dt>
+                <dd>{{ fileSize(drive.disk_usage) }}
+                {% if drive.quota %}
+                    / {{ fileSize(drive.quota) }}
+                    {% set ratio = drive.disk_usage / drive.quota %}
+                    {% if ratio < 0.75 %}
+                        {% set class = 'ok' %}
+                    {% elseif ratio < 0.9 %}
+                        {% set class = 'warning' %}
+                    {% else %}
+                        {% set class = 'danger' %}
+                    {% endif %}
+                        <div class="progress-bar ib" style="width:120px;margin-left:12px;">
+                            <span class="bar bar-{{ class }}" style="width:{{ max(2, min(100, ratio * 100)) }}%"></span>
+                        </div> {{ (ratio * 100) | round(2) }} %
+                    {% endif %}
+                </dd>
+            </dl>
+        </div>
+        <div class="actions">
+        {% if drive.url_edit %}
+        <a data-url="{{ drive.url_edit }}" class="opbtn drive-edit"><span>Edytuj<span class="icon edit"></span></span></a>
+        {% endif %}
+        <a href="{{ drive.url_browse }}" class="opbtn"><span>Przeglądaj<span class="icon goto"></span></span></a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+Brak dysków.
+{% endif %}

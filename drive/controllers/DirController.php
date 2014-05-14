@@ -3,7 +3,7 @@
 /**
  * @version 2013-05-15 / 2013-01-24 / 2012-12-18
  */
-class Drive_DirController extends Controller_Action
+class Drive_DirController extends Maniple_Controller_Action
 {
     public function indexAction() // {{{
     {

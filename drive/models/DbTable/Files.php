@@ -8,7 +8,7 @@ class Drive_Model_DbTable_Files extends Zefram_Db_Table
         'Dir' => array(
             'columns'       => 'dir_id',
             'refTableClass' => 'Drive_Model_DbTable_Dirs',
-            'refColumns'    => 'id',
+            'refColumns'    => 'dir_id',
         )
     );
 }

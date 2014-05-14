@@ -1,11 +1,23 @@
 <?php
 
-class Drive_Form_Drive extends Form
+class Drive_Form_Drive extends Zefram_Form
 {
     protected $_drive;
 
     public function __construct(array $options = array())
     {
+        $tableProvider = null;
+        if (isset($options['tableProvider'])) {
+            $tableProvider = $options['tableProvider'];
+            unset($options['tableProvider']);
+        }
+
+        $userMapper = null;
+        if (isset($options['userMapper'])) {
+            $userMapper = $options['userMapper'];
+            unset($options['userMapper']);
+        }
+
         $options['elements'] = array(
                 'name' => array(
                     'type' => 'text',
@@ -16,6 +28,7 @@ class Drive_Form_Drive extends Form
                             new Drive_Validate_FileName,
                             new Drive_Validate_DirNotExists(array(
                                 // uzyj domyslnego adaptera
+                                'tableProvider' => $tableProvider,
                                 'parentId' => null,
                                 'messages' => array(
                                     Drive_Validate_DirNotExists::DIR_EXISTS => 'Dysk o podanej nazwie już istnieje',
@@ -31,6 +44,21 @@ class Drive_Form_Drive extends Form
                         'label'      => 'Rozmiar dysku (MiB)',
                         'validators' => array('Digits'),
                     ),
+                ),
+                'owner' => array(
+                    'type' => 'text',
+                        'options' => array(
+                            'label' => 'Wybierz właściciela dysku',
+                            'required' => true,
+                            'validators' => array(
+                                array(
+                                    new Core_Validate_UserId(array(
+                                        'userMapper' => $userMapper,
+                                    )),
+                                    true,
+                                ),
+                            ),
+                        ),
                 ),
                 'description' => array(
                     'type' => 'textarea',

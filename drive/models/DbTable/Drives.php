@@ -8,22 +8,22 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
         'RootDir' => array(
             'columns'       => 'root_dir',
             'refTableClass' => 'Drive_Model_DbTable_Dirs',
-            'refColumns'    => 'id',
+            'refColumns'    => 'dir_id',
         ),
         'Dir' => array(
             'columns'       => 'root_dir',
             'refTableClass' => 'Drive_Model_DbTable_Dirs',
-            'refColumns'    => 'id',
+            'refColumns'    => 'dir_id',
         ),
         'Owner' => array(
             'columns'       => 'owner',
             'refTableClass' => 'Model_Core_Users',
-            'refColumns'    => 'id',
+            'refColumns'    => 'user_id',
         ),
         'Creator' => array(
             'columns'       => 'created_by',
             'refTableClass' => 'Model_Core_Users',
-            'refColumns'    => 'id',
+            'refColumns'    => 'user_id',
         ),
     );
 

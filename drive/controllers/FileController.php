@@ -1,6 +1,6 @@
 <?php
 
-class Drive_FileController extends Controller_Action
+class Drive_FileController extends Drive_Controller_Action
 {
     /**
      * Parametry wywołania:
