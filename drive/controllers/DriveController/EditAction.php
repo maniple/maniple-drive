@@ -3,45 +3,48 @@
 /**
  * Edycja dysku wirtualnego.
  *
- * @version 2013-01-25
+ * @version 2014-05-14 / 2013-01-25
  * @author xemlock
  */
-class Drive_DriveController_EditAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_DriveController_EditAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_drive;
 
-    protected function _init()
+    protected $_ajaxFormHtml = true;
+
+    protected function _prepare()
     {
         $this->_helper->layout->setLayout('dialog');
-        $this->_helper->viewRenderer->setRender('create');
+        $this->_helper->viewRenderer->setRender('form');
 
-        $this->assertAccess(App::get('user')->isAuthenticated());
+        $this->getSecurity()->requireAuthentication();
 
-        $db = $this->getResource('db');
-        $id = $this->getScalarParam('id', 0);
-        $drive = Zefram_Db::getTable('Drive_Model_DbTable_Drives', $db)->findRow($id);
+        $drive_id = $this->getScalarParam('drive_id', 0);
+        $drive = $this->getResource('db.table_provider')->getTable('Drive_Model_DbTable_Drives')->findRow($drive_id);
 
         if (empty($drive)) {
             throw new App_Exception_NotFound('Dysk o podanym identyfikatorze nie został znaleziony.');
         }
 
         $this->_drive = $drive;
-        $this->_form  = new Drive_Form_Drive(array('drive' => $drive));
+        $this->_form  = new Drive_Form_Drive(array(
+            'userMapper' => $this->getResource('profile.mapper'),
+            'tableProvider' => $this->getResource('db.table_provider'),
+            'drive' => $drive,
+        ));
     }
 
-    public function _processForm()
+    public function _process()
     {
         $values = $this->_form->getValues();
 
-        $user = App::get('user');
-
-        $db = $this->getResource('db');
+        $db = $this->getResource('db.adapter');
         $db->beginTransaction();
 
         try {
             $drive = $this->_drive;
             $drive->setFromArray($values);
-            $drive->modified_by = $user->id;
+            $drive->modified_by = $this->getSecurity()->getUserId();
             $drive->save();
             $db->commit();
 
@@ -50,9 +53,15 @@ class Drive_DriveController_EditAction extends Zefram_Controller_Action_Standalo
             throw $e;
         }
 
-        return $this->_helper->dialog->completionUrl(array(
-            'id' => $drive->id,
+        $response = $this->_helper->ajaxResponse();
+        $response->setMessage(sprintf(
+            $this->view->translate('Drive <em>%s</em> has been successfully updated'),
+            $drive->getName()
         ));
+        $response->setData(array(
+            'drive_id' => $drive->drive_id,
+        ));
+        $response->sendAndExit();
     }
 }
 

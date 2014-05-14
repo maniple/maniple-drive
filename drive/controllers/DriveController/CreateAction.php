@@ -13,6 +13,9 @@ class Drive_DriveController_CreateAction extends Zefram_Controller_Action_Standa
     protected function _prepare()
     {
         $this->_helper->layout->setLayout('dialog');
+        $this->_helper->viewRenderer->setRender('form');
+
+        $this->getSecurity()->requireAuthentication();
 
         $form = new Drive_Form_Drive(array(
             'tableProvider' => $this->getResource('db.table_provider'),

@@ -30,7 +30,7 @@ $(function() {
                 submitLabel: submitLabel,
                 complete: function (dialog, response) {
                     dialog.close();
-                    load_drive_list(params.id);
+                    load_drive_list(response.data.drive_id);
                 }
             });
             return false;

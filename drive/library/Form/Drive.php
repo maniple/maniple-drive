@@ -106,7 +106,6 @@ class Drive_Form_Drive extends Zefram_Form
 
         $this->getElement('name')
              ->getValidator('Drive_Validate_DirNotExists')
-             ->setAdapter($drive->getAdapter())
              ->setAllowed($drive->name);
 
         $this->_drive = $drive;
