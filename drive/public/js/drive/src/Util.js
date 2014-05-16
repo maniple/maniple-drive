@@ -1,6 +1,6 @@
 /**
  * @namespace
- * @version 2013-01-13
+ * @version 2014-05-16 / 2013-01-13
  */
 var Util = {}
 
@@ -13,7 +13,10 @@ Util.interp = function (template, vars, esc) { // {{{
 } // }}}
 
 Util.uri = function (template, vars) { // {{{
-    return decodeURIComponent(unescape(Util.interp(template, vars, escape)));
+    vars = vars || {};
+    return String(template).replace(/:([_0-9a-z]+)/ig, function (match, key) {
+        return escape(vars[key]);
+    });
 } // }}}
 
 Util.gotoHash = function (hash) { // {{{

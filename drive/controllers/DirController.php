@@ -7,31 +7,27 @@ class Drive_DirController extends Maniple_Controller_Action
 {
     public function indexAction() // {{{
     {
-        // perms!!!
+        // TODO access perms
 
-        $id = $this->getScalarParam('id', 0);
-
-        $uri_template = $this->_helper->uriTemplate;
-
-        $this->view->dir_id = $id;
+        $this->view->dir_id = (int) $this->getScalarParam('dir_id', 0);
         $this->view->uri_templates = array(
             'dir' => array(
-                'view'   => $uri_template('contents', 'dir', array('id' => '{id}')),
-                'create' => $uri_template('create',   'dir', array('parent' => '{parent}')),
-                'remove' => $uri_template('remove',   'dir', array('id' => '{id}')),
-                'rename' => $uri_template('rename',   'dir', array('id' => '{id}')),
-                'share'  => $uri_template('share',    'dir', array('id' => '{id}')),
-                'move'   => $uri_template('move',     'dir'),
-                'chown'  => $uri_template('chown',    'dir'),
+                'read'   => $this->_helper->urlTemplate('drive.dir', array('action' => 'read')),
+                'create' => $this->_helper->urlTemplate('drive.dir', array('action' => 'create')),
+                'remove' => $this->_helper->urlTemplate('drive.dir', array('action' => 'remove')),
+                'rename' => $this->_helper->urlTemplate('drive.dir', array('action' => 'rename')),
+                'share'  => $this->_helper->urlTemplate('drive.dir', array('action' => 'share')),
+                'move'   => $this->_helper->urlTemplate('drive.dir', array('action' => 'move')),
+                'chown'  => $this->_helper->urlTemplate('drive.dir', array('action' => 'chown')),
+                'upload' => $this->_helper->urlTemplate('drive.dir', array('action' => 'upload')),
             ),
             'file' => array(
-                'upload' => $uri_template('upload', 'file', array('dir' => '{id}')),
-                'view'   => $uri_template('{id}',   'file'),
-                'edit'   => $uri_template('edit',   'file', array('id' => '{id}')),
-                'remove' => $uri_template('remove', 'file', array('id' => '{id}')),
-                'rename' => $uri_template('rename', 'file', array('id' => '{id}')),
-                'move'   => $uri_template('move',   'file'),
-                'chown'  => $uri_template('chown',  'file'),
+                'read'   => $this->_helper->urlTemplate('drive.file', array('action' => 'read')),
+                'edit'   => $this->_helper->urlTemplate('drive.file', array('action' => 'edit')),
+                'remove' => $this->_helper->urlTemplate('drive.file', array('action' => 'remove')),
+                'rename' => $this->_helper->urlTemplate('drive.file', array('action' => 'rename')),
+                'move'   => $this->_helper->urlTemplate('drive.file', array('action' => 'move')),
+                'chown'  => $this->_helper->urlTemplate('drive.file', array('action' => 'chown')),
             ),
         );
 
@@ -46,14 +42,17 @@ class Drive_DirController extends Maniple_Controller_Action
         );
     } // }}}
 
-    public function contentsAction() // {{{
+    /**
+     * Read directory contents.
+     */
+    public function readAction() // {{{
     {
         // params:
-        // id         - directory id
+        // dir_id     - directory id
         // filter     - file type filter value, !value
         // files-only - do not include subdirectories
 
-        $id = $this->getScalarParam('id', 0);
+        $dir_id = (int) $this->getScalarParam('dir_id');
         $files_only = $this->getScalarParam('files-only');
 
         $filter = $this->getScalarParam('filter');
@@ -70,7 +69,7 @@ class Drive_DirController extends Maniple_Controller_Action
             'inverseFilter' => $inverse_filter,
         );
 
-        $dir = $this->_helper->drive->browseDir($id, $options);
+        $dir = $this->getResource('drive.helper')->browseDir($dir_id, $options);
 
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData($dir);
@@ -85,23 +84,21 @@ class Drive_DirController extends Maniple_Controller_Action
      */
     public function moveAction() // {{{
     {
-        $drive_helper = $this->_helper->drive;
+        $drive_helper = $this->getResource('drive.helper');
 
-        $id = $this->_request->getPost('id');
-        $dir = $this->_helper->drive->fetchDir($id);
+        $id = $this->_request->getPost('dir_id');
+        $dir = $drive_helper->fetchDir($id);
         $this->assertAccess($drive_helper->isDirWritable($dir));
 
-        $parent_id = $this->_request->getPost('parent');
-        $parent_dir = $this->_helper->drive->fetchDir($parent_id);
+        $parent_id = $this->_request->getPost('parent_id');
+        $parent_dir = $drive_helper->fetchDir($parent_id);
         $this->assertAccess($drive_helper->isDirWritable($parent_dir));
 
-        $user = $this->getBootstrapResource('user');
-        $db = $this->getBootstrapResource('db');
-
+        $db = $this->getResource('db');
         $db->beginTransaction();
         try {
             $dir->parent_id = $parent_dir->id;
-            $dir->modified_by = $user->id;
+            $dir->modified_by = $this->getSecurity()->getUserId();
             $dir->save();
             $db->commit();
 
@@ -120,10 +117,10 @@ class Drive_DirController extends Maniple_Controller_Action
      */
     public function shareAction() // {{{
     {
-        $user = $this->getBootstrapResource('user');
+        $drive_helper = $this->getResource('drive.helper');
 
-        $drive_helper = $this->_helper->drive;
-        $dir = $drive_helper->fetchDir($this->_getParam('id'));
+        $dir_id = (int) $this->getScalarParam('dir_id');
+        $dir = $drive_helper->fetchDir($dir_id);
 
         $this->assertAccess($drive_helper->isDirShareable($dir));
 
@@ -136,14 +133,14 @@ class Drive_DirController extends Maniple_Controller_Action
 
             $shares = (array) $this->_request->getPost('shares');
 
-            $db = $dir->getAdapter();
+            $db = $this->getResource('db');
             $db->beginTransaction();
 
             try {
                 $dir->saveShares($shares);
 
                 $dir->visibility = $visibility;
-                $dir->modified_by = $user->id;
+                $dir->modified_by = $this->getSecurity()->getUserId();
                 $dir->save();
 
                 $db->commit();
@@ -182,25 +179,24 @@ class Drive_DirController extends Maniple_Controller_Action
      */
     public function chownAction() // {{{
     {
-        $drive_helper = $this->_helper->drive;
-        $dir = $drive_helper->fetchDir((string) $this->_request->getPost('id'));
+        $drive_helper = $this->getResource('drive.helper');
+
+        $dir_id = (int) $this->_request->getPost('dir_id');
+        $dir = $drive_helper->fetchDir($dir_id);
 
         $this->assertAccess($drive_helper->isDirChownable($dir));
 
-        $db = $this->getBootstrapResource('db');
-        $users = $db->getTable('Model_Core_Users');
-        $owner = $users->findRow((string) $this->_request->getPost('owner'));
-
+        $owner = (int) $this->_request->getPost('owner');
+        $user = $drive_helper->getUserMapper()->getUser($owner);
         if (!$owner) {
             throw new App_Exception_InvalidArgument('Niepoprawny identyfikator użytkownika');
         }
 
-        $user = $this->getBootstrapResource('user');
-
+        $db = $this->getResource('db');
         $db->beginTransaction();
         try {
-            $dir->owner = $owner->id;
-            $dir->modified_by = $user->id;
+            $dir->owner = $user->id;
+            $dir->modified_by = $this->getSecurity()->getUserId();
             $dir->save();
             $db->commit();
 
@@ -211,10 +207,10 @@ class Drive_DirController extends Maniple_Controller_Action
 
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData(array(
-            'id'    => $dir->id,
+            'dir_id' => $dir->dir_id,
             'owner' => $drive_helper->projectUserData($owner),
             'mtime' => $drive_helper->getDate($dir->mtime),
-            'modified_by' => $drive_helper->projectUserData($user),
+            'modified_by' => $drive_helper->projectUserData($this->getSecurity()->getUser()),
         ));
         $ajaxResponse->sendAndExit();
     } // }}}

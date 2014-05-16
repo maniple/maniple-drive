@@ -444,7 +444,7 @@ DirBrowser.prototype._eip = function(selector, url, options) { // {{{
 
 DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
     var $ = this.$,
-        url = Drive.Util.uri(this._uriTemplates.dir.view, {id: dirId}); 
+        url = Drive.Util.uri(this._uriTemplates.dir.read, {id: dirId}); 
 
     $('#drive-loading').text('Ładowanie zawartości katalogu...');
 
@@ -493,7 +493,7 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
 
     // jezeli nie jest dostepny url do uploadu plikow wylacz uploadera
     if (dir.perms.write) {
-        url = Drive.Util.uri(self._uriTemplates.file.upload, dir);
+        url = Drive.Util.uri(self._uriTemplates.dir.upload, dir);
         self._uploader.disableUpload(false).setUploadUrl(url);
     } else {
         self._uploader.disableUpload();
@@ -1088,7 +1088,7 @@ DirBrowser.prototype._fileOpdd = function(file) { // {{{
         opdd = self._dirEntryOpdd(file, [
             {
                 title: Drive.Util.i18n('DirBrowser.opOpenFile.opname'),
-                url: Drive.Util.uri(self._uriTemplates.file.view, file),
+                url: Drive.Util.uri(self._uriTemplates.file.read, file),
                 click: function() {
                     // zwrocenie false spowoduje, ze nie otworzy sie plik,
                     // trzeba puscic event i zamknac opdd w osobnym watku
@@ -1368,7 +1368,7 @@ DirBrowser.prototype._renderFile = function(file, replace) { // {{{
 
     // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
     // w nim zawarte rowniez sa czytelne
-    var url = Drive.Util.uri(self._uriTemplates.file.view, file);
+    var url = Drive.Util.uri(self._uriTemplates.file.read, file);
     hooks.name.attr('data-url', url);
 
     // TODO isFileMovable? file.perms.move?

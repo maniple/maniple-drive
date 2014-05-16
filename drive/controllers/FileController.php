@@ -2,45 +2,11 @@
 
 class Drive_FileController extends Drive_Controller_Action
 {
-    /**
-     * Parametry wywołania:
-     * id - identyfikator przenoszonego pliku
-     * dir - identyfikator docelowego katalogu
-     */
-    public function moveAction() // {{{
-    {
-        $drive_helper = $this->_helper->drive;
-
-        $id = $this->_request->getPost('id');
-        $file = $this->_helper->drive->fetchFile($id);
-        $this->assertAccess($drive_helper->isDirWritable($file->Dir));
-
-        $dir_id = $this->_request->getPost('dir');
-        $dir = $this->_helper->drive->fetchDir($dir_id);
-        $this->assertAccess($drive_helper->isDirWritable($dir));
-
-        $db = $file->getAdapter();
-        $db->beginTransaction();
-
-        try {
-            $file->dir_id = $dir->id;
-            $file->save();
-            $db->commit();
-
-        } catch (Exception $e) {
-            $db->rollBack();
-            throw $e;
-        }
-
-        $ajaxResponse = $this->_helper->ajaxResponse();
-        $ajaxResponse->sendAndExit();
-    } // }}}
-
-    public function indexAction() // {{{
+    public function readAction() // {{{
     {
         try {
-            $id = $this->_getParam('id');
-            $file = $this->_helper->drive->fetchFile((string) $id);
+            $file_id = (string) $this->getScalarParam('file_id');
+            $file = $this->_helper->drive->fetchFile($file_id);
 
             $this->_helper->serveFile($file->getPath(), array(
                 'type' => $file->mimetype,
@@ -63,6 +29,40 @@ class Drive_FileController extends Drive_Controller_Action
     } // }}}
 
     /**
+     * Parametry wywołania:
+     * id - identyfikator przenoszonego pliku
+     * dir - identyfikator docelowego katalogu
+     */
+    public function moveAction() // {{{
+    {
+        $drive_helper = $this->_helper->drive;
+
+        $file_id = $this->_request->getPost('file_id');
+        $file = $this->_helper->drive->fetchFile($file_id);
+        $this->assertAccess($drive_helper->isDirWritable($file->Dir));
+
+        $dir_id = $this->_request->getPost('dir_id');
+        $dir = $this->_helper->drive->fetchDir($dir_id);
+        $this->assertAccess($drive_helper->isDirWritable($dir));
+
+        $db = $file->getAdapter();
+        $db->beginTransaction();
+
+        try {
+            $file->dir_id = $dir->dir_id;
+            $file->save();
+            $db->commit();
+
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw $e;
+        }
+
+        $ajaxResponse = $this->_helper->ajaxResponse();
+        $ajaxResponse->sendAndExit();
+    } // }}}
+
+    /**
      * Zmiana właściciela pliku. Parametry wywołania akcji (id, owner)
      * muszą być przekazane metodą POST.
      *
@@ -71,7 +71,9 @@ class Drive_FileController extends Drive_Controller_Action
     public function chownAction() // {{{
     {
         $drive_helper = $this->_helper->drive;
-        $file = $drive_helper->fetchFile((string) $this->_request->getPost('id'));
+
+        $file_id = (string) $this->_request->getPost('file_id');
+        $file = $drive_helper->fetchFile($file_id);
 
         $this->assertAccess($drive_helper->isFileChownable($file));
 
@@ -100,7 +102,7 @@ class Drive_FileController extends Drive_Controller_Action
 
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData(array(
-            'id'    => $file->id,
+            'file_id' => $file->id,
             'owner' => $drive_helper->projectUserData($owner),
             'mtime' => $drive_helper->getDate($file->mtime),
             'modified_by' => $drive_helper->projectUserData($user),

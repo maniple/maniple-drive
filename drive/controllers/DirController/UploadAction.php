@@ -1,6 +1,6 @@
 <?php
 
-class Drive_FileController_UploadAction extends Zefram_Controller_Action_Standalone_Abstract
+class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalone_Abstract
 {
     protected function _getTempName() // {{{
     {
@@ -197,7 +197,7 @@ class Drive_FileController_UploadAction extends Zefram_Controller_Action_Standal
             $this->assertAccess(App::get('user')->isAuthenticated());
 
             // katalog, w ktorym umieszczony ma zostac plik
-            $dir_id = $this->_getParam('dir');
+            $dir_id = $this->_getParam('dir_id');
             $dir = $this->_helper->drive->fetchDir($dir_id);
 
             // TODO uprawnienia zapisu do dysku

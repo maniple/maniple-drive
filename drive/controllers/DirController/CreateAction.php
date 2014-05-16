@@ -1,15 +1,15 @@
 <?php
 
-class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_DirController_CreateAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_parentDir;
 
-    protected function _init() // {{{
+    protected function _prepare() // {{{
     {
         $current_user = App::get('user');
         $this->assertAccess($current_user->isAuthenticated());
 
-        $parent_id = $this->_getParam('parent');
+        $parent_id = $this->_getParam('dir_id');
         $parent_dir = $this->_helper->drive->fetchDir($parent_id);
 
         $this->assertAccess(
@@ -29,7 +29,7 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
                         new Drive_Validate_FileName,
                         new Drive_Validate_DirNotExists(array(
                             'adapter'  => App::get('db'),
-                            'parentId' => $parent_dir->id
+                            'parentId' => $parent_dir->dir_id
                         )),
                     ),
                     'attribs'    => array(
@@ -45,7 +45,9 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
                 'options' => array(
                     'label'      => 'Właściciel',
                     'required'   => true,
-                    'validators' => array(new Validate_UserId),
+                    'validators' => array(
+                        new Core_Validate_UserId,
+                    ),
                     'value'      => $current_user->id,
                     'attribs'    => array(
                         'data-label' => $current_user->first_name . ' ' . $current_user->last_name,
@@ -60,18 +62,19 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         $this->_helper->layout->setLayout('dialog');
     } // }}}
 
-    protected function _processForm() // {{{
+    protected function _process() // {{{
     {
-        $user = App::get('user');
-        $db = App::get('db');
+        $user = $this->getSecurity()->getUser();
 
         $values = $this->_form->getValues();
-        $values['created_by'] = $user->id;
-        $values['modified_by'] = $user->id;
+        $values['created_by'] = $user->getId();
+        $values['modified_by'] = $user->getId();
 
         if (empty($values['owner'])) {
-            $values['owner'] = $user->id;
+            $values['owner'] = $user->getId();
         }
+
+        $db = App::get('db');
 
         $dirs = Zefram_Db::getTable('Drive_Model_DbTable_Dirs', $db);
 
@@ -80,7 +83,7 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         try {
             $dir = $dirs->createRow($values);
             $dir->drive_id = $this->_parentDir->drive_id;
-            $dir->parent_id = $this->_parentDir->id;
+            $dir->parent_id = $this->_parentDir->dir_ id;
             $dir->save();
 
             $db->commit();

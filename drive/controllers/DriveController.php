@@ -35,8 +35,8 @@ class Drive_DriveController extends Drive_Controller_Action
 
         foreach ($drives as &$drive) {
             // uzupelnij rekord dysku adresami akcji
-            $drive['url_edit']   = $this->view->routeUrl('drive.drive.edit', array('drive_id' => $drive['drive_id']));
-            $drive['url_browse'] = $this->view->routeUrl('drive.dir.contents', array('dir_id' => $drive['root_dir']));
+            $drive['url_edit']   = $this->view->routeUrl('drive.drive', array('action' => 'edit', 'drive_id' => $drive['drive_id']));
+            $drive['url_browse'] = $this->view->routeUrl('drive.dir', array('action' => 'read', 'dir_id' => $drive['root_dir']));
 
             // dodaj rekordy uzytkownikow odpowiadajace wlascicielowi
             // i osobie, ktora utworzyla dysk
