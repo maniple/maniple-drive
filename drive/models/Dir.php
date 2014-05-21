@@ -4,20 +4,20 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 {
     public function isReadable($user_id) // {{{
     {
-        return $this->getTable()->isDirReadable($this->id, $user_id);
+        return $this->getTable()->isDirReadable($this->dir_id, $user_id);
     } // }}}
 
     public function isWritable($user_id) // {{{
     {
-        return $this->getTable()->isDirWritable($this->id, $user_id);
+        return $this->getTable()->isDirWritable($this->dir_id, $user_id);
     } // }}}
 
     public function fetchSubDirs() // {{{
     {
-        $id = $this->id;
+        $dir_id = $this->dir_id;
         $dirs = $this->getTable()->fetchAll(array(
-            'parent_id = ?' => $id,
-            'id <> ?' => $id,
+            'parent_id = ?' => (int) $dir_id,
+            'dir_id <> ?' => (int) $dir_id,
         ), 'name ASC');
 
         return $dirs;
@@ -30,13 +30,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
      */
     public function fetchFiles($where = null, $order = null) // {{{
     {
-        $where = (array) $where;
-        $where['dir_id = ?'] = $this->id;
-
-        $db = $this->getAdapter();
-        $files = $db->getTable('Drive_Model_DbTable_Files')->fetchAll($where, $order);
-
-        return $files;
+        return $this->getTable()->fetchFilesByDir($this->dir_id);
     } // }}}
 
     /**
@@ -47,7 +41,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         $db = $this->getAdapter();
 
         $where = (array) $where;
-        $where['dir_id = ?'] = $this->id;
+        $where['dir_id = ?'] = (int) $this->dir_id;
         $where['id IN (?)'] = $ordering;
 
         $weight = 0;
@@ -61,7 +55,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             'weight' => new Zend_Db_Expr($case),
         );
 
-        $db->getTable('Drive_Model_DbTable_Files')->update($data, $where);
+        $this->_getTable('Drive_Model_DbTable_Files')->update($data, $where);
     } // }}}
 
     /**
@@ -115,7 +109,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             $now = time();
 
             $data = array_merge($data, array(
-                'dir_id' => $this->id,
+                'dir_id' => $this->dir_id,
                 'md5sum' => $md5,
                 'size'   => $size,
                 'ctime'  => $now,
@@ -152,7 +146,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             }
 
             $db = $this->getAdapter();
-            $file = $db->getTable('Drive_Model_DbTable_Files')->createRow($data);
+            $file = $this->_getTable('Drive_Model_DbTable_Files')->createRow($data);
             $file->save();
 
             // zaktualizuj zajmowane miejsce na dysku
@@ -176,12 +170,12 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
     public function selectShares($columns = Zend_Db_Select::SQL_WILDCARD) // {{{
     {
         $db = $this->getAdapter();
-        $shares = $db->getTable('Drive_Model_DbTable_DirShares');
-        $select = $db->getTable('Model_Core_Users')
+        $shares = $this->_getTable('Drive_Model_DbTable_DirShares');
+        $select = $this->_getTable('Model_Core_Users')
             ->select(array('u' => $columns))
             ->setIntegrityCheck(false)
             ->join(array('s' => $shares), 's.user_id = u.id', 'can_write')
-            ->where('s.dir_id = ?', $this->id)
+            ->where('s.dir_id = ?', $this->dir_id)
             ->order(array('last_name', 'first_name', 'username'));
 
         return $select;
@@ -196,21 +190,21 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         $db = $this->getAdapter();
 
         // usun aktualne rekordy uprawnien
-        $shares = $db->getTable('Drive_Model_DbTable_DirShares');
-        $shares->delete(array('dir_id = ?' => $this->id));
+        $shares = $this->_getTable('Drive_Model_DbTable_DirShares');
+        $shares->delete(array('dir_id = ?' => $this->dir_id));
 
         $count = 0;
         $users = array_map(function($value) { return $value ? 1 : 0; }, (array) $users);
 
         if (count($users)) {
             // odfiltruj niepoprawne identyfikatory uzytkownikow
-            $user_ids = $db->getTable('Model_Core_Users')
+            $user_ids = $this->_getTable('Model_Core_Users')
                 ->select('id')
                 ->where('id IN (?)', array_keys($users))
                 ->fetchAll();
 
             if (count($user_ids)) {
-                $row = array('dir_id' => $this->id);
+                $row = array('dir_id' => $this->dir_id);
 
                 // zapisz nowe uprawnienia do tego katalogu
                 foreach ($user_ids as $user_id) {
@@ -279,9 +273,8 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         }
 
         // usun udostepnienia
-        $db = $this->getAdapter();
-        $db->getTable('Drive_Model_DbTable_DirShares')->delete(array(
-            'dir_id = ?' => $this->id,
+        $this->_getTable('Drive_Model_DbTable_DirShares')->delete(array(
+            'dir_id = ?' => $this->dir_id,
         ));
 
         return parent::delete();
@@ -294,35 +287,36 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
     {
         // liczba podkatalogow, biezacy katalog nie jest liczony
         $dir_count = 0;
+        $dir_id = (int) $this->dir_id;
 
-        $queue = array($this->id);
+        $queue = array($this->dir_id);
         $select = $this->getTable()->select('id');
         $where = array(
             'drive_id = ?' => $this->drive_id,
         );
 
-        $ids = new DbUtils_ValueSet;
-
-        // dodaj biezacego katalogu do listy przeszukiwanych katalogow
-        $ids->add($this->id);
+        $dir_ids = array(
+            // dodaj biezacy katalog do listy przeszukiwanych katalogow
+            $dir_id => true,
+        );
 
         // pobierz identyfikatory wszystkich katalogow w poddrzewie
         // zakorzenionym w tym katalogu
-        while ($id = array_shift($queue)) {
-            $where['parent_id = ?'] = $id;
+        while ($dir_id = array_shift($queue)) {
+            $where['parent_id = ?'] = $dir_id;
             $select->reset(Zend_Db_Select::WHERE)->where($where);
 
             foreach ($select->fetchAll() as $row) {
-                $ids->add($row['id']);
-                $queue[] = $row['id'];
+                $dir_ids[$row['dir_id']] = true;
+                $queue[] = $row['dir_id'];
                 ++$dir_count;
             }
         }
 
         $db = $this->getAdapter();
-        $select = $db->getTable('Drive_Model_DbTable_Files')
+        $select = $this->_getTable('Drive_Model_DbTable_Files')
                 ->select(array('SUM(size) AS size', 'COUNT(1) AS file_count'))
-                ->where($ids->in('dir_id'));
+                ->where('dir_id IN (?)', array_keys($dir_ids));
 
         $row = $select->fetchRow();
 

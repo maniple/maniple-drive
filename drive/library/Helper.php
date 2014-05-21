@@ -2,18 +2,31 @@
 
 class Drive_Helper
 {
-    protected $_tableProvider;
+    protected $_security;
 
+    /**
+     * @var Zend_View_Abstract
+     */
     protected $_view;
 
-    public function __construct($resourceContainer)
+    /**
+     * @var Zefram_Db_Table_Provider
+     */
+    protected $_tableProvider;
+
+    /**
+     * @var Core_UserMapperInterface
+     */
+    protected $_userMapper;
+
+    public function getMapper()
     {
-        $this->_resourceContainer = $resourceContainer;
+        return new Drive_Mapper($this->getTableProvider());
     }
 
-    public function getResource($name)
+    public function fetchDir($dir_id)
     {
-        return $this->_resourceContainer->{$name};
+        return $this->getDir($dir_id);
     }
 
     /**
@@ -23,14 +36,9 @@ class Drive_Helper
      * @param int $dir_id
      * @return Drive_Model_Dir
      */
-    public function fetchDir($dir_id) // {{{
+    public function getDir($dir_id) // {{{
     {
-        $dir_id = (int) $dir_id;
-        $dir = $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')->findRow($dir_id);
-
-        if (empty($dir)) {
-            throw new Exception(sprintf('Katalog nie został znaleziony (%d)', $dir_id));
-        }
+        $dir = $this->getMapper()->getDir($dir_id);
 
         if (!$this->isDirReadable($dir)) {
             throw new Exception('Nie masz uprawnień dostępu do tego katalogu');
@@ -86,7 +94,7 @@ class Drive_Helper
             //   moga byc przenoszone w inne miejsce (zmiana nazwy takiego
             //   katalogu jedynie poprzez zmiane nazwy dysku)
 
-            if ($user->hasPerm('administrator')) {
+            if ($this->getSecurity()->isSuperUser()) {
                 $perms = array(
                     self::READ   => true,
                     self::WRITE  => true,
@@ -442,23 +450,47 @@ class Drive_Helper
 
     // resources
 
+    public function setTableProvider(Zefram_Db_Table_Provider $tableProvider = null)
+    {
+        $this->_tableProvider = $tableProvider;
+        return $this;
+    }
+
     public function getTableProvider()
     {
-        return $this->getResource('db.table_provider');
+        return $this->_tableProvider;
+    }
+
+    public function setView(Zend_View_Abstract $view = null)
+    {
+        $this->_view = $view;
+        return $this;
     }
 
     public function getView() // {{{
     {
-        return $this->getResource('view');
+        return $this->_view;
     } // }}}
+
+    public function setSecurity($security = null)
+    {
+        $this->_security = $security;
+        return $this;
+    }
 
     public function getSecurity()
     {
-        return $this->getResource('security');
+        return $this->_security;
+    }
+
+    public function setUserMapper(Core_UserMapperInterface $userMapper = null)
+    {
+        $this->_userMapper = $userMapper;
+        return $this;
     }
 
     public function getUserMapper()
     {
-        return $this->getResource('profile.mapper');
+        return $this->_userMapper;
     }
 }

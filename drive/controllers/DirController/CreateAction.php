@@ -9,8 +9,8 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         $current_user = App::get('user');
         $this->assertAccess($current_user->isAuthenticated());
 
-        $parent_id = $this->_getParam('dir_id');
-        $parent_dir = $this->_helper->drive->fetchDir($parent_id);
+        $parent_id = (int) $this->getScalarParam('dir_id');
+        $parent_dir = $this->getResource('drive.helper')->getDir($parent_id);
 
         $this->assertAccess(
             $this->_helper->drive->isDirWritable($parent_dir),
@@ -39,23 +39,6 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
             ),
         );
 
-        if ($current_user->hasPerm('administrator')) {
-            $elements['owner'] = array(
-                'type' => 'text',
-                'options' => array(
-                    'label'      => 'Właściciel',
-                    'required'   => true,
-                    'validators' => array(
-                        new Core_Validate_UserId,
-                    ),
-                    'value'      => $current_user->id,
-                    'attribs'    => array(
-                        'data-label' => $current_user->first_name . ' ' . $current_user->last_name,
-                    ),
-                ),
-            );
-        }
-
         $this->_form = new Form(array('elements' => $elements));
         $this->_parentDir = $parent_dir;
 
@@ -66,32 +49,17 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
     {
         $user = $this->getSecurity()->getUser();
 
-        $values = $this->_form->getValues();
-        $values['created_by'] = $user->getId();
-        $values['modified_by'] = $user->getId();
+        $data = $this->_form->getValues();
+        $data['created_by']  = $user->getId();
+        $data['modified_by'] = $user->getId();
+        $data['owner']       = $user->getId();
+        $data['drive_id']    = $this->_parentDir->drive_id;
+        $data['parent_id']   = $this->_parentDir->dir_id;
 
-        if (empty($values['owner'])) {
-            $values['owner'] = $user->getId();
-        }
+        $mapper = $this->getResource('drive.helper')->getMapper();
 
-        $db = App::get('db');
-
-        $dirs = Zefram_Db::getTable('Drive_Model_DbTable_Dirs', $db);
-
-        $db->beginTransaction();
-
-        try {
-            $dir = $dirs->createRow($values);
-            $dir->drive_id = $this->_parentDir->drive_id;
-            $dir->parent_id = $this->_parentDir->dir_ id;
-            $dir->save();
-
-            $db->commit();
-
-        } catch (Exception $e) {
-            $db->rollBack();
-            throw $e;
-        }
+        $dir = $mapper->createDir($data);
+        $dir = $mapper->saveDir($dir);
 
         $result = $this->_helper->drive->getViewableData($dir, true);
 

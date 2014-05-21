@@ -211,4 +211,14 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         return $select;
     }
+
+    public function fetchFilesByDir($dir_id, $where = null, $order = null)
+    {
+        $where = (array) $where;
+        $where['dir_id = ?'] = (int) $dir_id;
+
+        $files = $this->_getTable('Drive_Model_DbTable_Files')->fetchAll($where, $order);
+
+        return $files;
+    }
 }
