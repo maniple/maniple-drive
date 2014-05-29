@@ -13,10 +13,10 @@ class Drive_Bootstrap extends Zend_Application_Module_Bootstrap
             'drive.helper' => array(
                 'class' => 'Drive_Helper',
                 'params' => array(
-                    'security'      => 'resource:core.security',
-                    'view'          => 'resource:view',
-                    'tableProvider' => null,
-                    'userMapper'    => null,
+                    'view'            => 'resource:view',
+                    'securityContext' => null,
+                    'tableProvider'   => null,
+                    'userMapper'      => null,
                 ),
             ),
         );

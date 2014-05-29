@@ -26,7 +26,7 @@ var I18n = {
     },
     DirBrowser: {
         noItems:                'Katalog jest pusty',
-        dirActions:             'Akcje',
+        moreOps:                'Więcej',
         eipHint:                'Kliknij aby edytować',
         clickToRenameTooltip:   'Kliknij aby zmienić nazwę katalogu',
         uploadFiles:            'Wgraj pliki',

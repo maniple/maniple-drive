@@ -30,7 +30,7 @@ function DirBrowser(selector, options) { // {{{
     self._options = $.extend({}, options);
 
     // zainicjuj interpolatory stringow
-    self._strInterp = new Viewtils.Interp;
+    self._strInterp = new Viewtils.Interp();
     // TODO self._uriInterp = new Viewtils.Interp({esc: escape});
 
     // zainicjuj widok
@@ -95,12 +95,12 @@ DirBrowser.prototype._initView = function (selector) { // {{{
 
     element.append(this._renderTemplate('DirBrowser'));
     view = new Drive.View(element, [
-        'title', 'messageArea', 'auxMenu', 'dirContents',
+        'dirName', 'messageArea', 'auxMenu', 'dirContents',
         'uploader', 'diskUsage'
     ]);
 
     this._view = view;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._initDiskUsage = function () { // {{{
     var str = Drive.Util.i18n('DirBrowser.diskUsage'),
@@ -125,7 +125,7 @@ DirBrowser.prototype._initDiskUsage = function () { // {{{
     }
 
     this._view.inject('diskUsage', view);
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
     var view = this._view.childViews.diskUsage,
@@ -189,7 +189,7 @@ DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
     if ('none' === element.css('display')) {
         element.css('display', '');
     }
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._initUploader = function () { // {{{
     var self = this,
@@ -211,7 +211,7 @@ DirBrowser.prototype._initUploader = function () { // {{{
     });
 
     self._uploader = uploader;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._initBreadcrumbs = function() { // {{{
     // wrap() tworzy kopie elementu danego jako otaczajacy, bez wzgledu
@@ -219,10 +219,11 @@ DirBrowser.prototype._initBreadcrumbs = function() { // {{{
     var $ = this.$,
         options = this._options.breadcrumbs,
         selector,
-        element,
-        current,
+        container,
         currentClass,
-        separator;
+        after,
+        separator,
+        itemTag;
 
     // jezeli nie podano konfiguracji okruchow, nie inicjuj ich
     if (!options) {
@@ -230,39 +231,41 @@ DirBrowser.prototype._initBreadcrumbs = function() { // {{{
     }
 
     // selector - element zawierajacy okruchy
-    selector = 'string' === typeof options ? options : options.selector;
+    selector = typeof options === 'string' ? options : options.selector;
+    container = selector instanceof $ ? selector.first() : $(selector);
+
+    // sciezka w gore dysku bedzie wyswietlana zamiast ostatniego
+    // elementu w okruchach, lub na samym poczatku okruchow
+    after = $(selector).children(':last-child').prev();
 
     // currentClass - klasa, ktora oznaczony jest element wskazujacy aktualna
     // pozycje w sladzie okruchow
     currentClass = options.currentClass || 'current';
 
-    // separator - ciag znakow do separowania linkow w sladzie okruchow
-    separator = options.separatorClass || '<span class="separator"></span>';
+    // itemTag - element zawierajacy odnosnik i separator
+    itemTag = options.itemTag;
 
-    current = $(selector).find('.' + currentClass);
+    // separator - ciag znakow do separowania linkow w sladzie okruchow,
+    // jezeli nie podano go uzyj domyslnej wartosci SPAN.separator
+    separator = options.separator;
 
-    if (!current.size()) {
-        throw new Error('Element with class \'' + currentClass + '\' not found');
+    if (typeof separator === 'undefined') {
+        separator = '<span class="separator"></span>';
     }
 
-    var element = $('<span/>');
-
-    element.insertBefore(current); // replaceWith usuwa obsluge zdarzen
-    current.appendTo(element);
-
     this._breadcrumbs = {
-        selector: selector,
-        element: element,
-        separator: separator,
-        currentClass: currentClass
+        container:    container,
+        after:        after,
+        separator:    separator,
+        currentClass: currentClass,
+        itemTag:      itemTag
     };
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     var self = this,
         breadcrumbs = self._breadcrumbs,
-        contents,
-        separator;
+        item;
 
     if (!breadcrumbs) {
         return;
@@ -281,116 +284,128 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
         return '<a' + Viewtils.attrs(attrs) + '>' + Viewtils.esc(dir.name) + '</a>';
     }
 
-    contents = [];
+    if (breadcrumbs.after.size()) {
+        // insert links after 'after' element ...
+        breadcrumbs.after.nextAll().remove();
+    } else {
+        // ... or at the beginning of breadcrumb container
+        breadcrumbs.container.empty();
+    }
 
     if (dir.parents) {
         for (i = dir.parents.length - 1; i >= 0; --i) {
-            contents.push(dirLink(dir.parents[i]));
+            item = dirLink(dir.parents[i]);
+            if (breadcrumbs.separator) {
+                item += ' ' + breadcrumbs.separator + ' ';
+            }
+            if (breadcrumbs.itemTag) {
+                item = $(item).wrap('<' + breadcrumbs.itemTag + '/>');
+            }
+            breadcrumbs.container.append(item);
         }
     }
 
-    contents.push('<span class="' + breadcrumbs.currentClass + '">' + Viewtils.esc(dir.name) + '</span>');
+    // current element, create SPAN, wrap it in itemTag if required,
+    // add proper class
+    item = $('<span>' + Viewtils.esc(dir.name) + '</span>');
+    if (breadcrumbs.itemTag) {
+        item = item.wrap('<' + breadcrumbs.itemTag + '/>');
+    }
+    if (breadcrumbs.currentClass) {
+        item.addClass(breadcrumbs.currentClass);
+    }
+    breadcrumbs.container.append(item);
 
-    breadcrumbs
-        .element
-        .html(contents.join(' ' + breadcrumbs.separator + ' '))
-        .find('[data-drop-dir]').each(function() {
-            self._dropTargets.push(this);
-        });
-} // }}}
+    breadcrumbs.container.find('[data-drop-dir]').each(function() {
+        self._dropTargets.push(this);
+    });
+}; // }}}
 
 DirBrowser.prototype._updateAuxmenu = function(dir) { // {{{
     var $ = this.$,
         self = this,
-        menu = [];
+        ops,
+        handlers;
 
     if (self._options.disableAuxmenu) {
         return;
     }
 
+    ops = [];
+    handlers = {};
+
     if (dir.perms.write) {
-        menu.push({
-            title: Drive.Util.i18n('DirBrowser.uploadFiles'),
-            click: function() {
-                self._uploader.showDropZone();
-                return false;
-            }
+        ops.push({
+            op: 'uploadFiles',
+            title: Drive.Util.i18n('DirBrowser.uploadFiles')
         });
+        handlers.uploadFiles = function() {
+            self._uploader.showDropZone();
+        };
 
-        menu.push({
-            title: Drive.Util.i18n('DirBrowser.opCreateDir.opname'),
-            click: function() {
-                self.opCreateDir(dir);
-                return false;
-            }
+        ops.push({
+            op: 'createDir',
+            title: Drive.Util.i18n('DirBrowser.opCreateDir.opname')
         });
+        handlers.createDir = function() {
+            self.opCreateDir(dir);
+        };
     }
-
-    var ops = [];
 
     if (dir.perms.share) {
         ops.push({
-            title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
-            click: function() {
-                self.opShareDir(dir);
-                self._closeOpdd();
-                return false;
-            }
+            op: 'shareDir',
+            title: Drive.Util.i18n('DirBrowser.opShareDir.opname')
         });
+        handlers.shareDir = function() {
+            self.opShareDir(dir);
+            self._closeOpdd();
+        };
     }
 
     if (dir.perms.rename) {
         ops.push({
-            title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
-            click:function() {
-                self.opRenameDir(dir);
-                self._closeOpdd();
-                return false;
-            }
+            op: 'renameDir',
+            title: Drive.Util.i18n('DirBrowser.opRenameDir.opname')
         });
+        handlers.renameDir = function () {
+            self.opRenameDir(dir);
+            self._closeOpdd();
+        };
     }
 
     ops.push({
-        title: 'Właściwości',
-        click: function() {
-            self.opDirDetails(dir);
-            self._closeOpdd();
-            return false;
-        }
+        op: 'dirDetails',
+        title: Drive.Util.i18n('DirBrowser.opDirDetails.opname')
     });
+    handlers.dirDetails = function() {
+        self.opDirDetails(dir);
+        self._closeOpdd();
+    };
 
-    // nie mozna usunac biezacego katalogu
-
-    if (ops.length) {
-        menu.push({
-            title: Drive.Util.i18n('DirBrowser.dirActions'),
-            sub: ops
-        });
-    }
+    // brak opRemoveDir bo nie mozna usunac biezacego katalogu
 
     var auxMenu = self._view.hooks.auxMenu.empty();
 
-    $.each(menu, function(i, item) {
-        if (i > 0) {
-            auxMenu.append(' | ');
+    auxMenu.off('click');
+    auxMenu.on('click', '[data-op]', function () {
+        var op = handlers[this.getAttribute('data-op')];
+        if (op) {
+            op();
         }
-
-        if (item.sub) {
-            auxMenu.append(App.View.opdd(item.sub, {title: item.title, tip: true}));
-        } else {
-            auxMenu.append(
-                $('<a href="#" class="oplink"/>')
-                    .text('' + item.title)
-                    .click(function(e) {
-                        if (typeof item.click == 'function') {
-                            item.click.call(this, e);
-                        }
-                        return false;
-                    })
-            );
-        }
+        return false;
     });
-} // }}}
+
+    auxMenu.append(
+        self._renderTemplate('DirBrowser.auxMenu', {
+            ops: ops.slice(0, 2),
+            moreOps: ops.slice(2),
+            str: {
+                moreOps: Drive.Util.i18n('DirBrowser.moreOps')
+            }
+        })
+    );
+}; // }}}
 
 DirBrowser.prototype._initWidthChecker = function() { // {{{
     // wykrywanie szerokosci kontenera na liste plikow
@@ -417,11 +432,11 @@ DirBrowser.prototype._initWidthChecker = function() { // {{{
 
     widthChecker();
     $(window).resize(widthChecker);
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._dirUrl = function(dir) { // {{{
     return '#dir:' + dir.id;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._eip = function(selector, url, options) { // {{{
     var $ = this.$,
@@ -440,11 +455,11 @@ DirBrowser.prototype._eip = function(selector, url, options) { // {{{
 
     $.extend(options, opts);
     $(selector).eip(url, options);
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
     var $ = this.$,
-        url = Drive.Util.uri(this._uriTemplates.dir.read, {id: dirId}); 
+        url = Drive.Util.uri(this._uriTemplates.dir.read, {dir_id: dirId}); 
 
     $('#drive-loading').text('Ładowanie zawartości katalogu...');
 
@@ -462,11 +477,11 @@ DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
             success.call(this, response.data);
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.setDir = function (dir) { // {{{
     var self = this,
-        title, url;
+        dirName, url;
 
     self._currentDir = dir;
     self._dropTargets = [];
@@ -475,20 +490,20 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
     self._updateAuxmenu(dir);
 
     // podepnij zmiane nazwy katalogu do tytulu strony
-    title = self._view.hooks.title
+    dirName = self._view.hooks.dirName
         .text(dir.name)
         .unbind('click')
         .removeAttr('title')
         .addClass('disabled');
 
     if (dir.perms.rename) {
-        title
+        dirName
             .removeClass('disabled')
             .attr('title', Drive.Util.i18n('DirBrowser.clickToRenameTooltip'))
             .click(function() {
                 self.opRenameDir(dir);
                 return false;
-            })
+            });
     }
 
     // jezeli nie jest dostepny url do uploadu plikow wylacz uploadera
@@ -504,7 +519,7 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
 
     // pokaz zawartosc katalogu
     self._renderDirContents(dir);
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     var self = this,
@@ -524,7 +539,7 @@ DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
     var $ = this.$,
@@ -545,19 +560,23 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
             }, 10);
         },
         complete: function (response) {
-            var responseDir = response.dir;
+            var responseDir = response.dir,
+                dirName = responseDir.name;
 
-            Drive.Util.assert(responseDir.id == dir.id, 'Unexpected directory id in response');
+            Drive.Util.assert(responseDir.id == dir.id, 'Unexpected directory ID in response');
 
             // zaktualizuj nazwe katalogu wyswietlona w naglowku oraz w okruchach,
             // o ile modyfikowany katalog jest katalogiem biezacym
             if (self._currentDir && responseDir.id == self._currentDir.id) {
-                $('h1 .drive-dir-rename, #breadcrumbs .current').text(responseDir.name);
+                self._view.hooks.dirName.text(dirName);
+                if (self._breadcrumbs) {
+                    self._breadcrumbs.container.find(':last-child').text(dirName);
+                }
             }
 
             if (dir.element) {
                 var oldElement, newElement;
-               
+
                 oldElement = dir.element;
                 $.extend(dir, responseDir);
 
@@ -570,7 +589,7 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
                 });
 
                 self._removeDropTarget(oldElement);
-                self._dropTargets.push(view.el);
+                // self._dropTargets.push(view.el);
 
                 oldElement.remove();
                 dir.element = newElement;
@@ -581,7 +600,7 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
     var self = this,
@@ -600,7 +619,7 @@ DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opShareDir = function(dir) { // {{{
     var $ = this.$,
@@ -650,7 +669,7 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
 
                 function highlightUser(element) {
                     $(element).effect('highlight', {color: highlightColor}, 1000);
-                };
+                }
 
                 function userBuilder(user) {
                     var vars = {
@@ -708,17 +727,17 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
                 // dostosuj wielkosc okna dialogowego do zawartosci, w osobnym
                 // watku, w przeciwnym razie jego rozmiar nie zostanie poprawnie
                 // obliczony
+
    //            setTimeout(function() {
 //                    dialog.height(content.outerHeight(), true);
 
                     // zeby overflow:auto zadzialalo
   //                  content.height(content.height());
  //               }, 10);
-
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._removeDir = function (dir) { // {{{
     // remove dir element from dir contents listing
@@ -736,10 +755,10 @@ DirBrowser.prototype._removeDir = function (dir) { // {{{
     if (index > -1) {
         currentDir.subdirs = subdirs.slice(0, index).concat(subdirs.slice(index + 1));
     }
-    if (!(currentDir.subdirs.length + currentDir.files.length)) {
+    if (0 === (currentDir.subdirs.length + currentDir.files.length)) {
         this._view.childViews.dirContents.element.addClass('no-items');
     }
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opRemoveDir = function(dir) { // {{{
     var self = this,
@@ -760,7 +779,7 @@ DirBrowser.prototype.opRemoveDir = function(dir) { // {{{
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opDirDetails = function(dir) { // {{{
     var self = this,
@@ -785,7 +804,7 @@ DirBrowser.prototype.opDirDetails = function(dir) { // {{{
                 return {id: dir.id};
             },
             after_save: function(response) {
-                Drive.Util.assert(response.id == dir.id, 'Unexpected directory id in response');
+                Drive.Util.assert(response.id == dir.id, 'Unexpected directory ID in response');
 
                 dir.owner = response.owner;
                 dir.mtime = response.mtime;
@@ -815,7 +834,7 @@ DirBrowser.prototype.opDirDetails = function(dir) { // {{{
             }
         }]
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opRenameFile = function(file) { // {{{
     var $ = this.$,
@@ -852,7 +871,7 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._removeFile = function (file) { // {{{
     // remove file element from dir contents listing
@@ -872,7 +891,7 @@ DirBrowser.prototype._removeFile = function (file) { // {{{
     if (!(currentDir.subdirs.length + currentDir.files.length)) {
         this._view.childViews.dirContents.element.addClass('no-items');
     }
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opMoveFile = function(file, dirId) { // {{{
     var self = this,
@@ -887,7 +906,7 @@ DirBrowser.prototype.opMoveFile = function(file, dirId) { // {{{
             self._removeFile(file);
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opRemoveFile = function(file) { // {{{
     var self = this,
@@ -901,14 +920,14 @@ DirBrowser.prototype.opRemoveFile = function(file) { // {{{
         title:       str.title,
         submitLabel: str.submit,
         complete: function (response) {
-            response = response || {error: 'Nieoczekiwana odpowiedź od serwera'}
+            response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
                 self._removeFile(file);
                 self._updateDiskUsage(response.disk_usage, response.quota);
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opEditFile = function(file) { // {{{
     var self = this,
@@ -922,13 +941,13 @@ DirBrowser.prototype.opEditFile = function(file) { // {{{
         title:       str.title,
         submitLabel: str.submit,
         complete: function (response) {
-            response = response || {error: 'Nieoczekiwana odpowiedź od serwera'}
+            response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
                 App.flash(str.messageSuccess);
             }
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.opFileDetails = function(file) { // {{{
     var self = this,
@@ -985,7 +1004,7 @@ DirBrowser.prototype.opFileDetails = function(file) { // {{{
         }]
     });
 
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.addSubdir = function(dir) { // {{{
     var element = this._renderSubdir(dir),
@@ -995,7 +1014,7 @@ DirBrowser.prototype.addSubdir = function(dir) { // {{{
 
     dirContentsView.element.removeClass('no-items');
     this.$(window).trigger('resize');
-} // }}}
+}; // }}}
 
 DirBrowser.prototype.addFile = function(file) { // {{{
     var element = this._renderFile(file),
@@ -1005,11 +1024,30 @@ DirBrowser.prototype.addFile = function(file) { // {{{
 
     dirContentsView.element.removeClass('no-items');
     this.$(window).trigger('resize');
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._closeOpdd = function() { // {{{
+    this._view.element.find('[data-toggle="dropdown"]').each(function () {
+        var el = $(this),
+            target = el.attr('data-target') || el.attr('href'),
+            parent;
+
+        try {
+            target = String(target).match(/#([^\s]*)$/)[1];
+            parent = target && $(target);
+        } catch (e) {
+        }
+
+        if (!parent || !parent.length) {
+            parent = el.parent();
+        }
+
+        parent.removeClass('open');
+    });
+
+    // deprecated
     this.$.fn.opdd.close();
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._dirEntryOpdd = function(entry, items) { // {{{
     var opdd = App.View.opdd(items);
@@ -1038,7 +1076,7 @@ DirBrowser.prototype._dirEntryOpdd = function(entry, items) { // {{{
     });
 
     return opdd;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._subdirOpdd = function(dir) { // {{{
     var self = this,
@@ -1081,7 +1119,7 @@ DirBrowser.prototype._subdirOpdd = function(dir) { // {{{
         ]);
 
     return opdd;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._fileOpdd = function(file) { // {{{
     var self = this,
@@ -1135,7 +1173,7 @@ DirBrowser.prototype._fileOpdd = function(file) { // {{{
         ]);
 
     return opdd;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._removeDropTarget = function(element) { // {{{
     // element - element dokumentu reprezentujacy wpis w katalogu
@@ -1148,7 +1186,7 @@ DirBrowser.prototype._removeDropTarget = function(element) { // {{{
             self._dropTargets.splice(index, 1);
         }
     });
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._getDropDirElement = function(position, dragDirId) { // {{{
     // teraz trzeba zlapac element na wspolrzednych x i y ktory ma
@@ -1181,7 +1219,7 @@ DirBrowser.prototype._getDropDirElement = function(position, dragDirId) { // {{{
         }
     });
     return target;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {{{
     var $ = this.$,
@@ -1230,7 +1268,7 @@ DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {
 
             // zaktualizuj tresc tylko jesli jest ona rozna od poprzedniej
             if (tooltipText != prevTooltipText) {
-                self._grabTooltip.html(tooltipText)
+                self._grabTooltip.html(tooltipText);
                 prevTooltipText = tooltipText;
             }
 
@@ -1263,16 +1301,16 @@ DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {
     });
 
     element.addClass('grabbable').attr('title', str.tooltipText);
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._renderTemplate = function(id, vars) { // {{{
     return Drive.Util.render(id, vars || {}, this.$);
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._renderHeader = function() { // {{{
     var str = Drive.Util.i18n('DirBrowser.dirContents');
     return this._renderTemplate('DirBrowser.dirContents.header', {str: str});
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._renderUpdir = function (dir) { // {{{
     var self = this;
@@ -1299,7 +1337,7 @@ DirBrowser.prototype._renderUpdir = function (dir) { // {{{
     }
 
     return element;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._renderSubdir = function(dir, replace) { // {{{
     var self = this;
@@ -1346,7 +1384,7 @@ DirBrowser.prototype._renderSubdir = function(dir, replace) { // {{{
     dir.element = element;
 
     return element;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._renderFile = function(file, replace) { // {{{
     var self = this,
@@ -1382,7 +1420,7 @@ DirBrowser.prototype._renderFile = function(file, replace) { // {{{
 
     // zastap juz istniejacy element jeszcze raz wygenerowanym widokiem
     if (replace && file.element) {
-        var old = file.element
+        var old = file.element;
 
         old.replaceWith(element);
         old.remove();
@@ -1392,7 +1430,7 @@ DirBrowser.prototype._renderFile = function(file, replace) { // {{{
     file.element = element;
 
     return element;
-} // }}}
+}; // }}}
 
 DirBrowser.prototype._renderDirContents = function (dir) { // {{{
     var $ = this.$,
@@ -1425,5 +1463,6 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
     //view.find('[data-drop-dir]').each(function() {
     //    self._dropTargets.push(this);
     //});
-} // }}}
+}; // }}}
+
 

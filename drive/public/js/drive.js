@@ -32,7 +32,7 @@ var Drive = {
             self._options = $.extend({}, options);
 
             // zainicjuj interpolatory stringow
-            self._strInterp = new Viewtils.Interp;
+            self._strInterp = new Viewtils.Interp();
             // TODO self._uriInterp = new Viewtils.Interp({esc: escape});
 
             // zainicjuj widok
@@ -97,12 +97,12 @@ var Drive = {
 
             element.append(this._renderTemplate('DirBrowser'));
             view = new Drive.View(element, [
-                'title', 'messageArea', 'auxMenu', 'dirContents',
+                'dirName', 'messageArea', 'auxMenu', 'dirContents',
                 'uploader', 'diskUsage'
             ]);
 
             this._view = view;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._initDiskUsage = function () { // {{{
             var str = Drive.Util.i18n('DirBrowser.diskUsage'),
@@ -127,7 +127,7 @@ var Drive = {
             }
 
             this._view.inject('diskUsage', view);
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
             var view = this._view.childViews.diskUsage,
@@ -191,7 +191,7 @@ var Drive = {
             if ('none' === element.css('display')) {
                 element.css('display', '');
             }
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._initUploader = function () { // {{{
             var self = this,
@@ -213,7 +213,7 @@ var Drive = {
             });
 
             self._uploader = uploader;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._initBreadcrumbs = function() { // {{{
             // wrap() tworzy kopie elementu danego jako otaczajacy, bez wzgledu
@@ -221,10 +221,11 @@ var Drive = {
             var $ = this.$,
                 options = this._options.breadcrumbs,
                 selector,
-                element,
-                current,
+                container,
                 currentClass,
-                separator;
+                after,
+                separator,
+                itemTag;
 
             // jezeli nie podano konfiguracji okruchow, nie inicjuj ich
             if (!options) {
@@ -232,39 +233,41 @@ var Drive = {
             }
 
             // selector - element zawierajacy okruchy
-            selector = 'string' === typeof options ? options : options.selector;
+            selector = typeof options === 'string' ? options : options.selector;
+            container = selector instanceof $ ? selector.first() : $(selector);
+
+            // sciezka w gore dysku bedzie wyswietlana zamiast ostatniego
+            // elementu w okruchach, lub na samym poczatku okruchow
+            after = $(selector).children(':last-child').prev();
 
             // currentClass - klasa, ktora oznaczony jest element wskazujacy aktualna
             // pozycje w sladzie okruchow
             currentClass = options.currentClass || 'current';
 
-            // separator - ciag znakow do separowania linkow w sladzie okruchow
-            separator = options.separatorClass || '<span class="separator"></span>';
+            // itemTag - element zawierajacy odnosnik i separator
+            itemTag = options.itemTag;
 
-            current = $(selector).find('.' + currentClass);
+            // separator - ciag znakow do separowania linkow w sladzie okruchow,
+            // jezeli nie podano go uzyj domyslnej wartosci SPAN.separator
+            separator = options.separator;
 
-            if (!current.size()) {
-                throw new Error('Element with class \'' + currentClass + '\' not found');
+            if (typeof separator === 'undefined') {
+                separator = '<span class="separator"></span>';
             }
 
-            var element = $('<span/>');
-
-            element.insertBefore(current); // replaceWith usuwa obsluge zdarzen
-            current.appendTo(element);
-
             this._breadcrumbs = {
-                selector: selector,
-                element: element,
-                separator: separator,
-                currentClass: currentClass
+                container:    container,
+                after:        after,
+                separator:    separator,
+                currentClass: currentClass,
+                itemTag:      itemTag
             };
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
             var self = this,
                 breadcrumbs = self._breadcrumbs,
-                contents,
-                separator;
+                item;
 
             if (!breadcrumbs) {
                 return;
@@ -283,116 +286,128 @@ var Drive = {
                 return '<a' + Viewtils.attrs(attrs) + '>' + Viewtils.esc(dir.name) + '</a>';
             }
 
-            contents = [];
+            if (breadcrumbs.after.size()) {
+                // insert links after 'after' element ...
+                breadcrumbs.after.nextAll().remove();
+            } else {
+                // ... or at the beginning of breadcrumb container
+                breadcrumbs.container.empty();
+            }
 
             if (dir.parents) {
                 for (i = dir.parents.length - 1; i >= 0; --i) {
-                    contents.push(dirLink(dir.parents[i]));
+                    item = dirLink(dir.parents[i]);
+                    if (breadcrumbs.separator) {
+                        item += ' ' + breadcrumbs.separator + ' ';
+                    }
+                    if (breadcrumbs.itemTag) {
+                        item = $(item).wrap('<' + breadcrumbs.itemTag + '/>');
+                    }
+                    breadcrumbs.container.append(item);
                 }
             }
 
-            contents.push('<span class="' + breadcrumbs.currentClass + '">' + Viewtils.esc(dir.name) + '</span>');
+            // current element, create SPAN, wrap it in itemTag if required,
+            // add proper class
+            item = $('<span>' + Viewtils.esc(dir.name) + '</span>');
+            if (breadcrumbs.itemTag) {
+                item = item.wrap('<' + breadcrumbs.itemTag + '/>');
+            }
+            if (breadcrumbs.currentClass) {
+                item.addClass(breadcrumbs.currentClass);
+            }
+            breadcrumbs.container.append(item);
 
-            breadcrumbs
-                .element
-                .html(contents.join(' ' + breadcrumbs.separator + ' '))
-                .find('[data-drop-dir]').each(function() {
-                    self._dropTargets.push(this);
-                });
-        } // }}}
+            breadcrumbs.container.find('[data-drop-dir]').each(function() {
+                self._dropTargets.push(this);
+            });
+        }; // }}}
 
         DirBrowser.prototype._updateAuxmenu = function(dir) { // {{{
             var $ = this.$,
                 self = this,
-                menu = [];
+                ops,
+                handlers;
 
             if (self._options.disableAuxmenu) {
                 return;
             }
 
+            ops = [];
+            handlers = {};
+
             if (dir.perms.write) {
-                menu.push({
-                    title: Drive.Util.i18n('DirBrowser.uploadFiles'),
-                    click: function() {
-                        self._uploader.showDropZone();
-                        return false;
-                    }
+                ops.push({
+                    op: 'uploadFiles',
+                    title: Drive.Util.i18n('DirBrowser.uploadFiles')
                 });
+                handlers.uploadFiles = function() {
+                    self._uploader.showDropZone();
+                };
 
-                menu.push({
-                    title: Drive.Util.i18n('DirBrowser.opCreateDir.opname'),
-                    click: function() {
-                        self.opCreateDir(dir);
-                        return false;
-                    }
+                ops.push({
+                    op: 'createDir',
+                    title: Drive.Util.i18n('DirBrowser.opCreateDir.opname')
                 });
+                handlers.createDir = function() {
+                    self.opCreateDir(dir);
+                };
             }
-
-            var ops = [];
 
             if (dir.perms.share) {
                 ops.push({
-                    title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
-                    click: function() {
-                        self.opShareDir(dir);
-                        self._closeOpdd();
-                        return false;
-                    }
+                    op: 'shareDir',
+                    title: Drive.Util.i18n('DirBrowser.opShareDir.opname')
                 });
+                handlers.shareDir = function() {
+                    self.opShareDir(dir);
+                    self._closeOpdd();
+                };
             }
 
             if (dir.perms.rename) {
                 ops.push({
-                    title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
-                    click:function() {
-                        self.opRenameDir(dir);
-                        self._closeOpdd();
-                        return false;
-                    }
+                    op: 'renameDir',
+                    title: Drive.Util.i18n('DirBrowser.opRenameDir.opname')
                 });
+                handlers.renameDir = function () {
+                    self.opRenameDir(dir);
+                    self._closeOpdd();
+                };
             }
 
             ops.push({
-                title: 'Właściwości',
-                click: function() {
-                    self.opDirDetails(dir);
-                    self._closeOpdd();
-                    return false;
-                }
+                op: 'dirDetails',
+                title: Drive.Util.i18n('DirBrowser.opDirDetails.opname')
             });
+            handlers.dirDetails = function() {
+                self.opDirDetails(dir);
+                self._closeOpdd();
+            };
 
-            // nie mozna usunac biezacego katalogu
-
-            if (ops.length) {
-                menu.push({
-                    title: Drive.Util.i18n('DirBrowser.dirActions'),
-                    sub: ops
-                });
-            }
+            // brak opRemoveDir bo nie mozna usunac biezacego katalogu
 
             var auxMenu = self._view.hooks.auxMenu.empty();
 
-            $.each(menu, function(i, item) {
-                if (i > 0) {
-                    auxMenu.append(' | ');
+            auxMenu.off('click');
+            auxMenu.on('click', '[data-op]', function () {
+                var op = handlers[this.getAttribute('data-op')];
+                if (op) {
+                    op();
                 }
-
-                if (item.sub) {
-                    auxMenu.append(App.View.opdd(item.sub, {title: item.title, tip: true}));
-                } else {
-                    auxMenu.append(
-                        $('<a href="#" class="oplink"/>')
-                            .text('' + item.title)
-                            .click(function(e) {
-                                if (typeof item.click == 'function') {
-                                    item.click.call(this, e);
-                                }
-                                return false;
-                            })
-                    );
-                }
+                return false;
             });
-        } // }}}
+
+            auxMenu.append(
+                self._renderTemplate('DirBrowser.auxMenu', {
+                    ops: ops.slice(0, 2),
+                    moreOps: ops.slice(2),
+                    str: {
+                        moreOps: Drive.Util.i18n('DirBrowser.moreOps')
+                    }
+                })
+            );
+        }; // }}}
 
         DirBrowser.prototype._initWidthChecker = function() { // {{{
             // wykrywanie szerokosci kontenera na liste plikow
@@ -419,11 +434,11 @@ var Drive = {
 
             widthChecker();
             $(window).resize(widthChecker);
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._dirUrl = function(dir) { // {{{
             return '#dir:' + dir.id;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._eip = function(selector, url, options) { // {{{
             var $ = this.$,
@@ -442,11 +457,11 @@ var Drive = {
 
             $.extend(options, opts);
             $(selector).eip(url, options);
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
             var $ = this.$,
-                url = Drive.Util.uri(this._uriTemplates.dir.view, {id: dirId});
+                url = Drive.Util.uri(this._uriTemplates.dir.read, {dir_id: dirId});
 
             $('#drive-loading').text('Ładowanie zawartości katalogu...');
 
@@ -464,11 +479,11 @@ var Drive = {
                     success.call(this, response.data);
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.setDir = function (dir) { // {{{
             var self = this,
-                title, url;
+                dirName, url;
 
             self._currentDir = dir;
             self._dropTargets = [];
@@ -477,25 +492,25 @@ var Drive = {
             self._updateAuxmenu(dir);
 
             // podepnij zmiane nazwy katalogu do tytulu strony
-            title = self._view.hooks.title
+            dirName = self._view.hooks.dirName
                 .text(dir.name)
                 .unbind('click')
                 .removeAttr('title')
                 .addClass('disabled');
 
             if (dir.perms.rename) {
-                title
+                dirName
                     .removeClass('disabled')
                     .attr('title', Drive.Util.i18n('DirBrowser.clickToRenameTooltip'))
                     .click(function() {
                         self.opRenameDir(dir);
                         return false;
-                    })
+                    });
             }
 
             // jezeli nie jest dostepny url do uploadu plikow wylacz uploadera
             if (dir.perms.write) {
-                url = Drive.Util.uri(self._uriTemplates.file.upload, dir);
+                url = Drive.Util.uri(self._uriTemplates.dir.upload, dir);
                 self._uploader.disableUpload(false).setUploadUrl(url);
             } else {
                 self._uploader.disableUpload();
@@ -506,7 +521,7 @@ var Drive = {
 
             // pokaz zawartosc katalogu
             self._renderDirContents(dir);
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
             var self = this,
@@ -526,7 +541,7 @@ var Drive = {
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
             var $ = this.$,
@@ -547,14 +562,18 @@ var Drive = {
                     }, 10);
                 },
                 complete: function (response) {
-                    var responseDir = response.dir;
+                    var responseDir = response.dir,
+                        dirName = responseDir.name;
 
-                    Drive.Util.assert(responseDir.id == dir.id, 'Unexpected directory id in response');
+                    Drive.Util.assert(responseDir.id == dir.id, 'Unexpected directory ID in response');
 
                     // zaktualizuj nazwe katalogu wyswietlona w naglowku oraz w okruchach,
                     // o ile modyfikowany katalog jest katalogiem biezacym
                     if (self._currentDir && responseDir.id == self._currentDir.id) {
-                        $('h1 .drive-dir-rename, #breadcrumbs .current').text(responseDir.name);
+                        self._view.hooks.dirName.text(dirName);
+                        if (self._breadcrumbs) {
+                            self._breadcrumbs.container.find(':last-child').text(dirName);
+                        }
                     }
 
                     if (dir.element) {
@@ -572,7 +591,7 @@ var Drive = {
                         });
 
                         self._removeDropTarget(oldElement);
-                        self._dropTargets.push(view.el);
+                        // self._dropTargets.push(view.el);
 
                         oldElement.remove();
                         dir.element = newElement;
@@ -583,7 +602,7 @@ var Drive = {
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
             var self = this,
@@ -602,7 +621,7 @@ var Drive = {
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opShareDir = function(dir) { // {{{
             var $ = this.$,
@@ -652,7 +671,7 @@ var Drive = {
 
                         function highlightUser(element) {
                             $(element).effect('highlight', {color: highlightColor}, 1000);
-                        };
+                        }
 
                         function userBuilder(user) {
                             var vars = {
@@ -710,17 +729,17 @@ var Drive = {
                         // dostosuj wielkosc okna dialogowego do zawartosci, w osobnym
                         // watku, w przeciwnym razie jego rozmiar nie zostanie poprawnie
                         // obliczony
+
            //            setTimeout(function() {
         //                    dialog.height(content.outerHeight(), true);
 
                             // zeby overflow:auto zadzialalo
           //                  content.height(content.height());
          //               }, 10);
-
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._removeDir = function (dir) { // {{{
             // remove dir element from dir contents listing
@@ -738,10 +757,10 @@ var Drive = {
             if (index > -1) {
                 currentDir.subdirs = subdirs.slice(0, index).concat(subdirs.slice(index + 1));
             }
-            if (!(currentDir.subdirs.length + currentDir.files.length)) {
+            if (0 === (currentDir.subdirs.length + currentDir.files.length)) {
                 this._view.childViews.dirContents.element.addClass('no-items');
             }
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opRemoveDir = function(dir) { // {{{
             var self = this,
@@ -762,7 +781,7 @@ var Drive = {
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opDirDetails = function(dir) { // {{{
             var self = this,
@@ -787,7 +806,7 @@ var Drive = {
                         return {id: dir.id};
                     },
                     after_save: function(response) {
-                        Drive.Util.assert(response.id == dir.id, 'Unexpected directory id in response');
+                        Drive.Util.assert(response.id == dir.id, 'Unexpected directory ID in response');
 
                         dir.owner = response.owner;
                         dir.mtime = response.mtime;
@@ -817,7 +836,7 @@ var Drive = {
                     }
                 }]
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opRenameFile = function(file) { // {{{
             var $ = this.$,
@@ -854,7 +873,7 @@ var Drive = {
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._removeFile = function (file) { // {{{
             // remove file element from dir contents listing
@@ -874,7 +893,7 @@ var Drive = {
             if (!(currentDir.subdirs.length + currentDir.files.length)) {
                 this._view.childViews.dirContents.element.addClass('no-items');
             }
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opMoveFile = function(file, dirId) { // {{{
             var self = this,
@@ -889,7 +908,7 @@ var Drive = {
                     self._removeFile(file);
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opRemoveFile = function(file) { // {{{
             var self = this,
@@ -903,14 +922,14 @@ var Drive = {
                 title:       str.title,
                 submitLabel: str.submit,
                 complete: function (response) {
-                    response = response || {error: 'Nieoczekiwana odpowiedź od serwera'}
+                    response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
                         self._removeFile(file);
                         self._updateDiskUsage(response.disk_usage, response.quota);
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opEditFile = function(file) { // {{{
             var self = this,
@@ -924,13 +943,13 @@ var Drive = {
                 title:       str.title,
                 submitLabel: str.submit,
                 complete: function (response) {
-                    response = response || {error: 'Nieoczekiwana odpowiedź od serwera'}
+                    response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
                         App.flash(str.messageSuccess);
                     }
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.opFileDetails = function(file) { // {{{
             var self = this,
@@ -987,7 +1006,7 @@ var Drive = {
                 }]
             });
 
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.addSubdir = function(dir) { // {{{
             var element = this._renderSubdir(dir),
@@ -997,7 +1016,7 @@ var Drive = {
 
             dirContentsView.element.removeClass('no-items');
             this.$(window).trigger('resize');
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype.addFile = function(file) { // {{{
             var element = this._renderFile(file),
@@ -1007,11 +1026,30 @@ var Drive = {
 
             dirContentsView.element.removeClass('no-items');
             this.$(window).trigger('resize');
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._closeOpdd = function() { // {{{
+            this._view.element.find('[data-toggle="dropdown"]').each(function () {
+                var el = $(this),
+                    target = el.attr('data-target') || el.attr('href'),
+                    parent;
+
+                try {
+                    target = String(target).match(/#([^\s]*)$/)[1];
+                    parent = target && $(target);
+                } catch (e) {
+                }
+
+                if (!parent || !parent.length) {
+                    parent = el.parent();
+                }
+
+                parent.removeClass('open');
+            });
+
+            // deprecated
             this.$.fn.opdd.close();
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._dirEntryOpdd = function(entry, items) { // {{{
             var opdd = App.View.opdd(items);
@@ -1040,7 +1078,7 @@ var Drive = {
             });
 
             return opdd;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._subdirOpdd = function(dir) { // {{{
             var self = this,
@@ -1083,14 +1121,14 @@ var Drive = {
                 ]);
 
             return opdd;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._fileOpdd = function(file) { // {{{
             var self = this,
                 opdd = self._dirEntryOpdd(file, [
                     {
                         title: Drive.Util.i18n('DirBrowser.opOpenFile.opname'),
-                        url: Drive.Util.uri(self._uriTemplates.file.view, file),
+                        url: Drive.Util.uri(self._uriTemplates.file.read, file),
                         click: function() {
                             // zwrocenie false spowoduje, ze nie otworzy sie plik,
                             // trzeba puscic event i zamknac opdd w osobnym watku
@@ -1137,7 +1175,7 @@ var Drive = {
                 ]);
 
             return opdd;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._removeDropTarget = function(element) { // {{{
             // element - element dokumentu reprezentujacy wpis w katalogu
@@ -1150,7 +1188,7 @@ var Drive = {
                     self._dropTargets.splice(index, 1);
                 }
             });
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._getDropDirElement = function(position, dragDirId) { // {{{
             // teraz trzeba zlapac element na wspolrzednych x i y ktory ma
@@ -1183,7 +1221,7 @@ var Drive = {
                 }
             });
             return target;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {{{
             var $ = this.$,
@@ -1232,7 +1270,7 @@ var Drive = {
 
                     // zaktualizuj tresc tylko jesli jest ona rozna od poprzedniej
                     if (tooltipText != prevTooltipText) {
-                        self._grabTooltip.html(tooltipText)
+                        self._grabTooltip.html(tooltipText);
                         prevTooltipText = tooltipText;
                     }
 
@@ -1265,16 +1303,16 @@ var Drive = {
             });
 
             element.addClass('grabbable').attr('title', str.tooltipText);
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._renderTemplate = function(id, vars) { // {{{
             return Drive.Util.render(id, vars || {}, this.$);
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._renderHeader = function() { // {{{
             var str = Drive.Util.i18n('DirBrowser.dirContents');
             return this._renderTemplate('DirBrowser.dirContents.header', {str: str});
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._renderUpdir = function (dir) { // {{{
             var self = this;
@@ -1301,7 +1339,7 @@ var Drive = {
             }
 
             return element;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._renderSubdir = function(dir, replace) { // {{{
             var self = this;
@@ -1348,7 +1386,7 @@ var Drive = {
             dir.element = element;
 
             return element;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._renderFile = function(file, replace) { // {{{
             var self = this,
@@ -1370,7 +1408,7 @@ var Drive = {
 
             // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
             // w nim zawarte rowniez sa czytelne
-            var url = Drive.Util.uri(self._uriTemplates.file.view, file);
+            var url = Drive.Util.uri(self._uriTemplates.file.read, file);
             hooks.name.attr('data-url', url);
 
             // TODO isFileMovable? file.perms.move?
@@ -1384,7 +1422,7 @@ var Drive = {
 
             // zastap juz istniejacy element jeszcze raz wygenerowanym widokiem
             if (replace && file.element) {
-                var old = file.element
+                var old = file.element;
 
                 old.replaceWith(element);
                 old.remove();
@@ -1394,7 +1432,7 @@ var Drive = {
             file.element = element;
 
             return element;
-        } // }}}
+        }; // }}}
 
         DirBrowser.prototype._renderDirContents = function (dir) { // {{{
             var $ = this.$,
@@ -1427,7 +1465,7 @@ var Drive = {
             //view.find('[data-drop-dir]').each(function() {
             //    self._dropTargets.push(this);
             //});
-        } // }}}
+        }; // }}}
         return DirBrowser;
     })(),
     FileUpload: (function() {
@@ -2108,140 +2146,6 @@ var Drive = {
         } // }}}
         return FileUpload;
     })(),
-    I18n: (function() {
-        var I18n = {
-            Uploader: {
-                noItems:                'Brak plików do przesłania',
-                filename:               'Plik',
-                size:                   'Rozmiar',
-                progress:               'Postęp',
-                waiting:                'Oczekiwanie',
-                uploading:              'Przesyłanie...',
-                uploaded:               'Przesłano',
-                canceled:               'Anulowano',
-                error:                  'Błąd',
-                queuePaneTitle:         'Przesyłanie plików',
-                openButtonText:         'Szczegóły',
-                cleanButtonText:        'Wyczyść',
-                cleanButtonTooltip:     'Usuwa z listy pliki, których przesyłanie zostało zakończone lub anulowane',
-                cancelButtonText:       'Ukryj',
-                cancelButtonTooltip:    'Kliknij aby anulować',
-                uploadSuccess:          'Wszystkie pliki zostały pomyślnie przesłane',
-                uploadError:            'Przesyłanie zakończone. Wystąpiły błędy',
-                uploadProgress:         'Przesyłanie pliku {number} z {total} ... {percent}%',
-                dropHere:               'Przeciągnij i upuść pliki tutaj.',
-                dropHereOpera:          'Kliknij aby dodać pliki. <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
-                dropHereLegacy:         'Kliknij aby dodać plik. <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
-                responseError:          'Nieoczekiwana odpowiedź od serwera',
-                cancelUploadConfirm:    'Opuszczenie tej strony przerwie przesyłanie plików. Czy na pewno chcesz przejść do innej strony?',
-            },
-            DirBrowser: {
-                noItems:                'Katalog jest pusty',
-                dirActions:             'Akcje',
-                eipHint:                'Kliknij aby edytować',
-                clickToRenameTooltip:   'Kliknij aby zmienić nazwę katalogu',
-                uploadFiles:            'Wgraj pliki',
-                diskUsage: {
-                    used:               'Wykorzystanie dysku:',
-                    available:          'Dostępne miejsce:',
-                    unlimited:          'Bez ograniczeń',
-                },
-                grab: {
-                    tooltip:            'Przeciągnij aby przenieść do innego katalogu',
-                    dropDirTooltip:     'Przenieś <strong>{source}</strong> do <strong>{target}</strong>',
-                    noDropDirTooltip:   'Przenieś <strong>{source}</strong>'
-                },
-                dirContents: {
-                    name:               'Nazwa',
-                    owner:              'Właściciel',
-                    size:               'Rozmiar',
-                    mtime:              'Zmodyfikowany'
-                },
-                opCreateDir: {
-                    opname:             'Nowy katalog',
-                    title:              'Nowy katalog',
-                    submit:             'Zastosuj'
-                },
-                opRenameDir: {
-                    opname:             'Zmień nazwę',
-                    title:              'Zmiana nazwy katalogu',
-                    submit:             'Zastosuj'
-                },
-                opRemoveDir: {
-                    opname:             'Usuń',
-                    title:              'Usunięcie katalogu',
-                    submit:             'Wykonaj'
-                },
-                opDirDetails: {
-                    opname:             'Właściwości',
-                    title:              'Właściwości katalogu',
-                    submit:             'Gotowe',
-                    name:               'Nazwa',
-                    owner:              'Właściciel',
-                    mtime:              'Ostatnia modyfikacja',
-                    ctime:              'Utworzony',
-                    timeSeparator:      'przez'
-                },
-                opShareDir: {
-                    opname:             'Udostępnianie',
-                    title:              'Udostępnianie katalogu',
-                    submit:             'Zapisz',
-                    visLabel:           'Widoczność katalogu',
-                    visOptPrivate:      'Prywatny',
-                    visOptUsersonly:    'Tylko użytkownicy',
-                    visOptPublic:       'Publiczny',
-                    visOptInherited:    'Dziedziczony',
-                    visDescPrivate:     'Pliki znajdujące się w tym katalogu widoczne są jedynie dla mnie &ndash; właściciela katalogu, oraz wybranych użytkowników.',
-                    visDescUsersonly:   'Pliki znajdujące się w tym katalogu widoczne są tylko dla zalogowanych użytkowników.',
-                    visDescPublic:      'Pliki znajdujące się w tym katalogu widoczne są dla wszystkich osób znających ich adres.',
-                    visDescInherited:   'Dostęp do plików w tym katalogu jest taki sam jak dla plików w katalogu nadrzędnym.',
-                    aclLabel:           'Nadaj uprawnienia dostępu do tego katalogu wybranym użytkownikom',
-                    aclRead:            'Tylko odczyt',
-                    aclReadWrite:       'Odczyt i zapis',
-                    aclNoUsers:         'Nie wybrano użytkowników',
-                    userSearch:         'Szukaj użytkownika',
-                    userAdd:            'Dodaj',
-                    userDelete:         'Usuń',
-                    searchHint:         'Możesz wyszukać użytkownika wpisując jego imię i nazwisko, adres e-mail albo jego identyfikator w bazie danych.',
-                    messageSending:     'Wysyłanie danych...',
-                    messageError:       'Wystąpił nieoczekiwany błąd',
-                    messageSuccess:     'Ustawienia udostępniania zostały zapisane'
-                },
-                opOpenFile: {
-                    opname:             'Otwórz'
-                },
-                opEditFile: {
-                    opname:             'Edytuj',
-                    title:              'Edycja metadanych pliku',
-                    submit:             'Zapisz',
-                    messageSuccess:     'Metadane pliku zostały zapisane'
-                },
-                opRenameFile: {
-                    opname:             'Zmień nazwę'
-                },
-                opRemoveFile: {
-                    opname:             'Usuń',
-                    title:              'Usunięcie pliku',
-                    submit:             'Wykonaj'
-                },
-                opFileDetails: {
-                    opname:             'Właściwości',
-                    title:              'Właściwości pliku',
-                    submit:             'Gotowe',
-                    name:               'Nazwa',
-                    owner:              'Właściciel',
-                    mtime:              'Ostatnia modyfikacja',
-                    ctime:              'Utworzony',
-                    timeSeparator:      'przez',
-                    size:               'Rozmiar',
-                    mimetype:           'Typ MIME',
-                    md5sum:             'Suma kontrolna MD5',
-                    url:                'URL pliku'
-                }
-            }
-        }
-        return I18n;
-    })(),
     StickToBottom: (function() {
         /**
          * Makes the selected element sticked to the bottom of the browser's window in
@@ -2347,24 +2251,6 @@ var Drive = {
             this._anchor.height(0);
         }
         return StickToBottom;
-    })(),
-    Templates: (function() {
-        var Templates = {
-            "Uploader": "<div id=\"drive-uploader\">\n<div id=\"drive-uploader-dialog\" data-hook=\"dialog-content\">\n<div id=\"drive-uploader-dropzone\" data-hook=\"drop-zone-pane\">\n<div class=\"uploader\" data-hook=\"drop-zone\">\n<div class=\"drop-here\" data-hook=\"drop-zone-text\"></div>\n</div>\n</div>\n<div id=\"drive-uploader-queue\" data-hook=\"queue-pane\">\n<table id=\"drive-uploader-queue-items\">\n<tbody data-hook=\"items\"></tbody>\n</table>\n<div class=\"no-items-message\">{{ str.noItems }}</div>\n</div>\n</div>\n<div id=\"drive-uploader-status\">\n<div id=\"drive-uploader-status-icon\"></div>\n<div id=\"drive-uploader-status-content\">\n<h3>\n<span class=\"name\" data-hook=\"item-name\"></span>\n<span class=\"size\" data-hook=\"item-size\"></span>\n</h3>\n<p data-hook=\"status-message\"></p>\n</div>\n<div id=\"drive-uploader-status-button\">\n<button class=\"seamless\" data-hook=\"open-button\">{{ str.openButtonText }}</button>\n</div>\n</div>\n</div>",
-            "Uploader.queueItem": "<tr>\n<td class=\"col-filename\">\n<span class=\"filename\">{{ file.name }}</span>\n<span class=\"error-message\" data-hook=\"error-message\"></span>\n</td>\n<td class=\"col-size\">{{ file.size | Viewtils.fsize }}</td>\n<td class=\"col-progress\">\n<span class=\"progress-text\" data-hook=\"progress-text\"></span>\n<span class=\"progress-bar\"><span class=\"bar\" data-hook=\"progress-bar\"></span></span>\n</td>\n<td class=\"col-cancel\">\n<button class=\"seamless\" data-hook=\"cancel-button\" title=\"{{ str.cancelButtonTooltip }}\"></button>\n</td>\n</tr>",
-            "DirBrowser": "<div data-hook=\"disk-usage\"></div>\n<h1 id=\"title\"><span class=\"drive-dir-renamable\" data-hook=\"title\"></span></h1>\n<div id=\"opnav\">\n<div id=\"drive-loading\" class=\"abs\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>",
-            "DirBrowser.diskUsage": "<div id=\"drive-du\">\n<div class=\"pane\">\n<div class=\"progress-bar\">\n<div class=\"bar\" data-hook=\"progress-bar\" data-level-template=\"bar-{level}\"></div>\n</div>\n<dl class=\"used\">\n<dt>{{ str.used }}</dt>\n<dd>\n<span data-hook=\"used\">{{ used | Viewtils.fsize }}</span>\n<span class=\"percent\">(<span data-hook=\"percent\"></span>%)</span>\n</dd>\n</dl>\n<dl class=\"available\">\n<dt>{{ str.available }}</dt>\n<dd data-hook=\"available\"></dd>\n</dl>\n</div>\n</div>",
-            "DirBrowser.dirContents": "<div id=\"drive-dir-contents\">\n<table>\n<thead data-hook=\"header\"></thead>\n<tbody data-hook=\"updir\"></tbody>\n<tbody data-hook=\"subdirs\"></tbody>\n<tbody data-hook=\"files\"></tbody>\n</table>\n<div class=\"no-items-message\">{{ str.noItems }}</div>\n</div>",
-            "DirBrowser.dirContents.header": "<tr>\n<th class=\"col-grab\"></th>\n<th class=\"col-icon\"></th>\n<th class=\"col-name\">{{ str.name }}</th>\n<th class=\"col-owner\">{{ str.owner }}</th>\n<th class=\"col-size\">{{ str.size }}</th>\n<th class=\"col-mtime\">{{ str.mtime }}</th>\n<th class=\"col-ops\"></th>\n</tr>",
-            "DirBrowser.dirContents.updir": "<tr>\n<td class=\"col-grab\"></td>\n<td class=\"col-icon\"></td>\n<td class=\"col-name\" colspan=\"5\">\n<span title=\"{{ dir.name }}\" class=\"dir\" data-hook=\"name\">..</span>\n</td>\n</tr>",
-            "DirBrowser.dirContents.subdir": "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-folder\"></span></td>\n<td class=\"col-name\">\n<span title=\"{{ dir.name }}\" data-hook=\"name\">{{ dir.name }}</span>\n</td>\n<td class=\"col-owner\">{{ dir.owner.name }}</td>\n<td class=\"col-size\"></td>\n<td class=\"col-mtime\">\n<div class=\"full\">{{ dir.mtime.short }}</div>\n<div class=\"date-only\">{{ dir.mtime.date }}</div>\n</td>\n<td class=\"col-ops\" data-hook=\"ops\"></td>\n</tr>",
-            "DirBrowser.dirContents.file": "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-{{ file.filter }}\" data-hook=\"icon\"></span></td>\n<td class=\"col-name\">\n<span title=\"{{ file.name }}\" data-hook=\"name\">{{ file.name }}</span>\n</td>\n<td class=\"col-owner\">{{ file.owner.name }}</td>\n<td class=\"col-size\">{{ file.size | Viewtils.fsize }}</td>\n<td class=\"col-mtime\">\n<div class=\"full\">{{ file.mtime.short }}</div>\n<div class=\"date-only\">{{ file.mtime.date }}</div>\n</td>\n<td class=\"col-ops\" data-hook=\"ops\"></td>\n</tr>",
-            "DirBrowser.opShareDir": "<div id=\"drive-dir-share\">\n<form class=\"form\">\n<div id=\"drive-dir-share-vis\">\n<label for=\"drive-dir-share-visibility\">{{ str.visLabel }}</label>\n<table>\n<tr>\n<td>\n<select name=\"visibility\" id=\"drive-dir-share-visibility\">\n<option value=\"private\">{{ str.visOptPrivate }}</option>\n<option value=\"usersonly\">{{ str.visOptUsersonly }}</option>\n<option value=\"public\">{{ str.visOptPublic }}</option>\n<option value=\"inherited\">{{ str.visOptInherited }}</option>\n</select>\n</td>\n<td style=\"padding-left:6px\">\n<div id=\"drive-dir-share-vis-desc-private\" class=\"vis-desc\">{{ str.visDescPrivate }}</div>\n<div id=\"drive-dir-share-vis-desc-usersonly\" class=\"vis-desc\">{{ str.visDescUsersonly }}</div>\n<div id=\"drive-dir-share-vis-desc-public\" class=\"vis-desc\">{{ str.visDescPublic }}</div>\n<div id=\"drive-dir-share-vis-desc-inherited\" class=\"vis-desc\">{{ str.visDescInherited }}</div>\n</td>\n</tr>\n</table>\n</div>\n<div id=\"drive-dir-share-acl\">\n<label for=\"drive-dir-share-acl-search-user\">{{ str.aclLabel }}</label>\n<div id=\"drive-dir-share-acl-users\">\n<div class=\"highlight\"></div>\n<table>\n<tbody data-hook=\"user-list\">\n<tr data-hook=\"empty-list-message\">\n<td colspan=\"3\" class=\"no-users\">{{ str.aclNoUsers }}</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div id=\"drive-dir-share-acl-search\">\n<table>\n<tr>\n<td>\n<input type=\"text\" id=\"drive-dir-share-acl-search-user\" data-hook=\"user-search\" placeholder=\"{{ str.userSearch }}\" />\n</td>\n<td>\n<button type=\"button\" class=\"btn btn-primary disabled\" data-hook=\"user-add\">{{ str.userAdd }}</button>\n</td>\n</tr>\n</table>\n<div class=\"hint\">{{ str.searchHint }}</div>\n</div>\n</div>\n</form>\n</div>",
-            "DirBrowser.opShareDir.user": "<tr>\n<td class=\"user-name\">\n<div class=\"user-name-fn\">{{ user.first_name }} {{ user.last_name }}</div>\n<div class=\"user-name-un\">{{ user.username }}</div>\n</td>\n<td class=\"user-perms\">\n<select name=\"shares[{{ user.id }}]\">\n<option value=\"0\">{{ str.aclRead }}</option>\n<option value=\"1\"{{# user.can_write }}selected{{/ user.can_write }}>{{ str.aclReadWrite }}</option>\n</select>\n</td>\n<td class=\"user-delete\">\n<button type=\"button\" data-hook=\"user-delete\" title=\"{{ str.userDelete }}\">&times;</button>\n</td>\n</tr>",
-            "DirBrowser.opDirDetails": "<div id=\"drive-dir-details\">\n<dl>\n<dt>{{ str.name }}</dt>\n<dd>{{ dir.name }}</dd>\n<dt>{{ str.owner }}</dt>\n<dd><span class=\"owner\">{{ dir.owner.id }} ({{ dir.owner.name }})</span></dd>\n<dt>{{ str.mtime }}</dt>\n<dd>\n<div class=\"mtime timelog\">\n<span class=\"time\">{{ dir.mtime.long }}</span>\n<span class=\"sep\">{{ str.timeSeparator }}</span>\n<span class=\"user\">{{ dir.modified_by.name }}</span>\n</div>\n</dd>\n<dt>{{ str.ctime }}</dt>\n<dd>\n<div class=\"ctime timelog\">\n<span class=\"time\">{{ dir.ctime.long }}</span>\n<span class=\"sep\">{{ str.timeSeparator }}</span>\n<span class=\"user\">{{ dir.created_by.name }}</span>\n</div>\n</dd>\n</dl>\n</div>",
-            "DirBrowser.opFileDetails": "<div id=\"drive-file-details\">\n<dl>\n<dt>{{ str.name }}</dt>\n<dd>{{ file.name }}</dd>\n<dt>{{ str.owner }}</dt>\n<dd><span class=\"owner\">{{ file.owner.id }} ({{ file.owner.name }})</span></dd>\n<dt>{{ str.mtime }}</dt>\n<dd>\n<div class=\"mtime timelog\">\n<span class=\"time\">{{ file.mtime.long }}</span>\n<span class=\"sep\">{{ str.timeSeparator }}</span>\n<span class=\"user\">{{ file.modified_by.name }}</span>\n</div>\n</dd>\n<dt>{{ str.ctime }}</dt>\n<dd>\n<div class=\"ctime timelog\">\n<span class=\"time\">{{ file.ctime.long }}</span>\n<span class=\"sep\">{{ str.timeSeparator }}</span>\n<span class=\"user\">{{ file.created_by.name }}</span>\n</div>\n</dd>\n<dt>ID</dt>\n<dd>{{ file.id }}</dd>\n<dt>{{ str.size }}</dt>\n<dd>{{ file.size | Viewtils.fsize }}</dd>\n<dt>{{ str.mimetype }}</dt>\n<dd>{{ file.mimetype }}</dd>\n<dt>{{ str.md5sum }}</dt>\n<dd>{{ file.md5sum }}</dd>\n<dt>{{ str.url }}</dt>\n<dd><code>{{ file.url }}</code></dd>\n</dl>\n</div>"
-        };
-        return Templates;
     })(),
     Uploader: (function() {
         /**
@@ -3331,7 +3217,7 @@ var Drive = {
     Util: (function() {
         /**
          * @namespace
-         * @version 2013-01-13
+         * @version 2014-05-24 / 2013-01-13
          */
         var Util = {}
 
@@ -3344,7 +3230,10 @@ var Drive = {
         } // }}}
 
         Util.uri = function (template, vars) { // {{{
-            return decodeURIComponent(unescape(Util.interp(template, vars, escape)));
+            vars = vars || {};
+            return String(template).replace(/:([_0-9a-z]+)/ig, function (match, key) {
+                return escape(vars[key]);
+            });
         } // }}}
 
         Util.gotoHash = function (hash) { // {{{
@@ -3363,16 +3252,22 @@ var Drive = {
         Util.render = function (id, vars, wrapper) { // {{{
             var template = Drive.Templates[id];
 
-            Util.assert(typeof template === 'string', 'Template not found: ' + id);
+            Util.assert(typeof template === 'function', 'Template not found: ' + id);
 
             if (typeof vars === 'function') {
                 vars = null;
                 wrapper = vars;
             }
 
+            Handlebars.registerHelper('fileSize', function (text) {
+                return Viewtils.fsize(text);
+            });
+
             // Backwards compatibility with Mustache.js 0.4.x
-            var fn = Mustache.render ? 'render' : 'to_html',
-                out = Mustache[fn](template, vars || {});
+            //var fn = Mustache.render ? 'render' : 'to_html',
+            //    out = Mustache[fn](template, vars || {});
+            // Mustache sucks
+            var out = template(vars);
 
             return typeof wrapper === 'function' ? wrapper(out) : out;
         } // }}}
@@ -3396,6 +3291,66 @@ var Drive = {
             }
 
             return key;
+        } // }}}
+
+        Util.dropdown = function(items, options) { // {{{
+            var container,
+                ul,
+                id;
+
+            options = $.extend({}, options);
+
+            id = options.id || ('dropdown-' + String(Math.random()).substr(2));
+
+            container = $('<div class="dropdown"><a href="#' + id + '" data-toggle="dropdown">' + Viewtils.esc(options.title || '') + ' <span class="caret"></span></a></div>');
+            container.attr('id', id);
+
+            if (options.containerClass) {
+                container.addClass(options.containerClass);
+            }
+
+            ul = $('<ul class="dropdown-menu"/>').appendTo(container);
+            ul.on('focus', 'a.disabled', function () {
+                this.blur();
+            });
+            ul.on('click', 'a.disabled', function () {
+                return false;
+            });
+
+            if (options.menuClass) {
+                ul.addClass(options.menuClass);
+            }
+
+            // due to its more specific name, Bootstrap 3 dropdown menu alignment class
+            // is used (.dropdown-menu-right instead of more general .pull-right)
+            if (options.right) {
+                ul.addClass('dropdown-menu-right');
+            }
+            if (options.tip) {
+                ul.addClass('has-tip');
+            }
+
+            $.each(items, function (key, item) {
+                if (item) {
+                    var a = $('<a href="#!"/>').text('' + item.title);
+
+                    if (item.disabled) {
+                        a.addClass('disabled');
+                    } else {
+                        if (item.url) {
+                            a.attr('href', item.url);
+                        }
+
+                        if (typeof item.click === 'function') {
+                            a.click(item.click);
+                        }
+                    }
+
+                    $('<li/>').append(a).appendTo(ul);
+                }
+            });
+
+            return container;
         } // }}}
         return Util;
     })(),
@@ -3436,5 +3391,507 @@ var Drive = {
             });
         } // }}}
         return View;
+    })(),
+    I18n: (function() {
+        var I18n = {
+            Uploader: {
+                noItems:                'Brak plików do przesłania',
+                filename:               'Plik',
+                size:                   'Rozmiar',
+                progress:               'Postęp',
+                waiting:                'Oczekiwanie',
+                uploading:              'Przesyłanie...',
+                uploaded:               'Przesłano',
+                canceled:               'Anulowano',
+                error:                  'Błąd',
+                queuePaneTitle:         'Przesyłanie plików',
+                openButtonText:         'Szczegóły',
+                cleanButtonText:        'Wyczyść',
+                cleanButtonTooltip:     'Usuwa z listy pliki, których przesyłanie zostało zakończone lub anulowane',
+                cancelButtonText:       'Ukryj',
+                cancelButtonTooltip:    'Kliknij aby anulować',
+                uploadSuccess:          'Wszystkie pliki zostały pomyślnie przesłane',
+                uploadError:            'Przesyłanie zakończone. Wystąpiły błędy',
+                uploadProgress:         'Przesyłanie pliku {number} z {total} ... {percent}%',
+                dropHere:               'Przeciągnij i upuść pliki tutaj.',
+                dropHereOpera:          'Kliknij aby dodać pliki. <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
+                dropHereLegacy:         'Kliknij aby dodać plik. <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
+                responseError:          'Nieoczekiwana odpowiedź od serwera',
+                cancelUploadConfirm:    'Opuszczenie tej strony przerwie przesyłanie plików. Czy na pewno chcesz przejść do innej strony?',
+            },
+            DirBrowser: {
+                noItems:                'Katalog jest pusty',
+                moreOps:                'Więcej',
+                eipHint:                'Kliknij aby edytować',
+                clickToRenameTooltip:   'Kliknij aby zmienić nazwę katalogu',
+                uploadFiles:            'Wgraj pliki',
+                diskUsage: {
+                    used:               'Wykorzystanie dysku:',
+                    available:          'Dostępne miejsce:',
+                    unlimited:          'Bez ograniczeń',
+                },
+                grab: {
+                    tooltip:            'Przeciągnij aby przenieść do innego katalogu',
+                    dropDirTooltip:     'Przenieś <strong>{source}</strong> do <strong>{target}</strong>',
+                    noDropDirTooltip:   'Przenieś <strong>{source}</strong>'
+                },
+                dirContents: {
+                    name:               'Nazwa',
+                    owner:              'Właściciel',
+                    size:               'Rozmiar',
+                    mtime:              'Zmodyfikowany'
+                },
+                opCreateDir: {
+                    opname:             'Nowy katalog',
+                    title:              'Nowy katalog',
+                    submit:             'Zastosuj'
+                },
+                opRenameDir: {
+                    opname:             'Zmień nazwę',
+                    title:              'Zmiana nazwy katalogu',
+                    submit:             'Zastosuj'
+                },
+                opRemoveDir: {
+                    opname:             'Usuń',
+                    title:              'Usunięcie katalogu',
+                    submit:             'Wykonaj'
+                },
+                opDirDetails: {
+                    opname:             'Właściwości',
+                    title:              'Właściwości katalogu',
+                    submit:             'Gotowe',
+                    name:               'Nazwa',
+                    owner:              'Właściciel',
+                    mtime:              'Ostatnia modyfikacja',
+                    ctime:              'Utworzony',
+                    timeSeparator:      'przez'
+                },
+                opShareDir: {
+                    opname:             'Udostępnianie',
+                    title:              'Udostępnianie katalogu',
+                    submit:             'Zapisz',
+                    visLabel:           'Widoczność katalogu',
+                    visOptPrivate:      'Prywatny',
+                    visOptUsersonly:    'Tylko użytkownicy',
+                    visOptPublic:       'Publiczny',
+                    visOptInherited:    'Dziedziczony',
+                    visDescPrivate:     'Pliki znajdujące się w tym katalogu widoczne są jedynie dla mnie &ndash; właściciela katalogu, oraz wybranych użytkowników.',
+                    visDescUsersonly:   'Pliki znajdujące się w tym katalogu widoczne są tylko dla zalogowanych użytkowników.',
+                    visDescPublic:      'Pliki znajdujące się w tym katalogu widoczne są dla wszystkich osób znających ich adres.',
+                    visDescInherited:   'Dostęp do plików w tym katalogu jest taki sam jak dla plików w katalogu nadrzędnym.',
+                    aclLabel:           'Nadaj uprawnienia dostępu do tego katalogu wybranym użytkownikom',
+                    aclRead:            'Tylko odczyt',
+                    aclReadWrite:       'Odczyt i zapis',
+                    aclNoUsers:         'Nie wybrano użytkowników',
+                    userSearch:         'Szukaj użytkownika',
+                    userAdd:            'Dodaj',
+                    userDelete:         'Usuń',
+                    searchHint:         'Możesz wyszukać użytkownika wpisując jego imię i nazwisko, adres e-mail albo jego identyfikator w bazie danych.',
+                    messageSending:     'Wysyłanie danych...',
+                    messageError:       'Wystąpił nieoczekiwany błąd',
+                    messageSuccess:     'Ustawienia udostępniania zostały zapisane'
+                },
+                opOpenFile: {
+                    opname:             'Otwórz'
+                },
+                opEditFile: {
+                    opname:             'Edytuj',
+                    title:              'Edycja metadanych pliku',
+                    submit:             'Zapisz',
+                    messageSuccess:     'Metadane pliku zostały zapisane'
+                },
+                opRenameFile: {
+                    opname:             'Zmień nazwę'
+                },
+                opRemoveFile: {
+                    opname:             'Usuń',
+                    title:              'Usunięcie pliku',
+                    submit:             'Wykonaj'
+                },
+                opFileDetails: {
+                    opname:             'Właściwości',
+                    title:              'Właściwości pliku',
+                    submit:             'Gotowe',
+                    name:               'Nazwa',
+                    owner:              'Właściciel',
+                    mtime:              'Ostatnia modyfikacja',
+                    ctime:              'Utworzony',
+                    timeSeparator:      'przez',
+                    size:               'Rozmiar',
+                    mimetype:           'Typ MIME',
+                    md5sum:             'Suma kontrolna MD5',
+                    url:                'URL pliku'
+                }
+            }
+        }
+        return I18n;
+    })(),
+    Templates: (function() {
+        var Templates = {
+            "Uploader": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<div id=\"drive-uploader\">\n<div id=\"drive-uploader-dialog\" data-hook=\"dialog-content\">\n<div id=\"drive-uploader-dropzone\" data-hook=\"drop-zone-pane\">\n<div class=\"uploader\" data-hook=\"drop-zone\">\n<div class=\"drop-here\" data-hook=\"drop-zone-text\"></div>\n</div>\n</div>\n<div id=\"drive-uploader-queue\" data-hook=\"queue-pane\">\n<table id=\"drive-uploader-queue-items\">\n<tbody data-hook=\"items\"></tbody>\n</table>\n<div class=\"no-items-message\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.noItems)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</div>\n</div>\n<div id=\"drive-uploader-status\">\n<div id=\"drive-uploader-status-icon\"></div>\n<div id=\"drive-uploader-status-content\">\n<h3>\n<span class=\"name\" data-hook=\"item-name\"></span>\n<span class=\"size\" data-hook=\"item-size\"></span>\n</h3>\n<p data-hook=\"status-message\"></p>\n</div>\n<div id=\"drive-uploader-status-button\">\n<button class=\"seamless\" data-hook=\"open-button\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.openButtonText)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</button>\n</div>\n</div>\n</div>";
+          return buffer;
+          }
+
+        ),
+            "Uploader.queueItem": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+
+
+          buffer += "<tr>\n<td class=\"col-filename\">\n<span class=\"filename\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"error-message\" data-hook=\"error-message\"></span>\n</td>\n<td class=\"col-size\">"
+            + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options) : helperMissing.call(depth0, "fileSize", ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options)))
+            + "</td>\n<td class=\"col-progress\">\n<span class=\"progress-text\" data-hook=\"progress-text\"></span>\n<span class=\"progress-bar\"><span class=\"bar\" data-hook=\"progress-bar\"></span></span>\n</td>\n<td class=\"col-cancel\">\n<button class=\"seamless\" data-hook=\"cancel-button\" title=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.cancelButtonTooltip)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\"></button>\n</td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+
+
+
+          return "<div data-hook=\"disk-usage\"></div>\n<h1 id=\"drive-dir-name\"><span class=\"renamable\" data-hook=\"dir-name\"></span></h1>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>";
+          }
+
+        ),
+            "DirBrowser.diskUsage": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+
+
+          buffer += "<div id=\"drive-du\">\n<div class=\"pane\">\n<div class=\"progress-bar\">\n<div class=\"bar\" data-hook=\"progress-bar\" data-level-template=\"bar-{level}\"></div>\n</div>\n<dl class=\"used\">\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.used)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>\n<span data-hook=\"used\">"
+            + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, (depth0 && depth0.used), options) : helperMissing.call(depth0, "fileSize", (depth0 && depth0.used), options)))
+            + "</span>\n<span class=\"percent\">(<span data-hook=\"percent\"></span>%)</span>\n</dd>\n</dl>\n<dl class=\"available\">\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.available)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd data-hook=\"available\"></dd>\n</dl>\n</div>\n</div>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.auxMenu": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
+
+        function program1(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\">";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program3(depth0,data) {
+
+          var buffer = "", stack1, helper, options;
+          buffer += "\n<li id=\"drive-more-ops\" class=\"dropdown\">\n<a href=\"#drive-more-ops\" data-toggle=\"dropdown\">\n"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.moreOps)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + " <span class=\"caret\"></span>\n</a>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
+          options={hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data}
+          if (helper = helpers.moreOps) { stack1 = helper.call(depth0, options); }
+          else { helper = (depth0 && depth0.moreOps); stack1 = typeof helper === functionType ? helper.call(depth0, options) : helper; }
+          if (!helpers.moreOps) { stack1 = blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data}); }
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</ul>\n</li>\n";
+          return buffer;
+          }
+
+          buffer += "<ul>\n";
+          options={hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data}
+          if (helper = helpers.ops) { stack1 = helper.call(depth0, options); }
+          else { helper = (depth0 && depth0.ops); stack1 = typeof helper === functionType ? helper.call(depth0, options) : helper; }
+          if (!helpers.ops) { stack1 = blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data}); }
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.moreOps)),stack1 == null || stack1 === false ? stack1 : stack1.length), {hash:{},inverse:self.noop,fn:self.program(3, program3, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</ul>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.dirContents": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<div id=\"drive-dir-contents\">\n<table>\n<thead data-hook=\"header\"></thead>\n<tbody data-hook=\"updir\"></tbody>\n<tbody data-hook=\"subdirs\"></tbody>\n<tbody data-hook=\"files\"></tbody>\n</table>\n<div class=\"no-items-message\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.noItems)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</div>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.dirContents.header": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<tr>\n<th class=\"col-grab\"></th>\n<th class=\"col-icon\"></th>\n<th class=\"col-name\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</th>\n<th class=\"col-owner\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</th>\n<th class=\"col-size\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.size)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</th>\n<th class=\"col-mtime\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</th>\n<th class=\"col-ops\"></th>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.dirContents.updir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<tr>\n<td class=\"col-grab\"></td>\n<td class=\"col-icon\"></td>\n<td class=\"col-name\" colspan=\"5\">\n<span title=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" class=\"dir\" data-hook=\"name\">..</span>\n</td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.dirContents.subdir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-folder\"></span></td>\n<td class=\"col-name\">\n<span title=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" data-hook=\"name\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n</td>\n<td class=\"col-owner\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</td>\n<td class=\"col-size\"></td>\n<td class=\"col-mtime\">\n<div class=\"full\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['short'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div class=\"date-only\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</td>\n<td class=\"col-ops\" data-hook=\"ops\"></td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.dirContents.file": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+
+
+          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.filter)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" data-hook=\"icon\"></span></td>\n<td class=\"col-name\">\n<span title=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" data-hook=\"name\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n</td>\n<td class=\"col-owner\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</td>\n<td class=\"col-size\">"
+            + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options) : helperMissing.call(depth0, "fileSize", ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options)))
+            + "</td>\n<td class=\"col-mtime\">\n<div class=\"full\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['short'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div class=\"date-only\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</td>\n<td class=\"col-ops\" data-hook=\"ops\"></td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.opShareDir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<div id=\"drive-dir-share\">\n<form class=\"form\">\n<div id=\"drive-dir-share-vis\">\n<label for=\"drive-dir-share-visibility\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visLabel)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</label>\n<table>\n<tr>\n<td>\n<select name=\"visibility\" id=\"drive-dir-share-visibility\">\n<option value=\"private\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visOptPrivate)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</option>\n<option value=\"usersonly\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visOptUsersonly)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</option>\n<option value=\"public\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visOptPublic)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</option>\n<option value=\"inherited\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visOptInherited)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</option>\n</select>\n</td>\n<td style=\"padding-left:6px\">\n<div id=\"drive-dir-share-vis-desc-private\" class=\"vis-desc\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visDescPrivate)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div id=\"drive-dir-share-vis-desc-usersonly\" class=\"vis-desc\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visDescUsersonly)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div id=\"drive-dir-share-vis-desc-public\" class=\"vis-desc\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visDescPublic)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div id=\"drive-dir-share-vis-desc-inherited\" class=\"vis-desc\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visDescInherited)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</td>\n</tr>\n</table>\n</div>\n<div id=\"drive-dir-share-acl\">\n<label for=\"drive-dir-share-acl-search-user\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclLabel)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</label>\n<div id=\"drive-dir-share-acl-users\">\n<div class=\"highlight\"></div>\n<table>\n<tbody data-hook=\"user-list\">\n<tr data-hook=\"empty-list-message\">\n<td colspan=\"3\" class=\"no-users\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclNoUsers)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div id=\"drive-dir-share-acl-search\">\n<table>\n<tr>\n<td>\n<input type=\"text\" id=\"drive-dir-share-acl-search-user\" data-hook=\"user-search\" placeholder=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userSearch)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" />\n</td>\n<td>\n<button type=\"button\" class=\"btn btn-primary disabled\" data-hook=\"user-add\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userAdd)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</button>\n</td>\n</tr>\n</table>\n<div class=\"hint\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.searchHint)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</div>\n</div>\n</form>\n</div>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.opShareDir.user": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
+
+        function program1(depth0,data) {
+
+
+          return "selected";
+          }
+
+          buffer += "<tr>\n<td class=\"user-name\">\n<div class=\"user-name-fn\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.first_name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + " "
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.last_name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div class=\"user-name-un\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.username)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n</td>\n<td class=\"user-perms\">\n<select name=\"shares["
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.id)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "]\">\n<option value=\"0\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclRead)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</option>\n<option value=\"1\"";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.can_write)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += ">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclReadWrite)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</option>\n</select>\n</td>\n<td class=\"user-delete\">\n<button type=\"button\" data-hook=\"user-delete\" title=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userDelete)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\">&times;</button>\n</td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.opDirDetails": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+
+
+          buffer += "<div id=\"drive-dir-details\">\n<dl>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd><span class=\"owner\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.id)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + " ("
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + ")</span></dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>\n<div class=\"mtime timelog\">\n<span class=\"time\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['long'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"sep\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.timeSeparator)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"user\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.modified_by)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n</div>\n</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.ctime)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>\n<div class=\"ctime timelog\">\n<span class=\"time\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.ctime)),stack1 == null || stack1 === false ? stack1 : stack1['long'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"sep\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.timeSeparator)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"user\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.created_by)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n</div>\n</dd>\n</dl>\n</div>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.opFileDetails": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+
+
+          buffer += "<div id=\"drive-file-details\">\n<dl>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd><span class=\"owner\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.id)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + " ("
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + ")</span></dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>\n<div class=\"mtime timelog\">\n<span class=\"time\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['long'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"sep\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.timeSeparator)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"user\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.modified_by)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n</div>\n</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.ctime)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>\n<div class=\"ctime timelog\">\n<span class=\"time\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.ctime)),stack1 == null || stack1 === false ? stack1 : stack1['long'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"sep\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.timeSeparator)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n<span class=\"user\">"
+            + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.created_by)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</span>\n</div>\n</dd>\n<dt>ID</dt>\n<dd>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.id)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.size)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>"
+            + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options) : helperMissing.call(depth0, "fileSize", ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options)))
+            + "</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.mimetype)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mimetype)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.md5sum)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.md5sum)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dd>\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd><code>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</code></dd>\n</dl>\n</div>";
+          return buffer;
+          }
+
+        )
+        };
+        return Templates;
     })()
 };

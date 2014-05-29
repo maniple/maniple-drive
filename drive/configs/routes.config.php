@@ -29,7 +29,7 @@
         'defaults' => array(
             'module'     => 'drive',
             'controller' => 'dir',
-            'action'     => 'read',
+            'action'     => 'index',
         ),
     ),
     'drive.file' => array(

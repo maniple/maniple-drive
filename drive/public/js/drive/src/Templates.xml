@@ -39,7 +39,7 @@
   <span class="filename">{{ file.name }}</span>
   <span class="error-message" data-hook="error-message"></span>
  </td>
- <td class="col-size">{{ file.size | Viewtils.fsize }}</td>
+ <td class="col-size">{{ fileSize file.size }}</td>
  <td class="col-progress">
   <span class="progress-text" data-hook="progress-text"></span>
   <span class="progress-bar"><span class="bar" data-hook="progress-bar"></span></span>
@@ -53,9 +53,9 @@
 <template id="DirBrowser">
 <![CDATA[
 <div data-hook="disk-usage"></div>
-<h1 id="title"><span class="drive-dir-renamable" data-hook="title"></span></h1>
+<h1 id="drive-dir-name"><span class="renamable" data-hook="dir-name"></span></h1>
 <div id="opnav">
- <div id="drive-loading" class="abs" data-hook="message-area"></div>
+ <div id="drive-loading" data-hook="message-area"></div>
  <div id="drive-dir-menu" data-hook="aux-menu"></div>
 </div>
 <div data-hook="dir-contents"></div>
@@ -72,7 +72,7 @@
   <dl class="used">
    <dt>{{ str.used }}</dt>
    <dd>
-    <span data-hook="used">{{ used | Viewtils.fsize }}</span>
+    <span data-hook="used">{{ fileSize used }}</span>
     <span class="percent">(<span data-hook="percent"></span>%)</span>
    </dd>
   </dl>
@@ -82,6 +82,27 @@
   </dl>
  </div>
 </div>
+]]>
+</template>
+<template id="DirBrowser.auxMenu">
+<![CDATA[
+<ul>
+{{#ops}}
+    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+{{/ops}}
+{{#if moreOps.length}}
+    <li id="drive-more-ops" class="dropdown">
+        <a href="#drive-more-ops" data-toggle="dropdown">
+            {{ str.moreOps }} <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-right has-tip">
+        {{#moreOps}}
+            <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+        {{/moreOps}}
+        </ul>
+    </li>
+{{/if}}
+</ul>
 ]]>
 </template>
 <template id="DirBrowser.dirContents">
@@ -150,7 +171,7 @@
             <span title="{{ file.name }}" data-hook="name">{{ file.name }}</span>
         </td>
         <td class="col-owner">{{ file.owner.name }}</td>
-        <td class="col-size">{{ file.size | Viewtils.fsize }}</td>
+        <td class="col-size">{{ fileSize file.size }}</td>
         <td class="col-mtime">
             <div class="full">{{ file.mtime.short }}</div>
             <div class="date-only">{{ file.mtime.date }}</div>
@@ -289,7 +310,7 @@
   <dt>ID</dt>
   <dd>{{ file.id }}</dd>
   <dt>{{ str.size }}</dt>
-  <dd>{{ file.size | Viewtils.fsize }}</dd>
+  <dd>{{ fileSize file.size }}</dd>
   <dt>{{ str.mimetype }}</dt>
   <dd>{{ file.mimetype }}</dd>
   <dt>{{ str.md5sum }}</dt>

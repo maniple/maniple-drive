@@ -17,7 +17,7 @@ src/Templates.js: src/Templates.xml
 .PHONY: install clean
 
 install: all
-	mv -f $(OUTPUT) ..
+	cp -f $(OUTPUT) ..
 
 clean:
 	rm -rf $(OUTPUT) src/Templates.js src/I18n.js

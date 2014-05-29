@@ -31,7 +31,7 @@ if (false === @$doc->loadXML(file_get_contents($INPUT))) {
 $xpath = new DOMXPath($doc);
 $templates = $xpath->query('//template');
 
-function esc($x) {
+function quote($x) {
     return '"' . str_replace('"', '\"', $x) . '"';
 }
 
@@ -39,7 +39,7 @@ $indent = str_repeat(' ', 4);
 
 $t = array();
 foreach ($templates as $template) {
-    $str = implode('\n',
+    $str = implode("\n",
         array_map(
             'ltrim',
             explode(
@@ -47,10 +47,18 @@ foreach ($templates as $template) {
             )
         )
     );
-    $t[] = $indent . esc($template->getAttribute('id')) . ': ' . esc($str);
-}
+    $id = $template->getAttribute('id');
+    $temp = 'temp.handlebars';
+    file_put_contents($temp, $str);
+    $out = `handlebars --simple "$temp"`;
+    $out = 'Handlebars.template(' . $out . ')';
+    @unlink($temp);
 
+    $t[] = $indent . quote($template->getAttribute('id')) . ': ' . $out; // quote($str);
+}
 ob_start();
+
+// npm install -g handlebars@1.3.0
 
 echo "var {$path['filename']} = {\n";
 echo implode(",\n", $t), "\n";

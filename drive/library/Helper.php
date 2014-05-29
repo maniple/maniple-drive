@@ -2,7 +2,10 @@
 
 class Drive_Helper
 {
-    protected $_security;
+    /**
+     * @var Maniple_Security_ContextInterface
+     */
+    protected $_securityContext;
 
     /**
      * @var Zend_View_Abstract
@@ -19,6 +22,9 @@ class Drive_Helper
      */
     protected $_userMapper;
 
+    /**
+     * @return Drive_Mapper
+     */
     public function getMapper()
     {
         return new Drive_Mapper($this->getTableProvider());
@@ -84,8 +90,8 @@ class Drive_Helper
         $dir_id = $dir->dir_id;
 
         if (empty($this->_dirPermissions[$dir_id])) {
-            $user = $this->getSecurity()->getUser();
-            $user_id = $this->getSecurity()->getUserId();
+            $user = $this->getSecurityContext()->getUser();
+            $user_id = $this->getSecurityContext()->getUserId();
 
             // Dodatkowe reguly:
             // - tylko wlasciciel i administrator moga zmienic ustawienia
@@ -94,7 +100,7 @@ class Drive_Helper
             //   moga byc przenoszone w inne miejsce (zmiana nazwy takiego
             //   katalogu jedynie poprzez zmiane nazwy dysku)
 
-            if ($this->getSecurity()->isSuperUser()) {
+            if ($this->getSecurityContext()->isSuperUser()) {
                 $perms = array(
                     self::READ   => true,
                     self::WRITE  => true,
@@ -472,15 +478,15 @@ class Drive_Helper
         return $this->_view;
     } // }}}
 
-    public function setSecurity($security = null)
+    public function setSecurityContext(Maniple_Security_ContextInterface $security = null)
     {
-        $this->_security = $security;
+        $this->_securityContext = $security;
         return $this;
     }
 
-    public function getSecurity()
+    public function getSecurityContext()
     {
-        return $this->_security;
+        return $this->_securityContext;
     }
 
     public function setUserMapper(Core_UserMapperInterface $userMapper = null)

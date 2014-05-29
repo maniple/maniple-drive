@@ -14,6 +14,10 @@
 }
 */
 
+#drive-loading {
+    position: absolute;
+}
+
 /* #drive-du {{{ */
 #drive-du {
   position: relative;
@@ -439,14 +443,14 @@
 /* }}} */
 
 
-#title .drive-dir-renamable:hover {
+#drive-dir-name .renamable:hover {
   border: 1px solid #ddd;
   border-bottom-width: 0;
   background-color: #ddd;
   margin: -1px 0 0 -1px;
   cursor: text;
 }
-#title .drive-dir-renamable.disabled:hover {
+#drive-dir-name .renamable.disabled:hover {
   border: none;
   background: none;
   margin: 0;
@@ -482,16 +486,16 @@
     vertical-align: middle;
 }
 
-#drive-dir-contents .col-name {
+#drive-dir-contents td.col-name {
     cursor: pointer;
 }
-#drive-dir-contents .col-name > span {
+#drive-dir-contents td.col-name > span {
     display: block;
 }
 
-#drive-dir-contents .col-owner,
-#drive-dir-contents .col-size,
-#drive-dir-contents .col-mtime {
+#drive-dir-contents td.col-owner,
+#drive-dir-contents td.col-size,
+#drive-dir-contents td.col-mtime {
     font-size: 85%;
 }
 

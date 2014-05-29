@@ -159,10 +159,9 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
             // zas wartosc kolumny can_write jest niezerowa, uzytkownik ma
             // dostep rowniez do zapisu
             if ($user_id) {
-                $db = $this->getAdapter();
-                $row = $db->getTable('Drive_Model_DbTable_DirShares')->fetchRow(array(
-                    'dir_id = ' . $dir_id,
-                    'user_id = ' . $user_id,
+                $row = $this->getTable('Drive_Model_DbTable_DirShares')->fetchRow(array(
+                    'dir_id = ?' => $dir_id,
+                    'user_id = ?' => $user_id,
                 ));
 
                 if ($row) {
@@ -197,10 +196,8 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         $user = (int) $user;
 
-        $db = $this->getAdapter();
-
-        $shares = $db->getTable('Drive_Model_DbTable_DirShares');
-        $drives = $db->getTable('Drive_Model_DbTable_Drives');
+        $shares = $this->getTable('Drive_Model_DbTable_DirShares');
+        $drives = $this->getTable('Drive_Model_DbTable_Drives');
 
         $select = $this->select(array('d' => '*'))
             ->setIntegrityCheck(false)
@@ -217,7 +214,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
         $where = (array) $where;
         $where['dir_id = ?'] = (int) $dir_id;
 
-        $files = $this->_getTable('Drive_Model_DbTable_Files')->fetchAll($where, $order);
+        $files = $this->getTable('Drive_Model_DbTable_Files')->fetchAll($where, $order);
 
         return $files;
     }

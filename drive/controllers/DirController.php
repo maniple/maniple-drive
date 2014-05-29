@@ -3,7 +3,7 @@
 /**
  * @version 2013-05-15 / 2013-01-24 / 2012-12-18
  */
-class Drive_DirController extends Maniple_Controller_Action
+class Drive_DirController extends Drive_Controller_Action
 {
     public function indexAction() // {{{
     {
@@ -69,7 +69,7 @@ class Drive_DirController extends Maniple_Controller_Action
             'inverseFilter' => $inverse_filter,
         );
 
-        $dir = $this->getResource('drive.helper')->browseDir($dir_id, $options);
+        $dir = $this->getDriveHelper()->browseDir($dir_id, $options);
 
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData($dir);
@@ -84,7 +84,7 @@ class Drive_DirController extends Maniple_Controller_Action
      */
     public function moveAction() // {{{
     {
-        $drive_helper = $this->getResource('drive.helper');
+        $drive_helper = $this->getDriveHelper();
 
         $id = $this->_request->getPost('dir_id');
         $dir = $drive_helper->fetchDir($id);
@@ -97,7 +97,7 @@ class Drive_DirController extends Maniple_Controller_Action
         $db = $this->getResource('db');
         $db->beginTransaction();
         try {
-            $dir->parent_id = $parent_dir->id;
+            $dir->parent_id = $parent_dir->dir_id;
             $dir->modified_by = $this->getSecurity()->getUserId();
             $dir->save();
             $db->commit();
@@ -117,7 +117,7 @@ class Drive_DirController extends Maniple_Controller_Action
      */
     public function shareAction() // {{{
     {
-        $drive_helper = $this->getResource('drive.helper');
+        $drive_helper = $this->getDriveHelper();
 
         $dir_id = (int) $this->getScalarParam('dir_id');
         $dir = $drive_helper->fetchDir($dir_id);
@@ -179,7 +179,7 @@ class Drive_DirController extends Maniple_Controller_Action
      */
     public function chownAction() // {{{
     {
-        $drive_helper = $this->getResource('drive.helper');
+        $drive_helper = $this->getDriveHelper();
 
         $dir_id = (int) $this->_request->getPost('dir_id');
         $dir = $drive_helper->fetchDir($dir_id);
@@ -189,7 +189,7 @@ class Drive_DirController extends Maniple_Controller_Action
         $owner = (int) $this->_request->getPost('owner');
         $user = $drive_helper->getUserMapper()->getUser($owner);
         if (!$owner) {
-            throw new App_Exception_InvalidArgument('Niepoprawny identyfikator użytkownika');
+            throw new Exception('Niepoprawny identyfikator użytkownika');
         }
 
         $db = $this->getResource('db');
