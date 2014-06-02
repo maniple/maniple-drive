@@ -4,8 +4,8 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
 {
     protected function _getTempName() // {{{
     {
-        $prefix = sprintf('%06d.', App::get('user')->id);
-        return App_Env::requireTempDir('uploads') . uniqid($prefix, true);
+        $prefix = sprintf('%06d.', $this->getSecurityContext()->getUser()->getId());
+        return Drive_FileStorage::requireTempDir('uploads') . uniqid($prefix, true);
     } // }}}
 
     /**
@@ -58,7 +58,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         // nie zezwalaj na otaczajace spacje
         $initial = trim($initial);
 
-        // ani na kropke na koncu pliku (Windowsiwy menadzer okien nie potrafi
+        // ani na kropke na koncu pliku (Windowsowy menadzer okien nie potrafi
         // usuwac takich plikow)
         $initial = rtrim($initial, '.');
 
@@ -80,7 +80,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         $newname = $parts['filename'] . $parts['extension'];
 
         $where = array(
-            'dir_id = ?' => $dir->id,
+            'dir_id = ?' => $dir->dir_id,
             'name = ?' => $newname,
         );
 
@@ -97,7 +97,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         // dla katalogow pozniej, bo zwykle pliki maja rozszerzenia, a katalogi
         // nie bardzo
         $where = array(
-            'parent_id = ?' => $dir->id,
+            'parent_id = ?' => $dir->dir_id,
             'name = ?' => $newname,
         );
         $dirs = $dir->getTable();
@@ -132,14 +132,14 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         $name = preg_replace('#[\/:*?"<>|]#', '', $name);
 
         if (!strlen($name)) {
-            throw new App_Exception_InvalidArgument('Niepoprawna nazwa pliku.');
+            throw new InvalidArgumentException('Niepoprawna nazwa pliku.');
         }
 
         $info['name'] = $name;
         $tempname = $info['tmp_name'];
 
         if (!is_file($tempname)) {
-            throw new App_Exception('Nie odnaleziono pliku.');
+            throw new Exception('Nie odnaleziono pliku.');
         }
 
         // wykonaj skan antywirusem
@@ -148,7 +148,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
             false === stripos($output, 'Infected files: 0'))
         {
             unlink($tempname);
-            throw new App_Exception('W pliku został wykryty wirus.');
+            throw new Exception('W pliku został wykryty wirus.');
         }
 
         //$info['name'] = $this->_uniqueName($info['name'], $dir, 16);
@@ -157,11 +157,11 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         //    throw new App_Exception('Plik o podanej nazwie już istnieje');
         //}
 
-        $user = $this->getBootstrapResource('user');
+        $user = $this->getSecurityContext()->getUser();
 
-        $info['owner'] = $user->id;
-        $info['created_by'] = $user->id;
-        $info['modified_by'] = $user->id;
+        $info['owner'] = $user->getId();
+        $info['created_by'] = $user->getId();
+        $info['modified_by'] = $user->getId();
 
         $db = $dir->getAdapter();
         $db->beginTransaction();
@@ -175,7 +175,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
             throw $e;
         }
 
-        $result = $this->_helper->drive->getViewableData($file);
+        $result = $this->getDriveHelper()->getViewableData($file);
 
         // do zwracanych danych dolacz jeszcze informacje o zajetym
         // miejscu na dysku
@@ -194,14 +194,14 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         $translator = $this->getResource('translate');
 
         try {
-            $this->assertAccess(App::get('user')->isAuthenticated());
+            $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
             // katalog, w ktorym umieszczony ma zostac plik
-            $dir_id = $this->_getParam('dir_id');
-            $dir = $this->_helper->drive->fetchDir($dir_id);
+            $dir_id = $this->getScalarParam('dir_id');
+            $dir = $this->getDriveHelper()->fetchDir($dir_id);
 
             // TODO uprawnienia zapisu do dysku
-            if (!$this->_helper->drive->isDirWritable($dir)) {
+            if (!$this->getDriveHelper()->isDirWritable($dir)) {
                 throw new App_Exception_Forbidden('Brak uprawnień do zapisu do tego katalogu');
             }
 

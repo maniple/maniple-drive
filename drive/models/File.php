@@ -34,13 +34,13 @@ class Drive_Model_File extends Zefram_Db_Table_Row
 
     public function getPath() // {{{
     {
-        $drives = $this->getAdapter()->getTable('Drive_Model_DbTable_Drives');
+        $drives = $this->_getTable('Drive_Model_DbTable_Drives');
         return $drives->getFilePath($this);
     } // }}}
 
     public function isReadable($user_id) // {{{
     {
-        $dirs = $this->getAdapter()->getTable('Drive_Model_DbTable_Dirs');
+        $dirs = $this->_getTable('Drive_Model_DbTable_Dirs');
         return $dirs->isDirReadable($this->dir_id, $user_id);    
     } // }}}
 

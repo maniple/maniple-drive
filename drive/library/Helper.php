@@ -71,11 +71,11 @@ class Drive_Helper
         $file = $this->getTableProvider()->getTable('Drive_Model_DbTable_Files')->findRow($file_id);
 
         if (empty($file)) {
-            throw new Exception('Plik nie został znaleziony');
+            throw new Exception('Plik nie został znaleziony', 404);
         }
 
         if (!$this->isDirReadable($file->Dir)) {
-            throw new Exception('Nie masz uprawnień dostępu do tego pliku');
+            throw new Exception('Nie masz uprawnień dostępu do tego pliku', 403);
         }
 
         return $file;

@@ -679,10 +679,12 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
                     },
                     element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
 
-                element.bind('append exists', function(e) {
+                element.bind('append', function (e) {
                     if (usersContainer.scrollTo) {
                         usersContainer.scrollTo(this, 100);
                     }
+                });
+                element.bind('exists', function (e) {
                     highlightUser(this);
                 });
 
@@ -692,13 +694,12 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
             highlight.remove();
 
             // zainicjuj widget listy uzytkownikow
-            // FIXME path to user search
             new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
                     idColumn: 'user_id',
                     url: self._options.userSearchUrl,
                     users: data.shares,
                     autocomplete: {
-                        renderItem: function(item) {
+                        renderItem: function(item) { // TODO templejt!
                             var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
                             return str;
                         },

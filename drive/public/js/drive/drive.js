@@ -681,10 +681,12 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                             },
                             element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
 
-                        element.bind('append exists', function(e) {
+                        element.bind('append', function (e) {
                             if (usersContainer.scrollTo) {
                                 usersContainer.scrollTo(this, 100);
                             }
+                        });
+                        element.bind('exists', function (e) {
                             highlightUser(this);
                         });
 
@@ -694,13 +696,12 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     highlight.remove();
 
                     // zainicjuj widget listy uzytkownikow
-                    // FIXME path to user search
                     new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
                             idColumn: 'user_id',
                             url: self._options.userSearchUrl,
                             users: data.shares,
                             autocomplete: {
-                                renderItem: function(item) {
+                                renderItem: function(item) { // TODO templejt!
                                     var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
                                     return str;
                                 },
@@ -1481,235 +1482,294 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         return DirBrowser;
     })(),
     FileUpload: (function() {
+        (function ($, window, undefined) {
         /**
          * @namespace
-         * @version 2013-05-16 / 2013-01-22
+         * @version 2013-12-20
          */
         var FileUpload = {};
 
-        FileUpload.Utils = {
-            stopEvent: function (event) { // {{{
-                event.cancelBubble = true;
-                event.returnValue = false;
+        FileUpload.stopEvent = function (event) { // {{{
+            event.cancelBubble = true;
+            event.returnValue = false;
 
-                if (event.stopPropagation) {
-                    event.stopPropagation();
-                }
+            if (event.stopPropagation) {
+                event.stopPropagation();
+            }
 
-                if (event.preventDefault) {
-                    event.preventDefault();
-                }
-            } // }}}
-        };
+            if (event.preventDefault) {
+                event.preventDefault();
+            }
+        }; // }}}
 
         /**
-         * @namespace
+         * @constructor
+         * @param {HTMLInputElement} fileInput
+         * @param {string} [url]
+         * Event handlers:
+         * .onabort
+         * .oncomplete
+         * .onerror
          */
-        FileUpload.Transfer = {
-            /**
-             * @constructor
-             * @param {HTMLInputElement} fileInput
-             * @param {string} [url]
-             * Event handlers:
-             * .onabort
-             * .oncomplete
-             * .onerror
-             */
-            FileInputTransfer: function (fileInput, url) { // {{{
-                var self = this,
-                    iframe, form, interval;
+        FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
+            var self = this,
+                iframe, form, interval;
 
-                var _cleanup = function () {
+            var _cleanup = function () {
+                if (iframe) {
+                    iframe.remove();
+                    iframe = null;
+                }
+                if (form) {
+                    form.remove();
+                    form = null;
+                }
+                if (interval) {
+                    clearInterval(interval);
+                    interval = null;
+                }
+            }
+
+            if (typeof url === 'object') {
+                options = url;
+                url = undefined;
+            }
+
+            options = options || {};
+
+            this.isAborted = false;
+
+            this.url = url || options.url;
+            this.data = options.data;
+
+            this.size = '', // file size is not available
+            this.name = (function (value) {
+                var name = String(value).replace(/\\/g, '/'),
+                    pos = name.lastIndexOf('/'); // C:\fakepath\...
+
+                if (pos != -1) {
+                    name = name.substr(pos + 1);
+                }
+
+                return name;
+            })(fileInput.value);
+
+            this.abort = function () { // {{{
+                if (!self.isAborted) {
+                    self.isAborted = true;
+
                     if (iframe) {
-                        iframe.remove();
-                        iframe = null;
+                        iframe.attr('src', 'javascript:false');
                     }
-                    if (form) {
-                        form.remove();
-                        form = null;
+
+                    _cleanup();
+
+                    if (typeof self.onabort === 'function') {
+                        self.onabort.call(self);
                     }
-                    if (interval) {
-                        clearInterval(interval);
-                        interval = null;
+                }
+            } // }}}
+
+            this.send = function () { // {{{
+                var frameName;
+
+                if (self.isAborted) {
+                    return false;
+                }
+
+                frameName = 'iframe-' + Math.random().toString().substr(2);
+
+                iframe = $('<iframe name="' + frameName + '" />')
+                    .css('display', 'none')
+                    .appendTo('body')
+                    .each(function() {
+                        this.onload = function () {
+                            // make sure onload() is called at most once
+                            this.onload = null;
+
+                            if (!self.isAborted && typeof self.oncomplete === 'function') {
+                                var body = this.contentWindow.document.body,
+                                    response = body.innerHTML.replace(/^\s+|\s+$/g, '');
+
+                                // IFRAME is expecting an HTML document. If response has
+                                // non-text/html MIME Firefox and Chrome will wrap it in
+                                // a PRE tag (the latter adds a style attribute)
+                                if (response.substr(0, 5).match(/<pre[\s>]/i)) {
+                                    response = response
+                                        .replace(/^<pre[^>]*>|<\/pre>$/ig, '')
+                                        .replace(/&lt;/g, '<')
+                                        .replace(/&gt;/g, '>')
+                                        .replace(/&amp;/g, '&');
+                                }
+
+                                self.oncomplete.call(self, response);
+                            }
+
+                            // Remove IFRAME and FORM elements. Use a separate thread,
+                            // so that this function is safe to use in these elements'
+                            // event handlers. Without this, (at least) Firefox 12
+                            // throws an 0x80004002 (NS_NOINTERFACE) error.
+                            setTimeout(_cleanup, 10);
+                        }
+                        this.onerror = function () {
+                            // make sure onerror() is called at most once
+                            this.onerror = null;
+
+                            if (!self.isAborted && typeof self.onerror === 'function') {
+                                self.onerror.call(self);
+                            }
+
+                            setTimeout(_cleanup, 10);
+                        }
+                    });
+
+                // simulate progress event
+                if (typeof self.onprogress === 'function') {
+                    interval = setInterval(function () {
+                        // progress value is undefined
+                        self.onprogress.call(self);
+                    }, 500);
+                }
+
+                // in order to send file in IE file input must be clicked by the user,
+                // not triggered by JS. Otherwise 'SCRIPT5 Access is denied' error will
+                // be thrown. Read more:
+                // http://stackoverflow.com/questions/3935001/getting-access-is-denied-error-on-ie8
+                // http://stackoverflow.com/questions/8838485/ie9-file-input-triggering-using-javascript
+                form = $('<form method="post" enctype="multipart/form-data" />')
+                    .attr('target', frameName)
+                    .css('display', 'none')
+                    .appendTo('body')
+                    .append(fileInput)
+                    .attr('action', self.url);
+
+                if (this.data) {
+                    for (key in this.data) {
+                        if (this.data.hasOwnProperty(key)) {
+                            $('<input type="text" />').attr({
+                                name: key,
+                                value: String(this.data[key])
+                            }).appendTo(form);
+                        }
                     }
                 }
 
-                this.isAborted = false;
+                form.submit();
 
-                this.size = '', // file size is not available
-                this.name = (function (value) {
-                    var name = String(value).replace(/\\/g, '/'),
-                        pos = name.lastIndexOf('/'); // C:\fakepath\...
-
-                    if (pos != -1) {
-                        name = name.substr(pos + 1);
-                    }
-
-                    return name;
-                })(fileInput.value);
-
-                this.abort = function () { // {{{
-                    if (!self.isAborted) {
-                        self.isAborted = true;
-
-                        if (iframe) {
-                            iframe.attr('src', 'javascript:false');
-                        }
-
-                        _cleanup();
-
-                        if (typeof self.onabort === 'function') {
-                            self.onabort(self);
-                        }
-                    }
-                } // }}}
-
-                this.send = function () { // {{{
-                    if (self.isAborted) {
-                        return false;
-                    }
-
-                    var frameName = 'iframe-' + Math.random().toString().substr(2);
-
-                    iframe = $('<iframe name="' + frameName + '" />')
-                        .css('display', 'none')
-                        .appendTo('body')
-                        .each(function() {
-                            this.onload = function () {
-                                // make sure onload() is called at most once
-                                this.onload = null;
-
-                                if (!self.isAborted && typeof self.oncomplete === 'function') {
-                                    var response = this.contentWindow.document.body.innerHTML;
-                                    self.oncomplete(self, response);
-                                }
-
-                                // Remove IFRAME and FORM elements. Use a separate thread, so that
-                                // this function is safe to use in these elements' event handlers.
-                                // Without this, (at least) Firefox 12 throws an 0x80004002
-                                // (NS_NOINTERFACE) error.
-                                setTimeout(_cleanup, 10);
-                            }
-                            this.onerror = function () {
-                                // make sure onerror() is called at most once
-                                this.onerror = null;
-
-                                if (!self.isAborted && typeof self.onerror === 'function') {
-                                    self.onerror(self);
-                                }
-
-                                setTimeout(_cleanup, 10);
-                            }
-                        });
-
-                    // simulate progress event
-                    if (typeof self.onprogress === 'function') {
-                        interval = setInterval(function () {
-                            // progress value is undefined
-                            self.onprogress(self);
-                        }, 500);
-                    }
-
-                    form = $('<form method="post" enctype="multipart/form-data" />')
-                        .attr('target', frameName)
-                        .css('display', 'none')
-                        .appendTo('body')
-                        .append(fileInput)
-                        .attr('action', url)
-                        .submit();
-
-                    return true;
-                } // }}}
-            }, // }}}
-            /**
-             * @constructor
-             * @param {File} file
-             * @param {string} [url]
-             * send({complete: function, progress: function, name: string})
-             * complete(responseText, file) in context of the XMLHttpRequest
-             * progress(file) in context of the XMLHttpRequestUpload
-             * options.name = 'file'
-             * @param [options.complete] function (file, responseText, xhr)
-             * @param [options.progress] function (file, value, xhr)
-             */
-            XHRTransfer: function (file, url, options) { // {{{
-                var self = this,
-                    xhr = new XMLHttpRequest,
-                    complete, abort;
-
-                options = options || {};
-
-                this.isAborted = false;
-
-                this.name = file.fileName || file.name;
-                this.size = file.fileSize || file.size;
-
-                this.abort = function () { // {{{
-                    if (!self.isAborted) {
-                        self.isAborted = true;
-
-                        try {
-                            xhr.abort();
-                        } catch (e) {
-                            // IE 7 throws an error when trying to abort
-                        }
-
-                        if (typeof self.onabort === 'function') {
-                            self.onabort(self);
-                        }
-                    }
-                } // }}}
-
-                this.send = function () { // {{{
-                    if (self.isAborted) {
-                        return false;
-                    }
-
-                    var data = new FormData;
-
-                    // do not send empty files or folders
-                    if (file.size === 0) {
-                        throw 'An empty file cannot be uploaded';
-                    }
-
-                    data.append(options.name || 'file', file);
-
-                    // In Mozilla Firefox if you call abort when the readyState is 1,
-                    // 2, or 3 then as a result of that call the onreadystatechange
-                    // event handler is fired with readyState 4, then readyState is
-                    // changed to 0.
-                    // Other implementations (Opera 8.5, IE 6 with Microsoft.XMLHTTP)
-                    // simply abort and set readyState to 0, not firing any
-                    // onreadystatechange handler.
-                    // Source: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.xml/dCV-F7ZuaOg
-
-                    xhr.onreadystatechange = function () {
-                        if (this.readyState == 4 && !self.isAborted && typeof self.oncomplete === 'function') {
-                            self.oncomplete(self, this.responseText);
-                        }
-                    };
-
-                    xhr.onerror = function () {
-                        if (typeof self.onerror === 'function') {
-                            self.onerror(self);
-                        }
-                    }
-
-                    if (typeof self.onprogress === 'function' && xhr.upload) {
-                        xhr.upload.addEventListener('progress', function (e) {
-                            if (e.lengthComputable) {
-                                self.onprogress(self, e.loaded / e.total);
-                            }
-                        }, false);
-                    }
-
-                    xhr.open('POST', url, true);
-                    xhr.send(data);
-
-                    return true;
-                } // }}}
+                return true;
             } // }}}
-        };
+        }; // }}}
+
+        /**
+         * @constructor
+         * @param {File} file
+         * @param {string} [url]
+         * send({complete: function, progress: function, name: string})
+         * complete(responseText, file) in context of the XMLHttpRequest
+         * progress(file) in context of the XMLHttpRequestUpload
+         * @param {string} [options.name='file']
+         * @param {string} [options.url]
+         * @param {object} [options.data]
+         * @param {function} [options.complete] function (file, responseText, xhr)
+         * @param {function} [options.progress] function (file, value, xhr)
+         */
+        FileUpload.XHRUpload = function (file, url, options) { // {{{
+            var self = this,
+                xhr, complete, abort;
+
+            if (!(window.FileList && window.FormData)) {
+                throw 'Your browser does not support HTML5 file upload features';
+            }
+
+            if (typeof url === 'object') {
+                options = url;
+                url = undefined;
+            }
+
+            xhr = new XMLHttpRequest;
+            options = options || {};
+
+            this.isAborted = false;
+            this.url = url || options.url;
+            this.data = options.data;
+
+            this.name = file.fileName || file.name;
+            this.size = file.fileSize || file.size;
+
+            this.abort = function () { // {{{
+                if (!self.isAborted) {
+                    self.isAborted = true;
+
+                    try {
+                        xhr.abort();
+                    } catch (e) {
+                        // IE 7 throws an error when trying to abort
+                    }
+
+                    if (typeof self.onabort === 'function') {
+                        self.onabort.call(self);
+                    }
+                }
+            } // }}}
+
+            this.send = function () { // {{{
+                var data;
+
+                if (self.isAborted) {
+                    return false;
+                }
+
+                // do not send empty files or folders
+                if (file.size === 0) {
+                    throw 'An empty file cannot be uploaded';
+                }
+
+                data = new FormData;
+                data.append(options.name || 'file', file);
+
+                if (this.data) {
+                    for (key in this.data) {
+                        if (this.data.hasOwnProperty(key)) {
+                            data.append(key, String(this.data[key]));
+                        }
+                    }
+                }
+
+                // In Mozilla Firefox if you call abort when the readyState is 1,
+                // 2, or 3 then as a result of that call the onreadystatechange
+                // event handler is fired with readyState 4, then readyState is
+                // changed to 0.
+                // Other implementations (Opera 8.5, IE 6 with Microsoft.XMLHTTP)
+                // simply abort and set readyState to 0, not firing any
+                // onreadystatechange handler.
+                // Source: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.xml/dCV-F7ZuaOg
+
+                xhr.onreadystatechange = function () {
+                    if (this.readyState == 4 && !self.isAborted && typeof self.oncomplete === 'function') {
+                        self.oncomplete.call(self, this.responseText);
+                    }
+                };
+
+                xhr.onerror = function () {
+                    if (typeof self.onerror === 'function') {
+                        self.onerror.call(self);
+                    }
+                }
+
+                if (typeof self.onprogress === 'function' && xhr.upload) {
+                    xhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            self.onprogress.call(self, e.loaded / e.total);
+                        }
+                    }, false);
+                }
+
+                xhr.open('POST', self.url, true);
+                xhr.send(data);
+
+                return true;
+            } // }}}
+        }; // }}}
 
         /**
          * @constructor
@@ -1776,7 +1836,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         delete items[i];
 
                         if (typeof options.cleanup === 'function') {
-                            options.cleanup.call(self, item.transfer);
+                            options.cleanup.call(self, item.upload);
                         }
                     }
                 }
@@ -1855,22 +1915,22 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             }
 
             function prepareItem (item) {
-                var transfer = item.transfer;
+                var upload = item.upload;
 
-                transfer.onabort = (function (onAbort) {
+                upload.onabort = (function (onAbort) {
                     return function () {
                         _abort(item);
                         _complete(item, onAbort, arguments);
                     }
-                })(transfer.onabort);
+                })(upload.onabort);
 
-                transfer.oncomplete = (function (onComplete) {
+                upload.oncomplete = (function (onComplete) {
                     return function () {
                         _complete(item, onComplete, arguments);
                     }
-                })(transfer.oncomplete);
+                })(upload.oncomplete);
 
-                transfer.onprogress = (function (onProgress) {
+                upload.onprogress = (function (onProgress) {
                     if (typeof onProgress === 'function') {
                         return function () {
                             var args = Array.prototype.slice.apply(arguments);
@@ -1878,7 +1938,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         }
                     }
                     return null;
-                })(transfer.onprogress);
+                })(upload.onprogress);
             }
 
             self.__worker = function () { // {{{
@@ -1900,11 +1960,11 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     prepareItem(item);
 
                     if (typeof options.start === 'function') {
-                        options.start.call(self, item.transfer, ++position);
+                        options.start.call(self, item.upload, ++position);
                     }
 
                     try {
-                        item.transfer.send();
+                        item.upload.send();
                     } catch (e) {
                         // skip to next item in queue
                         item.isCompleted = true;
@@ -1912,29 +1972,29 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         wait = false;
 
                         if (typeof options.error === 'function') {
-                            options.error.call(self, item.transfer, e);
+                            options.error.call(self, item.upload, e);
                         }
                     }
                 }
             } // }}}
 
-            this.enqueue = function (transfer) { // {{{
+            this.enqueue = function (upload) { // {{{
                 var index = -1;
 
-                if (transfer && typeof transfer === 'object') {
+                if (upload && typeof upload === 'object') {
                     items.nextIndex = null;
                     index = items.freeIndex++;
 
                     items[index] = {
                         index: index,
-                        transfer: transfer,
+                        upload: upload,
                         isCompleted: false
                     };
 
                     self.length = ++items.length;
 
                     if (typeof options.enqueue == 'function') {
-                        options.enqueue.call(self, transfer, index);
+                        options.enqueue.call(self, upload, index);
                     }
                 }
                 return index;
@@ -2003,9 +2063,9 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
                 input.bind('change', function() {
                     if (!self.disabled) {
-                        var transfer = new FileUpload.Transfer.FileInputTransfer(this, self.url);
+                        var upload = new FileUpload.Transfer.FileInputUpload(this, self.url);
 
-                        $.extend(transfer, {
+                        $.extend(upload, {
                             onprogress: options.progress,
                             oncomplete: options.complete,
                             onabort:    options.abort,
@@ -2017,7 +2077,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         // that more files can be selected
                         $(this.form ? this.form : this.parentNode).append(self.createFileInput());
 
-                        queue.enqueue(transfer);
+                        queue.enqueue(upload);
 
                         if (typeof options.enqueueComplete === 'function') {
                             options.enqueueComplete.call(self, 1);
@@ -2080,16 +2140,16 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             this.enqueueFiles = function (files) { // {{{
                 if (!self.disabled && files.length) {
                     for (var i = 0, n = files.length; i < n; ++i) {
-                        var transfer = new FileUpload.Transfer.XHRTransfer(files[i], self.url);
+                        var upload = new FileUpload.XHRUpload(files[i], self.url);
 
-                        $.extend(transfer, {
+                        $.extend(upload, {
                             onprogress: options.progress,
                             oncomplete: options.complete,
                             onabort:    options.abort,
                             onerror:    options.error
                         });
 
-                        queue.enqueue(transfer);
+                        queue.enqueue(upload);
                     }
                     if (typeof options.enqueueComplete === 'function') {
                         options.enqueueComplete.call(self, files.length);
@@ -2119,7 +2179,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
                         // cancel event propagation, to prevent browser from opening
                         // dropped files
-                        FileUpload.Utils.stopEvent(e);
+                        FileUpload.stopEvent(e);
 
                         // send an artificial event upwards to notify that a drop
                         // event occured
@@ -2128,9 +2188,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         }, 1);
                     }, false);
 
-                    // ustawianie / usuwanie klasy .drop podczas zdarzen dragover,
-                    // dragleave i drop wykonywane przez FileDrop ssie potwornie.
-                    // Upuszczanie pliku na INPUT[type=file] nie dziala pod IE 7-9
+                    // dropping file on INPUT[type=file] does not work in IE 7-9
                     element.bind('dragover', function() {
                         element.addClass('dragover');
                     });
@@ -2147,7 +2205,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                             e.dataTransfer.effectAllowed = 'all';
                         }
 
-                        FileUpload.Utils.stopEvent(e);
+                        FileUpload.stopEvent(e);
                     }, false);
                 }).append(form));
 
@@ -2156,6 +2214,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
             _init();
         } // }}}
+
+            return window.FileUpload = FileUpload;
+
+        }(window.jQuery, window));
         return FileUpload;
     })(),
     StickToBottom: (function() {

@@ -6,7 +6,7 @@ class Drive_FileController extends Drive_Controller_Action
     {
         try {
             $file_id = (string) $this->getScalarParam('file_id');
-            $file = $this->_helper->drive->fetchFile($file_id);
+            $file = $this->getDriveHelper()->fetchFile($file_id);
 
             $this->_helper->serveFile($file->getPath(), array(
                 'type' => $file->mimetype,
@@ -14,17 +14,23 @@ class Drive_FileController extends Drive_Controller_Action
                 'cache' => true,
             ));
 
-        } catch (App_Exception_NotFound $e) {
-            header('HTTP/1.0 404 Not Found');
-            header('Status: 404 Not Found');
-            echo 'File not found';
-            exit;
+        } catch (Exception $e) {
+            switch ($e->getCode()) {
+                case 404:
+                    header('HTTP/1.0 404 Not Found');
+                    header('Status: 404 Not Found');
+                    echo 'File not found';
+                    exit;
 
-        } catch (App_Exception_Forbidden $e) {
-            header('HTTP/1.0 403 Forbidden');
-            header('Status: 403 Forbidden');
-            echo 'You don\'t have permission to access this file';
-            exit;
+                case 403:
+                    header('HTTP/1.0 403 Forbidden');
+                    header('Status: 403 Forbidden');
+                    echo 'You don\'t have permission to access this file';
+
+                default:
+                    echo $e->getMessage();
+                    exit;
+            }
         }
     } // }}}
 

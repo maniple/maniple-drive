@@ -84,7 +84,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             }
 
             $md5 = md5_file($path);
-            $mimetype = MimeType::detect($path);
+            $mimetype = Zefram_File_MimeType_Data::detect($path);
 
             // jezeli plik o takiej samej sumie MD5 juz istnieje, usuwamy plik
             // tymczasowy. Jezeli nie istnieje przenies go do docelowej
@@ -121,22 +121,22 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 
             // ustaw filtr
             switch ($data['mimetype']) {
-                case MimeType::JPEG:
-                case MimeType::GIF:
-                case MimeType::PNG:
+                case Zefram_File_MimeType_Data::JPEG:
+                case Zefram_File_MimeType_Data::GIF:
+                case Zefram_File_MimeType_Data::PNG:
                     $data['filter'] = 'image';
                     break;
 
-                case MimeType::PDF:
+                case Zefram_File_MimeType_Data::PDF:
                     $data['filter'] = 'pdf';
                     break;
 
-                case MimeType::AVI:
-                case MimeType::FLV:
-                case MimeType::MKV:
-                case MimeType::MPEG:
-                case MimeType::MP4:
-                case MimeType::WMV:
+                case Zefram_File_MimeType_Data::AVI:
+                case Zefram_File_MimeType_Data::FLV:
+                case Zefram_File_MimeType_Data::MKV:
+                case Zefram_File_MimeType_Data::MPEG:
+                case Zefram_File_MimeType_Data::MP4:
+                case Zefram_File_MimeType_Data::WMV:
                     $data['filter'] = 'video';
                     break;
 

@@ -44,7 +44,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
             return false;
         }
 
-        $path = App_Env::requireStorageDir('drive') . substr($md5, 0, 2)
+        $path = Drive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2)
               . '/' . substr($md5, 2);
 
         if ($check && !is_file($path)) {
@@ -62,7 +62,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
     {
         // roznica w stosunku do getFilePath() jest taka, ze utworzony zostaje
         // katalog nazwany pierwszymi dwoma literami sumy MD5
-        $path = App_Env::requireStorageDir('drive/' . substr($md5, 0, 2))
+        $path = Drive_FileStorage::requireStorageDir('drive/' . substr($md5, 0, 2))
               . substr($md5, 2);
 
         return $path;
