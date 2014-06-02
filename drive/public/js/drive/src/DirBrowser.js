@@ -435,7 +435,7 @@ DirBrowser.prototype._initWidthChecker = function() { // {{{
 }; // }}}
 
 DirBrowser.prototype._dirUrl = function(dir) { // {{{
-    return '#dir:' + dir.id;
+    return '#dir:' + dir.dir_id;
 }; // }}}
 
 DirBrowser.prototype._eip = function(selector, url, options) { // {{{
@@ -523,20 +523,21 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
 
 DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     var self = this,
-        url = Drive.Util.uri(self._uriTemplates.dir.create, {parent: parentDir.id}),
+        url = Drive.Util.uri(self._uriTemplates.dir.create, {dir_id: parentDir.dir_id}),
         str = Drive.Util.i18n('DirBrowser.opCreateDir');
 
-    App.traits.modalForm({
+    ajaxForm({
         width:       440,
         height:      120,
         url:         url,
         title:       str.title,
         submitLabel: str.submit,
-        complete: function (response) {
-            if (response.dir) {
-                self.addSubdir(response.dir);
-                self._currentDir.subdirs.push(response.dir);
-            }
+        complete: function (dialog, response) {
+            var dir = response.data.dir;
+
+            self.addSubdir(dir);
+            self._currentDir.subdirs.push(dir);
+            dialog.close();
         }
     });
 }; // }}}
@@ -547,20 +548,19 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
         url = Drive.Util.uri(self._uriTemplates.dir.rename, dir),
         str = Drive.Util.i18n('DirBrowser.opRenameDir');
 
-    App.traits.modalForm({
+    ajaxForm({
         width:       440,
         height:      120,
         url:         url,
         title:       str.title,
         submitLabel: str.submit,
-        load: function() {
-            var iframe = this;
+        load: function (dialog) {
             setTimeout(function() {
-                $(iframe).contents().find('input[type="text"]').focus().select();
+                dialog.getContentElement().find('input[type="text"]').focus().select();
             }, 10);
         },
-        complete: function (response) {
-            var responseDir = response.dir,
+        complete: function (dialog, response) {
+            var responseDir = response.data.dir,
                 dirName = responseDir.name;
 
             Drive.Util.assert(responseDir.id == dir.id, 'Unexpected directory ID in response');
@@ -627,114 +627,119 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
         str = Drive.Util.i18n('DirBrowser.opShareDir'),
         url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
 
-    App.modal.open({
+    ajaxForm({
         width:  600,
         height: 360,
         title:  str.title,
-        request: {
-            url:      url,
-            type:     'get',
-            dataType: 'json',
-            content: function(dialog, response) {
-                var data = response.data,
-                    content = self._renderTemplate('DirBrowser.opShareDir', {str: str, data:data});
+        url:    url,
+        submitLabel: str.submit,
+        submitStatus: str.messageSending,
+        content: function (dialog, response) {
+            var data = response.data,
+                content = self._renderTemplate('DirBrowser.opShareDir', {str: str, data: data});
+console.log(dialog, response, content);
+            // dialog.setContent(content);
 
-                // wyswietlanie opisu zaznaczonego poziomu widocznosci katalogu
-                content.find('select[name="visibility"]').change(function() {
-                    content.find('.vis-desc').hide();
-                    content.find('#drive-dir-share-vis-desc-' + this.value).fadeIn('fast');
-                }).each(function() {
-                    var visibility = data.visibility;
+            // wyswietlanie opisu zaznaczonego poziomu widocznosci katalogu
+            content.find('select[name="visibility"]').change(function() {
+                content.find('.vis-desc').hide();
+                content.find('#drive-dir-share-vis-desc-' + this.value).fadeIn('fast');
+            }).each(function() {
+                var visibility = data.visibility;
 
-                    // jezeli katalog nie moze dziedziczyc widocznosci
-                    // (znajduje sie w korzeniu drzewa katalogow) usun
-                    // odpowiednia opcje z selecta
-                    if (!data.can_inherit) {
-                        $.each(this.options, function(index, option) {
-                            if (option.value == 'inherited') {
-                                $(option).remove();
+                // jezeli katalog nie moze dziedziczyc widocznosci
+                // (znajduje sie w korzeniu drzewa katalogow) usun
+                // odpowiednia opcje z selecta
+                if (!data.can_inherit) {
+                    $.each(this.options, function(index, option) {
+                        if (option.value == 'inherited') {
+                            $(option).remove();
+                        }
+                    });
+                }
+
+                // zaznacz biezaca widocznosc katalogu
+                $(this).val(visibility).change();
+            });
+
+            // pobierz kolor podswietlenia elementow reprezentujacych
+            // uzytkownika, usun element przechowujacy kolor
+            var usersContainer = content.find('#drive-dir-share-acl-users'),
+                highlight = usersContainer.find('.highlight'),
+                highlightColor = highlight.backgroundColor;
+
+            function highlightUser(element) {
+                $(element).effect('highlight', {color: highlightColor}, 1000);
+            }
+
+            function userBuilder(user) {
+                var vars = {
+                        user: user,
+                        str: str
+                    },
+                    element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
+
+                element.bind('append exists', function(e) {
+                    if (usersContainer.scrollTo) {
+                        usersContainer.scrollTo(this, 100);
+                    }
+                    highlightUser(this);
+                });
+
+                return element;
+            }
+
+            highlight.remove();
+
+            // zainicjuj widget listy uzytkownikow
+            // FIXME path to user search
+            new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
+                    url: self._options.userSearchUrl,
+                    users: data.shares
+                });
+
+            if (0) {
+            dialog.buttons([
+                {
+                    id: 'submit',
+                    label: str.submit,
+                    action: function () {
+                        dialog.setStatus(str.messageSending);
+                        App.ajax({
+                            url: url,
+                            type: 'post',
+                            data: content.find('form').serialize(),
+                            dataType: 'json',
+                            success: function (response) {
+                                App.flash(str.messageSuccess, 'success');
+                                dialog.close();
+                            },
+                            error: function (response) {
+                                dialog.status(response.message || str.messageError);
                             }
                         });
                     }
+                },
+            'cancel'
+            ]);
+            }
 
-                    // zaznacz biezaca widocznosc katalogu
-                    $(this).val(visibility).change();
-                });
+            return content;
 
-                // pobierz kolor podswietlenia elementow reprezentujacych
-                // uzytkownika, usun element przechowujacy kolor
-                var usersContainer = content.find('#drive-dir-share-acl-users'),
-                    highlight = usersContainer.find('.highlight'),
-                    highlightColor = highlight.backgroundColor;
+            // podepnij zawartosc okna do drzewa dokumentu, przed
+            // inicjalizacja obslugi zdarzen
+            // dialog.content(content).adjustHeight(true);
+            
+            // dostosuj wielkosc okna dialogowego do zawartosci, w osobnym
+            // watku, w przeciwnym razie jego rozmiar nie zostanie poprawnie
+            // obliczony
 
-                function highlightUser(element) {
-                    $(element).effect('highlight', {color: highlightColor}, 1000);
-                }
-
-                function userBuilder(user) {
-                    var vars = {
-                            user: user,
-                            str: str
-                        },
-                        element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
-
-                    element.bind('append exists', function(e) {
-                        if (usersContainer.scrollTo) {
-                            usersContainer.scrollTo(this, 100);
-                        }
-                        highlightUser(this);
-                    });
-
-                    return element;
-                }
-
-                highlight.remove();
-
-                // zainicjuj widget listy uzytkownikow
-                new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
-                        url: App.url('core/users/search'),
-                        users: data.shares
-                    });
-
-                dialog.buttons([
-                    {
-                        id: 'submit',
-                        label: str.submit,
-                        click: function () {
-                            dialog.status(str.messageSending);
-                            App.ajax({
-                                url: url,
-                                type: 'post',
-                                data: content.find('form').serialize(),
-                                dataType: 'json',
-                                success: function (response) {
-                                    App.flash(str.messageSuccess, 'success');
-                                    dialog.close();
-                                },
-                                error: function (response) {
-                                    dialog.status(response.message || str.messageError);
-                                }
-                            });
-                        }
-                    },
-                    'cancel'
-                ]);
-
-                // podepnij zawartosc okna do drzewa dokumentu, przed
-                // inicjalizacja obslugi zdarzen
-                dialog.content(content).adjustHeight(true);
-                
-                // dostosuj wielkosc okna dialogowego do zawartosci, w osobnym
-                // watku, w przeciwnym razie jego rozmiar nie zostanie poprawnie
-                // obliczony
-
-   //            setTimeout(function() {
+//            setTimeout(function() {
 //                    dialog.height(content.outerHeight(), true);
 
-                    // zeby overflow:auto zadzialalo
-  //                  content.height(content.height());
- //               }, 10);
-            }
+                // zeby overflow:auto zadzialalo
+//                  content.height(content.height());
+//               }, 10);
         }
     });
 }; // }}}
@@ -765,13 +770,13 @@ DirBrowser.prototype.opRemoveDir = function(dir) { // {{{
         url = Drive.Util.uri(self._uriTemplates.dir.remove, dir),
         str = Drive.Util.i18n('DirBrowser.opRemoveDir');
 
-    App.traits.modalForm({
+    ajaxForm({
         width:       440,
         height:      120,
         url:         url,
         title:       str.title,
         submitLabel: str.submit,
-        complete: function (response) {
+        complete: function (dialog, response) {
             response = response || {error: 'Nieoczekiwana odpowiedz od serwera'};
             if (!response.error) {
                 self._removeDir(dir);
@@ -820,17 +825,17 @@ DirBrowser.prototype.opDirDetails = function(dir) { // {{{
         });
     }
 
-    App.modal.open({
+    (new Dialog).open({
         title: str.title,
         width: 440,
-        content: function(dialog) {
+        content: function (dialog) {
             content.appendTo(this);
-            dialog.adjustHeight();
+            // dialog.adjustHeight();
         },
         buttons: [{
             label: str.submit,
-            click: function() {
-                this.parentDialog.close();
+            action: function (dialog) {
+                dialog.close();
             }
         }]
     });
@@ -841,7 +846,7 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
         self = this,
         url = Drive.Util.uri(self._uriTemplates.file.rename, file);
 
-    App.traits.modalForm({
+    ajaxForm({
         width:  440,
         height: 120,
         url:    url,
@@ -989,17 +994,17 @@ DirBrowser.prototype.opFileDetails = function(file) { // {{{
         });
     }
 
-    App.modal.open({
+    ajaxForm({
         title: str.title,
         width: 440,
-        content: function(dialog) {
+        content: function (dialog) {
             content.appendTo(this);
             dialog.adjustHeight();
         },
         buttons: [{
             label: str.submit,
-            click: function() {
-                this.parentDialog.close();
+            action: function (dialog) {
+                dialog.close();
             }
         }]
     });
@@ -1046,10 +1051,10 @@ DirBrowser.prototype._closeOpdd = function() { // {{{
     });
 
     // deprecated
-    this.$.fn.opdd.close();
+    // this.$.fn.opdd.close();
 }; // }}}
 
-DirBrowser.prototype._dirEntryOpdd = function(entry, items) { // {{{
+DirBrowser.prototype._dirEntryOpdd = function(entry, items) { return; // {{{
     var opdd = App.View.opdd(items);
 
     opdd.bind('opdd-open', function() {
@@ -1331,7 +1336,7 @@ DirBrowser.prototype._renderUpdir = function (dir) { // {{{
     // jezeli katalog jest dostepny do zapisu, zezwol na upuszczanie
     // na niego plikow lub katalogow.
     if (dir.perms.write) {
-        hooks.name.attr('data-drop-dir', dir.id).each(function() {
+        hooks.name.attr('data-drop-dir', dir.dir_id).each(function() {
             self._dropTargets.push(this);
         });
     }

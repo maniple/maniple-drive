@@ -31,6 +31,10 @@ class Drive_DirController extends Drive_Controller_Action
             ),
         );
 
+        $this->view->user_search_url = $this->view->routeUrl(
+            (string) $this->getDriveHelper()->getUserSearchRoute()
+        );
+
         $this->view->breadcrumbs = array(
             array(
                 'title' => 'Dyski',
@@ -128,7 +132,7 @@ class Drive_DirController extends Drive_Controller_Action
         if ($this->_request->isPost()) {
             $visibility = (string) $this->_request->getPost('visibility');
             if (!Drive_Model_DbTable_Dirs::isValidVisibility($visibility)) {
-                throw new App_Exception_InvalidArgument('Niepoprawny typ widoczności katalogu');
+                throw new Exception('Niepoprawny typ widoczności katalogu');
             }
 
             $shares = (array) $this->_request->getPost('shares');
@@ -137,7 +141,7 @@ class Drive_DirController extends Drive_Controller_Action
             $db->beginTransaction();
 
             try {
-                $dir->saveShares($shares);
+                $num = $dir->saveShares($shares);
 
                 $dir->visibility = $visibility;
                 $dir->modified_by = $this->getSecurity()->getUserId();
@@ -151,17 +155,20 @@ class Drive_DirController extends Drive_Controller_Action
             }
 
             $ajaxResponse = $this->_helper->ajaxResponse();
+            $ajaxResponse->setMessage($num);
             $ajaxResponse->sendAndExit();
 
         } else {
             // katalog w korzeniu nie moze dziedziczyc widocznosci
-            $select = $dir->selectShares(array('id', 'first_name', 'last_name', 'username'));
-            $shares = $select->fetchAll();
-
-            array_walk($shares, function(&$row) {
-                $row['id']        = (int) $row['id'];
-                $row['can_write'] = (int) $row['can_write'];
-            });
+            $shares = $dir->fetchShares();
+            if ($shares) {
+                foreach ($this->getDriveHelper()->getUserMapper()->getUsers(array_keys($shares)) as $user) {
+                    $shares[$user->getId()] = array_merge(
+                        $user->toArray(Maniple_Model::UNDERSCORE),
+                        array('can_write' => $shares[$user->getId()])
+                    );
+                }
+            }
 
             $ajaxResponse = $this->_helper->ajaxResponse();
             $ajaxResponse->setData(array(

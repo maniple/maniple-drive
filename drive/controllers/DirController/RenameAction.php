@@ -5,35 +5,36 @@
  * miec uprawnienia zapisu do katalogu (byc jego wlascicielem lub miec ten
  * katalog udostepniony do zapisu) albo byc administratorem.
  *
- * @version 2012-12-09
+ * @version 2014-06-02 / 2012-12-09
  */
-class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_DirController_RenameAction extends Zefram_Controller_Action_StandaloneForm
 {
-    protected function _init() // {{{
+    protected $_ajaxFormHtml = true;
+
+    protected function _prepare() // {{{
     {
-        $this->_helper->layout->setLayout('dialog');
         $this->_helper->viewRenderer->setRender('create');
 
-        $current_user = App::get('user');
-        $this->assertAccess($current_user->isAuthenticated());
+        $security = $this->getSecurityContext();
+        $this->assertAccess($security->isAuthenticated());
 
-        $id  = $this->_getParam('id');
-        $dir = $this->_helper->drive->fetchDir($id);
+        $id  = $this->getScalarParam('dir_id');
+        $dir = $this->getDriveHelper()->fetchDir($id);
 
         // za pomoca tej akcji nie mozna zmienic nazwy katalogu,
         // ktory jest w korzeniu dysku (innymi slowy nie mozna
         // zmienic nazwy dysku)
         if (empty($dir->parent_id)) {
-            throw new App_Exception_ApplicationLogic('Nazwa tego katalogu nie może zostać zmieniona');
+            throw new Exception('Nazwa tego katalogu nie może zostać zmieniona');
         }
 
         $this->assertAccess(
-            $this->_helper->drive->isDirWritable($dir),
+            $this->getDriveHelper()->isDirWritable($dir),
             'Nie masz uprawnien do zmiany nazwy tego katalogu'
         );
     
-        $form = new Form(array('elements' => array(
-            new Form_Element_Token('token'),
+        $form = new Zefram_Form(array('elements' => array(
+            // new Form_Element_Token('token'),
             'name' => array(
                 'type' => 'text',
                 'options' => array(
@@ -43,7 +44,7 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
                     'validators' => array(
                         new Drive_Validate_FileName,
                         new Drive_Validate_DirNotExists(array(
-                            'adapter'  => $dir->getAdapter(),
+                            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
                             'allowed'  => $dir->name,
                             'parentId' => $dir->parent_id
                         )),
@@ -60,9 +61,9 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         $this->_dir  = $dir;
     } // }}}
 
-    protected function _processForm() // {{{
+    protected function _process() // {{{
     {
-        $user = App::get('user');
+        $user = $this->getSecurityContext()->getUser();
         $dir = $this->_dir;
 
         $db = $dir->getAdapter();
@@ -70,7 +71,7 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
 
         try {
             $dir->name = $this->_form->getValue('name');
-            $dir->modified_by = $user->id;
+            $dir->modified_by = $user->getId();
             $dir->save();
             $db->commit();
 
@@ -79,10 +80,12 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
             throw $e;
         }
 
-        $result = $this->_helper->drive->getViewableData($dir, true);
+        $result = $this->getDriveHelper()->getViewableData($dir, true);
 
-        return $this->_helper->dialog->completionUrl(array(
+        $response = $this->_helper->ajaxResponse();
+        $response->setData(array(
             'dir' => $result,
         ));
+        $response->sendAndExit();
     } // }}}
 }

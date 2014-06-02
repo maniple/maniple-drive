@@ -114,14 +114,14 @@ Uploader.prototype._initDialog = function () { // {{{
         options: {
             width: 600,
             content: function (dialog) {
-                dialog.content(dialogContent);
+                dialog.setContent(dialogContent);
                 dialogContent.show();
-                dialog.adjustHeight();
+                // dialog.adjustHeight();
             },
-            beforeclose: function () {
+            beforeClose: function (dialog) {
                 // przywroc dialogContent na miejsce zanim dialog usunie go
                 // z drzewa, ponadto uczyn go niewidocznym
-                dialogContent.hide();
+                // dialogContent.hide();
 
                 if (dialogContentPrev) {
                     dialogContent.insertBefore(dialogContentPrev);
@@ -149,17 +149,17 @@ Uploader.prototype._initDialog = function () { // {{{
                 element: hooks.queuePane.hide(),
                 buttons: [
                     {
-                        text: str.cleanButtonText,
+                        label: str.cleanButtonText,
                         load: function () {
                             this.setAttribute('title', str.cleanButtonTooltip);
                         },
-                        click: function () {
+                        action: function () {
                             self.cleanQueue();
                         }
                     },
                     {
-                        text: str.cancelButtonText,
-                        type: 'cancel'
+                        label: str.cancelButtonText,
+                        action: 'close'
                     }
                 ]
             }
@@ -539,8 +539,9 @@ Uploader.prototype._showDialogPane = function (name, show) { // {{{
                     dialog.panes[dialog.active].element.hide();
                     pane.element.show();
 
-                    widget.title(pane.title).buttons(pane.buttons);
-                    widget.adjustHeight();
+                    widget.setTitle(pane.title);
+                    widget.setButtons(pane.buttons);
+                    // widget.adjustHeight();
 
                     dialog.previous = dialog.active;
                     dialog.active = name;
@@ -554,7 +555,7 @@ Uploader.prototype._showDialogPane = function (name, show) { // {{{
                 options.title = pane.title;
                 options.buttons = pane.buttons;
 
-                widget = App.modal.open(options);
+                widget = (new Dialog(options)).open();
 
                 dialog.widget = widget;
                 dialog.active = name;
@@ -572,7 +573,7 @@ Uploader.prototype._showDialogPane = function (name, show) { // {{{
             // wywoluje onDialogClose za pomoca handlera beforeclose
             // podanego w opcjach okienka
             widget.close();
-            dialog.widget = widget = null;
+            widget = null;
         }
     }
 } // }}}

@@ -17,6 +17,7 @@ class Drive_Bootstrap extends Zend_Application_Module_Bootstrap
                     'securityContext' => null,
                     'tableProvider'   => null,
                     'userMapper'      => null,
+                    'userSearchRoute' => null,
                 ),
             ),
         );

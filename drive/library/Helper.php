@@ -23,6 +23,11 @@ class Drive_Helper
     protected $_userMapper;
 
     /**
+     * @var string
+     */
+    protected $_userSearchRoute;
+
+    /**
      * @return Drive_Mapper
      */
     public function getMapper()
@@ -274,7 +279,7 @@ class Drive_Helper
     {
         $user = $this->getUserMapper()->getUser($user_id);
         if ($user) {
-            return $this->projectUserData($user->toArray());
+            return $this->projectUserData($user->toArray(Maniple_Model::UNDERSCORE));
         }
     } // }}}
 
@@ -308,12 +313,15 @@ class Drive_Helper
         while (($row = $row->fetchParent()) && $this->isDirReadable($row)) {
             // $parents[] = $this->getViewableData($row, false);
             $parents[] = array(
-                'id'      => (int) $row->id,
+                'dir_id'  => (int) $row->dir_id,
                 'name'    => $row->name,
                 'perms'   => $this->getDirPermissions($row),
                 'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
             );
             // $set->add($row->owner, $row->created_by, $row->modified_by);
+            $user_ids[$row->owner] = true;
+            $user_ids[$row->created_by] = true;
+            $user_ids[$row->modified_by] = true;
         }
 
         $files = array();
@@ -351,12 +359,14 @@ class Drive_Helper
             // pobierz podkatalogi
             foreach ($dir->fetchSubDirs() as $row) {
                 $subdirs[] = $this->getViewableData($row, false);
-                $set->add($row->owner, $row->created_by, $row->modified_by);
+                $user_ids[$row->owner] = true;
+                $user_ids[$row->created_by] = true;
+                $user_ids[$row->modified_by] = true;
             }
         }
 
         // wczytaj wszystkie potrzebne rekordy uzytkownikow
-        $users = $this->getUserMapper()->getUsers($user_ids);
+        $users = $this->getUserMapper()->getUsers(array_keys($user_ids));
 
         // w kazdym z plikow i podkatalogow oraz katalogow nadrzednych
         // zamien identyfikator wlasciciela na odpowiadajacy mu rekord
@@ -367,15 +377,15 @@ class Drive_Helper
             $modified_by = $users[$item['modified_by']];
 
             $item['owner'] = $owner 
-                ? $that->projectUserData($owner->toArray())
+                ? $that->projectUserData($owner->toArray(Maniple_Model::UNDERSCORE))
                 : null;
 
             $item['created_by'] = $created_by
-                ? $that->projectUserData($created_by->toArray())
+                ? $that->projectUserData($created_by->toArray(Maniple_Model::UNDERSCORE))
                 : null;
 
             $item['modified_by'] = $modified_by
-                ? $that->projectUserData($modified_by->toArray())
+                ? $that->projectUserData($modified_by->toArray(Maniple_Model::UNDERSCORE))
                 : null;
         };
 
@@ -498,5 +508,16 @@ class Drive_Helper
     public function getUserMapper()
     {
         return $this->_userMapper;
+    }
+
+    public function setUserSearchRoute($userSearchRoute = null)
+    {
+        $this->_userSearchRoute = $userSearchRoute;
+        return $this;
+    }
+
+    public function getUserSearchRoute()
+    {
+        return $this->_userSearchRoute;
     }
 }

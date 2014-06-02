@@ -23,13 +23,13 @@ class Drive_DriveController_EditAction extends Zefram_Controller_Action_Standalo
         $drive = $this->getResource('db.table_provider')->getTable('Drive_Model_DbTable_Drives')->findRow($drive_id);
 
         if (empty($drive)) {
-            throw new App_Exception_NotFound('Dysk o podanym identyfikatorze nie został znaleziony.');
+            throw new Exception('Dysk o podanym identyfikatorze nie został znaleziony.');
         }
 
         $this->_drive = $drive;
         $this->_form  = new Drive_Form_Drive(array(
-            'userMapper' => $this->getResource('profile.mapper'),
-            'tableProvider' => $this->getResource('db.table_provider'),
+            'userMapper' => $this->getDriveHelper()->getUserMapper(),
+            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
             'drive' => $drive,
         ));
     }

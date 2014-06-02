@@ -2,6 +2,8 @@
 
 class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 {
+    protected $_idColumn = 'dir_id';
+
     public function isReadable($user_id) // {{{
     {
         return $this->getTable()->isDirReadable($this->dir_id, $user_id);
@@ -164,55 +166,46 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
     } // }}}
 
     /**
-     * @param string|array $columns
-     * @return Zefram_Db_Table_Select
+     * @return array
      */
-    public function selectShares($columns = Zend_Db_Select::SQL_WILDCARD) // {{{
+    public function fetchShares() // {{{
     {
         $db = $this->getAdapter();
-        $shares = $this->_getTable('Drive_Model_DbTable_DirShares');
-        $select = $this->_getTable('Model_Core_Users')
-            ->select(array('u' => $columns))
-            ->setIntegrityCheck(false)
-            ->join(array('s' => $shares), 's.user_id = u.id', 'can_write')
-            ->where('s.dir_id = ?', $this->dir_id)
-            ->order(array('last_name', 'first_name', 'username'));
+        $sharesTable = $this->_getTable('Drive_Model_DbTable_DirShares');
+        $shares = array();
 
-        return $select;
+        foreach ($sharesTable->fetchAll(array('dir_id = ?' => $this->dir_id)) as $row) {
+            $shares[$row->user_id] = (int) $row->can_write;
+        }
+
+        return $shares;
     } // }}}
 
     /**
      * @param array $users      tablica postaci array(user_id => can_write)
      * @return int              liczba utworzonych rekordow
      */
-    public function saveShares($users) // {{{
+    public function saveShares(array $shares) // {{{
     {
         $db = $this->getAdapter();
 
         // usun aktualne rekordy uprawnien
-        $shares = $this->_getTable('Drive_Model_DbTable_DirShares');
-        $shares->delete(array('dir_id = ?' => $this->dir_id));
+        $sharesTable = $this->_getTable('Drive_Model_DbTable_DirShares');
+        $sharesTable->delete(array('dir_id = ?' => $this->dir_id));
 
         $count = 0;
-        $users = array_map(function($value) { return $value ? 1 : 0; }, (array) $users);
 
-        if (count($users)) {
-            // odfiltruj niepoprawne identyfikatory uzytkownikow
-            $user_ids = $this->_getTable('Model_Core_Users')
-                ->select('id')
-                ->where('id IN (?)', array_keys($users))
-                ->fetchAll();
+        if (count($shares)) {
+            $row = array('dir_id' => $this->dir_id);
 
-            if (count($user_ids)) {
-                $row = array('dir_id' => $this->dir_id);
-
-                // zapisz nowe uprawnienia do tego katalogu
-                foreach ($user_ids as $user_id) {
-                    $user_id = reset($user_id);
+            // zapisz nowe uprawnienia do tego katalogu
+            foreach ($shares as $user_id => $can_write) {
+                $user_id = (int) $user_id;
+                if ($user_id) {
                     $row['user_id']   = $user_id;
-                    $row['can_write'] = $users[$user_id];
+                    $row['can_write'] = $can_write ? 1 : 0;
 
-                    $shares->insert($row);
+                    $sharesTable->insert($row);
                     ++$count;
                 }
             }

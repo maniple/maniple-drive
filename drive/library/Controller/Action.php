@@ -17,6 +17,11 @@ abstract class Drive_Controller_Action extends Maniple_Controller_Action
         return $this->getDriveHelper()->getSecurityContext();
     }
 
+    public function getSecurityContext()
+    {
+        return $this->getDriveHelper()->getSecurityContext();
+    }
+
     public function assertAccess($expr, $message = null)
     {
         if ($expr) {

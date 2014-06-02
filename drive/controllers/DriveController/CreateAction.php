@@ -18,8 +18,8 @@ class Drive_DriveController_CreateAction extends Zefram_Controller_Action_Standa
         $this->getSecurity()->requireAuthentication();
 
         $form = new Drive_Form_Drive(array(
-            'tableProvider' => $this->getResource('db.table_provider'),
-            'userMapper' => $this->getResource('profile.mapper'),
+            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
+            'userMapper' => $this->getDriveHelper()->getUserMapper(),
         ));
 
         $this->_form = $form;
