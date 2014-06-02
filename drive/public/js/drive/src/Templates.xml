@@ -244,7 +244,7 @@
   <div class="user-name-un">{{ user.username }}</div>
  </td>
  <td class="user-perms">
-  <select name="shares[{{ user.id }}]">
+  <select name="shares[{{ user.user_id }}]">
    <option value="0">{{ str.aclRead }}</option>
    <option value="1"{{# user.can_write }}selected{{/ user.can_write }}>{{ str.aclReadWrite }}</option>
   </select>

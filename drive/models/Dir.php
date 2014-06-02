@@ -44,12 +44,12 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 
         $where = (array) $where;
         $where['dir_id = ?'] = (int) $this->dir_id;
-        $where['id IN (?)'] = $ordering;
+        $where['file_id IN (?)'] = $ordering;
 
         $weight = 0;
-        $case = 'CASE id';
-        foreach ($ordering as $id) {
-            $case .= ' WHEN ' . $db->quote($id) . ' THEN ' . $weight++;
+        $case = 'CASE file_id';
+        foreach ($ordering as $file_id) {
+            $case .= ' WHEN ' . $db->quote($file_id) . ' THEN ' . $weight++;
         }
         $case .= ' ELSE weight END';
 
@@ -283,7 +283,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         $dir_id = (int) $this->dir_id;
 
         $queue = array($this->dir_id);
-        $select = $this->getTable()->select('id');
+        $select = $this->getTable()->select('dir_id');
         $where = array(
             'drive_id = ?' => $this->drive_id,
         );

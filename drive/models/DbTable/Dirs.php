@@ -42,7 +42,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     protected static function _getCache() // {{{
     {
-        return App::get('cache');
+        return null;
     } // }}}
 
     /**
@@ -114,7 +114,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
             }
         }
 
-        $dir_id = (int) $dir->id;
+        $dir_id = (int) $dir->dir_id;
         $user_id = (int) $user_id;
 
         // sprawdz czy dostep do dysku nie jest obecny w pamieci podrecznej
@@ -191,7 +191,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
     public function selectSharedDirs($user)
     {
         if ($user instanceof Model_Core_User) {
-            $user = $user->id;
+            $user = $user->user_id;
         }
 
         $user = (int) $user;
@@ -201,7 +201,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         $select = $this->select(array('d' => '*'))
             ->setIntegrityCheck(false)
-            ->join(array('s' => $shares), 's.dir_id = d.id', 'can_write')
+            ->join(array('s' => $shares), 's.dir_id = d.dir_id', 'can_write')
             ->where('s.user_id = ?', $user)
             ->where('d.owner <> ?', $user)
             ->where('d.drive_id <> ?', $user);

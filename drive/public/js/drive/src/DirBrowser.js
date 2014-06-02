@@ -637,7 +637,7 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
         content: function (dialog, response) {
             var data = response.data,
                 content = self._renderTemplate('DirBrowser.opShareDir', {str: str, data: data});
-console.log(dialog, response, content);
+
             // dialog.setContent(content);
 
             // wyswietlanie opisu zaznaczonego poziomu widocznosci katalogu
@@ -694,8 +694,15 @@ console.log(dialog, response, content);
             // zainicjuj widget listy uzytkownikow
             // FIXME path to user search
             new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
+                    idColumn: 'user_id',
                     url: self._options.userSearchUrl,
-                    users: data.shares
+                    users: data.shares,
+                    autocomplete: {
+                        renderItem: function(item) {
+                            var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
+                            return str;
+                        },
+                    }
                 });
 
             if (0) {

@@ -17,16 +17,17 @@
  * rodzica usuwanego elementu.
  *
  * @param {string|jQuery|Element} selector
- * @param {function} userBuilder   funkcja tworzace element reprezentujacy
+ * @param {function} itemBuilder   funkcja tworzace element reprezentujacy
  *                                 uzytkownika na liscie
  * @param {object} [options]       ustawienia dodatkowe
  * @param {string} [options.url]   zrodlo danych do autouzupelniania
+ * @param {int}    [options.limit] limit liczby elementow
  * @param {Array}  [options.users] poczatkowa lista uzytkownikow
  * @constructor
  * @requires Viewtils
- * @version 2012-12-27
+ * @version 2014-04-17 / 2013-07-20 / 2012-12-27
  */
-var UserPicker = function(selector, userBuilder, options) { // {{{
+var UserPicker = function(selector, itemBuilder, options) { // {{{
     var $ = window.jQuery,
         self = this,
         container = $(selector),
@@ -35,7 +36,7 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
         selected,
         term;
 
-    options = options || {};
+    options = $.extend(true, {}, UserPicker.defaults, options);
 
     function init() {
         users = {length: 0, data: {}};
@@ -51,7 +52,7 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
         // przycisk dodajacy uzytkownika do listy wybranych jest odblokowywany
         // po wybraniu uzytkownika, po dodaniu uzytkownika jest blokowany,
         // wartosc pola do wpisywania jest czyszczona
-        hooks.userSearch.autocomplete({
+        hooks.userSearch.autocomplete($.extend({}, options.autocomplete, {
             open: function(event, ui) {
                 closeTime = null;
             },
@@ -60,16 +61,12 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
             },
             source: options.url || [],
             select: function(event, ui) {
-                hooks.userAdd.removeClass('disabled');
+                hooks.userAdd.removeClass('disabled').prop('disabled', false);
                 selected = ui.item;
                 return false;
             },
-            renderItem: function(item) {
-                var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
-                return str;
-            },
             beforeSend: function(request) {
-                hooks.userAdd.addClass('disabled');
+                hooks.userAdd.addClass('disabled').prop('disabled', true);
                 selected = null;
 
                 term = $.trim(request.term);
@@ -77,7 +74,7 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
                     return false;
                 }
             }
-        });
+        }));
 
         // zablokuj zdarzenie keydown jezeli wcisnieto Enter, aby zablokowac
         // przesylanie formularza. Jezeli wybrano uzytkownika, a lista
@@ -104,7 +101,7 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
                     selected = null;
 
                     this.value = '';
-                    hooks.userAdd.addClass('disabled');
+                    hooks.userAdd.addClass('disabled').prop('disabled', true);
                 }
                 return false;
             }
@@ -123,12 +120,14 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
                 selected = null;
             }
 
-            j.addClass('disabled');
+            j.addClass('disabled').prop('disabled', true);
             hooks.userSearch.val('');
         });
 
+        // na poczatku przycisk dodawania jest zablokowany
+        hooks.userAdd.addClass('disabled').prop('disabled', true);
+
         // dodaj uzytkownikow do listy, poczatkowe wypelnianie listy
-        // nie wywoluje zdarzenia 'append'
         if (options.users) {
             $.each(options.users, function(key, user) {
                 self.addUser(user, false);
@@ -142,22 +141,39 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
      * Jezeli uzytkownik byl juz dodany reprezentujacy go element zostaje
      * podswietlony.
      * @param {object} user
-     * @param {bool} [triggerAppend=true]
      */
-    this.addUser = function(user, triggerAppend) {
-        if (user.id in users.data) {
+    this.addUser = function(user, _isInitialValue) {
+        var element,
+            elementHtml,
+            elementHooks;
+
+        if (user[options.idColumn] in users.data) {
             // uzytkownik o podanym id jest juz dodany do listy, wywolaj
             // zdarzenie o tym informujace
-            users.data[user.id].element.trigger('exists');
+            users.data[user[options.idColumn]].element.trigger('exists');
 
         } else {
-            var element = $(userBuilder(user)),
-                elementHooks = Viewtils.hooks(element, {wrapper: $});
+            if (options.limit > 0 && users.length == options.limit) {
+                return false;
+            }
+
+            elementHtml = itemBuilder(user);
+
+            // jezeli itemBuilder zwroci false, oznacza to, ze element nie
+            // moze zostac dodany.
+            if (false === elementHtml) {
+                return false;
+            }
+
+            element = $(elementHtml);
+            elementHooks = Viewtils.hooks(element, {wrapper: $});
 
             if (elementHooks.userDelete) {
                 elementHooks.userDelete.click(function() {
-                    delete users.data[user.id];
+                    delete users.data[user[options.idColumn]];
                     --users.length;
+
+                    hooks.userSearch.removeClass('disabled').prop('disabled', false);
 
                     // usun element z dokumentu i wywolaj zdarzenie informujace
                     // o usunieciu elementu. Event ma ustawione pole relatedNode
@@ -165,10 +181,14 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
                     // http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html#event-type-DOMNodeRemoved
                     var parentNode = element.get(0).parentNode;
 
+                    element.trigger({
+                        type: 'beforeRemove'
+                    });
                     element.remove().trigger({
                         type: 'remove',
                         relatedNode: parentNode
                     });
+                    container.trigger('itemRemove', [user, element]);
 
                     // usun referencje do elementu aby ulatwic odsmiecanie
                     element = null;
@@ -186,7 +206,7 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
                 hooks.emptyListMessage.remove();
             }
 
-            users.data[user.id] = user;
+            users.data[user[options.idColumn]] = user;
             ++users.length;
 
             user.element = element;
@@ -195,15 +215,25 @@ var UserPicker = function(selector, userBuilder, options) { // {{{
             // wywolaj zdarzenie append informujace element, ze zostal dodany
             // do drzewa dokumentu
             // http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html#event-type-DOMNodeInsertedIntoDocument
-            if (triggerAppend !== false) {
-                element.trigger({
-                    type: 'append',
-                    relatedNode: hooks.userList.get(0)
-                });
+            element.trigger({
+                type: 'append',
+                relatedNode: hooks.userList.get(0),
+                isInitialValue: _isInitialValue
+            });
+
+            container.trigger('itemAdd', [user, element, _isInitialValue]);
+
+            if (options.limit == users.length) {
+                hooks.userSearch.addClass('disabled').prop('disabled', true);
             }
         }
     }
 
     init();
 } // }}}
+
+UserPicker.defaults = {
+    idColumn: 'id',
+    autocomplete: {}
+};
 

@@ -123,7 +123,7 @@ class Drive_Helper
                 // zeby przeniesc lub usunac katalog trzeba miec uprawnienia do
                 // zapisu tego katalogu, oraz miec uprawnienia do zapisu
                 // w katalogu nadrzednym (ten ostatni musi istniec)
-                if ($write && ($parent = $dir->fetchParent()) && $parent->isWritable($use_id)) {
+                if ($write && ($parent = $dir->fetchParent()) && $parent->isWritable($user_id)) {
                     $remove = true;
                     $rename = true;
                 }
