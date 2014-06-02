@@ -259,7 +259,6 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
         // simply abort and set readyState to 0, not firing any
         // onreadystatechange handler.
         // Source: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.xml/dCV-F7ZuaOg
-
         xhr.onreadystatechange = function () {
             if (this.readyState == 4 && !self.isAborted && typeof self.oncomplete === 'function') {
                 self.oncomplete.call(self, this.responseText);
@@ -415,7 +414,7 @@ FileUpload.TransferQueue = function (options) { // {{{
         // call complete callback
         if (typeof callback === 'function') {
             try {
-                callback.apply(self, args);
+                callback.apply(self, [item].concat(args));
             } catch (err) {}
         }
 
@@ -436,13 +435,15 @@ FileUpload.TransferQueue = function (options) { // {{{
         upload.onabort = (function (onAbort) {
             return function () {
                 _abort(item);
-                _complete(item, onAbort, arguments);
+                var args = Array.prototype.slice.apply(arguments);
+                _complete(item, onAbort, args);
             }
         })(upload.onabort);
 
         upload.oncomplete = (function (onComplete) {
             return function () {
-                _complete(item, onComplete, arguments);
+                var args = Array.prototype.slice.apply(arguments);
+                _complete(item, onComplete, args);
             }
         })(upload.oncomplete);
 
