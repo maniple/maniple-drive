@@ -355,18 +355,50 @@ class Drive_Helper
             $user_ids[$row->modified_by] = true;
         }
 
+        $shares_dir_ids = array();
+        if ($this->isDirShareable($dir)) {
+            $shares_dir_ids[] = $dir->dir_id;
+        }
+
         if (!isset($options['filesOnly']) || !$options['filesOnly']) {
             // pobierz podkatalogi
             foreach ($dir->fetchSubDirs() as $row) {
-                $subdirs[] = $this->getViewableData($row, false);
+                $subdir = $this->getViewableData($row, false);
+                if ($subdir['perms'][self::SHARE]) {
+                    $shares_dir_ids[] = $row->dir_id;
+                }
+                $subdirs[] = $subdir;
+                
                 $user_ids[$row->owner] = true;
                 $user_ids[$row->created_by] = true;
                 $user_ids[$row->modified_by] = true;
             }
         }
 
+        // pobierz wszystkie wspoldzielenia katalogow
+        $rows = $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')->fetchDirShares($shares_dir_ids);
+        $shares = array();
+
+        foreach ($rows as $row) {
+            $shares[$row->dir_id][] = array(
+                'user_id' => $row->user_id,
+                'can_write' => $row->can_write ? 1 : 0,
+            );
+            $user_ids[$row->user_id] = true;
+        }
+
         // wczytaj wszystkie potrzebne rekordy uzytkownikow
         $users = $this->getUserMapper()->getUsers(array_keys($user_ids));
+
+        foreach ($shares as $dir_id => &$dir_shares) {
+            foreach ($dir_shares as &$share) {
+                $user_id = $share['user_id'];
+                if (isset($users[$user_id])) {
+                    $share = array_merge($share, $users[$user_id]->toArray(Maniple_Model::UNDERSCORE));
+                }
+            }
+        }
+        unset($dir_shares, $share);
 
         // w kazdym z plikow i podkatalogow oraz katalogow nadrzednych
         // zamien identyfikator wlasciciela na odpowiadajacy mu rekord
@@ -393,11 +425,20 @@ class Drive_Helper
         array_walk($subdirs, $attach_users);
         array_walk($files,   $attach_users);
 
+        foreach ($subdirs as &$subdir) {
+            $subdir['shares'] = isset($shares[$subdir['dir_id']]) ? $shares[$subdir['dir_id']] : null;
+        }
+        unset($subdir);
+
         // zwroc dane potrzebne do wyswietlenia zawartosci katalogu
         $result = $this->getViewableData($dir);
         $result['parents'] = $parents;
         $result['subdirs'] = $subdirs;
         $result['files']   = $files;
+
+        $result['visibility'] = $dir->visibility;
+        $result['can_inherit_visibility'] = (bool) $dir->parent_id;
+        $result['shares'] = isset($shares[$dir->dir_id]) ? $shares[$dir->dir_id] : null;
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         $drive = $dir->Drive;

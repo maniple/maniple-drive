@@ -156,6 +156,9 @@ DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
     hooks.used.text(Viewtils.fsize(used));
 
     if (hooks.percent) {
+        if (percent === 0 && used > 0) {
+            percent = '<1';
+        }
         hooks.percent.text(percent);
     }
 
@@ -604,12 +607,12 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
 
 DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
     var self = this,
-        url = Drive.Util.uri(self._uriTemplates.dir.move);
+        url = Drive.Util.uri(self._uriTemplates.dir.move, dir);
 
     App.ajax({
         url: url,
         type: 'post',
-        data: {id: dir.id, parent: parentDirId},
+        data: {parent_id: parentDirId},
         dataType: 'json',
         success: function () {
             if (dir.element) {
@@ -627,30 +630,56 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
         str = Drive.Util.i18n('DirBrowser.opShareDir'),
         url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
 
-    ajaxForm({
+    (new Dialog({
         width:  600,
         height: 360,
         title:  str.title,
-        url:    url,
+        buttons: [
+            {
+                label: 'Save',
+                action: function (dialog) {
+                    dialog.setStatus(str.messageSending);
+                    App.ajax({
+                        url: url,
+                        type: 'post',
+                        data: dialog.getContentElement().find('form').serialize(),
+                        dataType: 'json',
+                        success: function (response) {
+                            // App.flash(str.messageSuccess, 'success');
+                            $.extend(dir, response.data);
+                            dialog.close();
+                        },
+                        error: function (response) {
+                            dialog.setStatus(response.message || str.messageError);
+                        }
+                    });
+                },
+                className: 'btn btn-primary'
+            },
+            {
+                label: 'Cancel',
+                action: 'close',
+                className: 'btn'
+            }
+        ],
         submitLabel: str.submit,
         submitStatus: str.messageSending,
-        content: function (dialog, response) {
-            var data = response.data,
-                content = self._renderTemplate('DirBrowser.opShareDir', {str: str, data: data});
+        content: function (dialog) {
+            var content = self._renderTemplate('DirBrowser.opShareDir', {str: str});
 
-            // dialog.setContent(content);
+            dialog.setContent(content);
 
             // wyswietlanie opisu zaznaczonego poziomu widocznosci katalogu
             content.find('select[name="visibility"]').change(function() {
                 content.find('.vis-desc').hide();
                 content.find('#drive-dir-share-vis-desc-' + this.value).fadeIn('fast');
             }).each(function() {
-                var visibility = data.visibility;
+                var visibility = dir.visibility;
 
                 // jezeli katalog nie moze dziedziczyc widocznosci
                 // (znajduje sie w korzeniu drzewa katalogow) usun
                 // odpowiednia opcje z selecta
-                if (!data.can_inherit) {
+                if (!dir.can_inherit_visibility) {
                     $.each(this.options, function(index, option) {
                         if (option.value == 'inherited') {
                             $(option).remove();
@@ -697,7 +726,7 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
             new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
                     idColumn: 'user_id',
                     url: self._options.userSearchUrl,
-                    users: data.shares,
+                    users: dir.shares,
                     autocomplete: {
                         renderItem: function(item) { // TODO templejt!
                             var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
@@ -732,8 +761,6 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
             ]);
             }
 
-            return content;
-
             // podepnij zawartosc okna do drzewa dokumentu, przed
             // inicjalizacja obslugi zdarzen
             // dialog.content(content).adjustHeight(true);
@@ -749,7 +776,7 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
 //                  content.height(content.height());
 //               }, 10);
         }
-    });
+    })).open();
 }; // }}}
 
 DirBrowser.prototype._removeDir = function (dir) { // {{{
@@ -908,12 +935,12 @@ DirBrowser.prototype._removeFile = function (file) { // {{{
 
 DirBrowser.prototype.opMoveFile = function(file, dirId) { // {{{
     var self = this,
-        url = Drive.Util.uri(self._uriTemplates.file.move);
+        url = Drive.Util.uri(self._uriTemplates.file.move, file);
 
     App.ajax({
         url: url,
         type: 'post',
-        data: {id: file.id, dir: dirId},
+        data: {dir_id: dirId},
         dataType: 'json',
         success: function () {
             self._removeFile(file);

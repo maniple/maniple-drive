@@ -90,8 +90,8 @@ class Drive_DirController extends Drive_Controller_Action
     {
         $drive_helper = $this->getDriveHelper();
 
-        $id = $this->_request->getPost('dir_id');
-        $dir = $drive_helper->fetchDir($id);
+        $dir_id = $this->getScalarParam('dir_id');
+        $dir = $drive_helper->fetchDir($dir_id);
         $this->assertAccess($drive_helper->isDirWritable($dir));
 
         $parent_id = $this->_request->getPost('parent_id');
@@ -154,27 +154,24 @@ class Drive_DirController extends Drive_Controller_Action
                 throw $e;
             }
 
-            $ajaxResponse = $this->_helper->ajaxResponse();
-            $ajaxResponse->setMessage($num);
-            $ajaxResponse->sendAndExit();
-
-        } else {
-            // katalog w korzeniu nie moze dziedziczyc widocznosci
             $shares = $dir->fetchShares();
             if ($shares) {
-                foreach ($this->getDriveHelper()->getUserMapper()->getUsers(array_keys($shares)) as $user) {
+                foreach ($drive_helper->getUserMapper()->getUsers(array_keys($shares)) as $user) {
                     $shares[$user->getId()] = array_merge(
                         $user->toArray(Maniple_Model::UNDERSCORE),
                         array('can_write' => $shares[$user->getId()])
                     );
                 }
+            } else {
+                $shares = array();
             }
 
             $ajaxResponse = $this->_helper->ajaxResponse();
             $ajaxResponse->setData(array(
-                'visibility'  => $dir->visibility,
-                'can_inherit' => (bool) $dir->parent_id,
-                'shares'      => $shares,
+                'dir_id' => $dir->dir_id,
+                'visibility' => $dir->visibility,
+                'can_inherit_visibility' => (bool) $dir->parent_id,
+                'shares' => $shares,
             ));
             $ajaxResponse->sendAndExit();
         }

@@ -252,7 +252,7 @@ Uploader.prototype._initQueue = function () { // {{{
         uploadQueue.canceledFiles.push(file);
 
         if (fileView) {
-            fileView.hooks.progressText.html(str.canceled);
+            fileView.hooks.progressText.html(String(str.canceled));
 
             // usun przycisk anulujacy przesylanie pliku
             fileView.element.removeClass(uploadQueue.uploadingClass);
@@ -271,7 +271,7 @@ Uploader.prototype._initQueue = function () { // {{{
         if (fileView) {
             element = fileView.element.addClass(uploadQueue.uploadingClass);
 
-            fileView.hooks.progressText.html(str.uploading);
+            fileView.hooks.progressText.html(String(str.uploading));
 
             // nie ustawiaj minimalnej szerokosci paska postepu, jezeli na
             // starcie ma miec zerowa szerokosc musi byc to osiagniete za
@@ -301,7 +301,7 @@ Uploader.prototype._initQueue = function () { // {{{
             percent: Math.round(totalPercent)
         });
 
-        view.hooks.statusMessage.html(message);
+        view.hooks.statusMessage.html(String(message));
     }
 
     handlers.progress = function (file, value) {
@@ -336,7 +336,7 @@ Uploader.prototype._initQueue = function () { // {{{
             percent: Math.round(totalPercent)
         });
 
-        view.hooks.statusMessage.html(message);
+        view.hooks.statusMessage.html(String(message));
     }
 
     handlers.complete = function (file, response) {
@@ -366,10 +366,10 @@ Uploader.prototype._initQueue = function () { // {{{
 
             if (response.error) {
                 fileView.element.addClass('upload-error');
-                fileView.hooks.progressText.html(str.error);
-                fileView.hooks.errorMessage.text(response.error);
+                fileView.hooks.progressText.html(String(str.error));
+                fileView.hooks.errorMessage.text(String(response.error));
             } else {
-                fileView.hooks.progressText.html(str.uploaded);
+                fileView.hooks.progressText.html(String(str.uploaded));
                 fileView.hooks.progressBar.css('width', '100%');
                 if (fileView.hooks.progressValue) {
                     fileView.hooks.progressValue.text(100);
@@ -409,9 +409,9 @@ Uploader.prototype._initQueue = function () { // {{{
 
         // jezeli w kolejce nie ma juz wiecej plikow, ustaw komunikat
         // o zakonczeniu przesylania
-        view.hooks.statusMessage.html(
+        view.hooks.statusMessage.html(String(
             uploadQueue.hasErrors ? str.uploadError : str.uploadSuccess
-        );
+        ));
 
         self.trigger('queuecomplete');
     }
@@ -656,7 +656,7 @@ Uploader.prototype._initDropZone = function () { // {{{
         uploadQueue.uploadingClass += ' legacy-upload';
     }
 
-    hooks.dropZoneText.html(dropZoneText);
+    hooks.dropZoneText.html(String(dropZoneText));
 
     // zablokuj otworzenie upuszczonego pliku w przegladarce
     $(document).bind('dragleave dragend drop dragenter dragover dragstart drag', function() {

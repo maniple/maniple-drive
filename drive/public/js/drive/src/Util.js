@@ -59,6 +59,19 @@ Util.i18n = function (key) { // {{{
     var keys = key.split('.'),
         context = Drive.I18n;
 
+    function helper(str) {
+        if (typeof str === 'string') {
+            return new Handlebars.SafeString(str);
+        } else if (typeof str === 'object' && str !== null) {
+            var output = {};
+            $.each(str, function (k, v) {
+                output[k] = helper(v);
+            });
+            return output;
+        }
+        return str;
+    }
+
     while (keys.length) {
         var k = keys.shift();
 
@@ -69,7 +82,7 @@ Util.i18n = function (key) { // {{{
         }
 
         if (!keys.length) {
-            return context;
+            return helper(context);
         }
     }
 

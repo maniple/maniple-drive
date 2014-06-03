@@ -36,19 +36,19 @@ class Drive_FileController extends Drive_Controller_Action
 
     /**
      * Parametry wywołania:
-     * id - identyfikator przenoszonego pliku
-     * dir - identyfikator docelowego katalogu
+     * file_id - identyfikator przenoszonego pliku
+     * dir_id - identyfikator docelowego katalogu
      */
     public function moveAction() // {{{
     {
-        $drive_helper = $this->_helper->drive;
+        $drive_helper = $this->getDriveHelper();
 
-        $file_id = $this->_request->getPost('file_id');
-        $file = $this->_helper->drive->fetchFile($file_id);
+        $file_id = $this->getScalarParam('file_id');
+        $file = $drive_helper->fetchFile($file_id);
         $this->assertAccess($drive_helper->isDirWritable($file->Dir));
 
         $dir_id = $this->_request->getPost('dir_id');
-        $dir = $this->_helper->drive->fetchDir($dir_id);
+        $dir = $drive_helper->fetchDir($dir_id);
         $this->assertAccess($drive_helper->isDirWritable($dir));
 
         $db = $file->getAdapter();
@@ -122,10 +122,10 @@ class Drive_FileController extends Drive_Controller_Action
         $this->disableLayout();
 
         $file_id = $this->getScalarParam('file_id', 0);
-        $file = $this->_helper->drive->fetchFile($file_id);
+        $file = $this->getDriveHelper()->fetchFile($file_id);
 
         if (!in_array($file->mimetype, array('image/jpeg', 'image/gif', 'image/png'))) {
-            throw new App_Exception('Plik nie jest obrazem');
+            throw new Exception('Plik nie jest obrazem');
         }
 
         $width = (int) $this->getScalarParam('w');

@@ -158,6 +158,9 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             hooks.used.text(Viewtils.fsize(used));
 
             if (hooks.percent) {
+                if (percent === 0 && used > 0) {
+                    percent = '<1';
+                }
                 hooks.percent.text(percent);
             }
 
@@ -606,12 +609,12 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
         DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
             var self = this,
-                url = Drive.Util.uri(self._uriTemplates.dir.move);
+                url = Drive.Util.uri(self._uriTemplates.dir.move, dir);
 
             App.ajax({
                 url: url,
                 type: 'post',
-                data: {id: dir.id, parent: parentDirId},
+                data: {parent_id: parentDirId},
                 dataType: 'json',
                 success: function () {
                     if (dir.element) {
@@ -629,30 +632,56 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 str = Drive.Util.i18n('DirBrowser.opShareDir'),
                 url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
 
-            ajaxForm({
+            (new Dialog({
                 width:  600,
                 height: 360,
                 title:  str.title,
-                url:    url,
+                buttons: [
+                    {
+                        label: 'Save',
+                        action: function (dialog) {
+                            dialog.setStatus(str.messageSending);
+                            App.ajax({
+                                url: url,
+                                type: 'post',
+                                data: dialog.getContentElement().find('form').serialize(),
+                                dataType: 'json',
+                                success: function (response) {
+                                    // App.flash(str.messageSuccess, 'success');
+                                    $.extend(dir, response.data);
+                                    dialog.close();
+                                },
+                                error: function (response) {
+                                    dialog.setStatus(response.message || str.messageError);
+                                }
+                            });
+                        },
+                        className: 'btn btn-primary'
+                    },
+                    {
+                        label: 'Cancel',
+                        action: 'close',
+                        className: 'btn'
+                    }
+                ],
                 submitLabel: str.submit,
                 submitStatus: str.messageSending,
-                content: function (dialog, response) {
-                    var data = response.data,
-                        content = self._renderTemplate('DirBrowser.opShareDir', {str: str, data: data});
+                content: function (dialog) {
+                    var content = self._renderTemplate('DirBrowser.opShareDir', {str: str});
 
-                    // dialog.setContent(content);
+                    dialog.setContent(content);
 
                     // wyswietlanie opisu zaznaczonego poziomu widocznosci katalogu
                     content.find('select[name="visibility"]').change(function() {
                         content.find('.vis-desc').hide();
                         content.find('#drive-dir-share-vis-desc-' + this.value).fadeIn('fast');
                     }).each(function() {
-                        var visibility = data.visibility;
+                        var visibility = dir.visibility;
 
                         // jezeli katalog nie moze dziedziczyc widocznosci
                         // (znajduje sie w korzeniu drzewa katalogow) usun
                         // odpowiednia opcje z selecta
-                        if (!data.can_inherit) {
+                        if (!dir.can_inherit_visibility) {
                             $.each(this.options, function(index, option) {
                                 if (option.value == 'inherited') {
                                     $(option).remove();
@@ -699,7 +728,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
                             idColumn: 'user_id',
                             url: self._options.userSearchUrl,
-                            users: data.shares,
+                            users: dir.shares,
                             autocomplete: {
                                 renderItem: function(item) { // TODO templejt!
                                     var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
@@ -734,8 +763,6 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     ]);
                     }
 
-                    return content;
-
                     // podepnij zawartosc okna do drzewa dokumentu, przed
                     // inicjalizacja obslugi zdarzen
                     // dialog.content(content).adjustHeight(true);
@@ -751,7 +778,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         //                  content.height(content.height());
         //               }, 10);
                 }
-            });
+            })).open();
         }; // }}}
 
         DirBrowser.prototype._removeDir = function (dir) { // {{{
@@ -910,12 +937,12 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
         DirBrowser.prototype.opMoveFile = function(file, dirId) { // {{{
             var self = this,
-                url = Drive.Util.uri(self._uriTemplates.file.move);
+                url = Drive.Util.uri(self._uriTemplates.file.move, file);
 
             App.ajax({
                 url: url,
                 type: 'post',
-                data: {id: file.id, dir: dirId},
+                data: {dir_id: dirId},
                 dataType: 'json',
                 success: function () {
                     self._removeFile(file);
@@ -2582,7 +2609,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 uploadQueue.canceledFiles.push(file);
 
                 if (fileView) {
-                    fileView.hooks.progressText.html(str.canceled);
+                    fileView.hooks.progressText.html(String(str.canceled));
 
                     // usun przycisk anulujacy przesylanie pliku
                     fileView.element.removeClass(uploadQueue.uploadingClass);
@@ -2601,7 +2628,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 if (fileView) {
                     element = fileView.element.addClass(uploadQueue.uploadingClass);
 
-                    fileView.hooks.progressText.html(str.uploading);
+                    fileView.hooks.progressText.html(String(str.uploading));
 
                     // nie ustawiaj minimalnej szerokosci paska postepu, jezeli na
                     // starcie ma miec zerowa szerokosc musi byc to osiagniete za
@@ -2631,7 +2658,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     percent: Math.round(totalPercent)
                 });
 
-                view.hooks.statusMessage.html(message);
+                view.hooks.statusMessage.html(String(message));
             }
 
             handlers.progress = function (file, value) {
@@ -2666,7 +2693,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     percent: Math.round(totalPercent)
                 });
 
-                view.hooks.statusMessage.html(message);
+                view.hooks.statusMessage.html(String(message));
             }
 
             handlers.complete = function (file, response) {
@@ -2696,10 +2723,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
                     if (response.error) {
                         fileView.element.addClass('upload-error');
-                        fileView.hooks.progressText.html(str.error);
-                        fileView.hooks.errorMessage.text(response.error);
+                        fileView.hooks.progressText.html(String(str.error));
+                        fileView.hooks.errorMessage.text(String(response.error));
                     } else {
-                        fileView.hooks.progressText.html(str.uploaded);
+                        fileView.hooks.progressText.html(String(str.uploaded));
                         fileView.hooks.progressBar.css('width', '100%');
                         if (fileView.hooks.progressValue) {
                             fileView.hooks.progressValue.text(100);
@@ -2739,9 +2766,9 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
                 // jezeli w kolejce nie ma juz wiecej plikow, ustaw komunikat
                 // o zakonczeniu przesylania
-                view.hooks.statusMessage.html(
+                view.hooks.statusMessage.html(String(
                     uploadQueue.hasErrors ? str.uploadError : str.uploadSuccess
-                );
+                ));
 
                 self.trigger('queuecomplete');
             }
@@ -2986,7 +3013,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 uploadQueue.uploadingClass += ' legacy-upload';
             }
 
-            hooks.dropZoneText.html(dropZoneText);
+            hooks.dropZoneText.html(String(dropZoneText));
 
             // zablokuj otworzenie upuszczonego pliku w przegladarce
             $(document).bind('dragleave dragend drop dragenter dragover dragstart drag', function() {
@@ -3382,6 +3409,19 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             var keys = key.split('.'),
                 context = Drive.I18n;
 
+            function helper(str) {
+                if (typeof str === 'string') {
+                    return new Handlebars.SafeString(str);
+                } else if (typeof str === 'object' && str !== null) {
+                    var output = {};
+                    $.each(str, function (k, v) {
+                        output[k] = helper(v);
+                    });
+                    return output;
+                }
+                return str;
+            }
+
             while (keys.length) {
                 var k = keys.shift();
 
@@ -3392,7 +3432,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 }
 
                 if (!keys.length) {
-                    return context;
+                    return helper(context);
                 }
             }
 

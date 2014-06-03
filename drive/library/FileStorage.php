@@ -4,7 +4,7 @@ class Drive_FileStorage
 {
     public static function requireStorageDir($name = null) // {{{
     {
-        return self::_requireWritableDir(realpath(APPLICATION_PATH . '/../storage/drive'), $name);
+        return self::_requireWritableDir(APPLICATION_PATH . '/../storage', $name);
     } // }}}
 
     public static function requireCacheDir($name = null) // {{{
@@ -14,7 +14,7 @@ class Drive_FileStorage
 
     public static function requireTempDir($name = null) // {{{
     {
-        return self::_requireWritableDir(realpath(APPLICATION_PATH . '/../variable/temp'), $name);
+        return self::_requireWritableDir(APPLICATION_PATH . '/../variable/temp', $name);
     } // }}}
 
     public static function requireDirAccess($path) // {{{

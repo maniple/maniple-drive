@@ -218,4 +218,23 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         return $files;
     }
+
+    /**
+     * @param  int|array $dir_id
+     */
+    public function fetchDirShares($dir_id)
+    {
+        $dir_ids = array_map('intval', (array) $dir_id);
+
+        $where = null;
+
+        if (count($dir_ids)) {
+            $where['dir_id IN (?)'] = $dir_ids;
+        } else {
+            $where[] = 'dir_id IN (NULL)';
+        }
+
+        $shares = $this->getTable('Drive_Model_DbTable_DirShares')->fetchAll($where, 'dir_id');
+        return $shares;
+    }
 }

@@ -119,7 +119,7 @@
 }
 
 #drive-uploader-status-icon {
-  background: url(../i/v2/drive-upload.png) no-repeat 0 50%;
+  background: url(../img/drive-upload.png) no-repeat 0 50%;
   width: 32px;
   height: 32px;
   position: absolute;
@@ -272,7 +272,7 @@
   cursor: pointer;
   color: #777;
   display: block;
-  background: url(../i/v2/drive-cancel.png) no-repeat 3px 0;
+  background: url(../img/drive-cancel.png) no-repeat 3px 0;
   opacity: .45;
 }
 #drive-uploader-queue-items .col-cancel button:hover {
@@ -319,8 +319,10 @@
 }
 #drive-uploader-dropzone .file-input-wrapper input[type="file"] {
   border: none;
-  padding: 0;
+  height: auto;
+  width: auto;
   margin: 0;
+  padding: 0;
   font-size: 250px;
   opacity: 0;
   filter: alpha(opacity=0);
@@ -423,6 +425,12 @@
 }
 #drive-dir-share-acl-search-user {
   width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+  height: 30px;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
 }
 #drive-dir-share-acl-search td:first-child {
   width: 100%;
@@ -548,7 +556,7 @@
 }
 tbody > tr:hover .col-grab {
     cursor: grab;
-    background: url(../i/v2/grab.png) repeat-y 10px 0;
+    background: url(../img/grab.png) repeat-y 10px 0;
 }
 
 tbody > tr.not-grabbable:hover .col-grab {
@@ -569,7 +577,7 @@ tbody > tr.not-grabbable:hover .col-grab {
 .drive-icon {
   width: 22px;
   height: 22px;
-  background: url(../i/v2/drive.png) no-repeat 0 -22px;
+  background: url(../img/drive.png) no-repeat 0 -22px;
   display: inline-block;
   *zoom: 1;
 }
