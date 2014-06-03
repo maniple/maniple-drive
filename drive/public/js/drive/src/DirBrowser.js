@@ -55,7 +55,7 @@ function DirBrowser(selector, options) { // {{{
 
     // kolekcja wszystkich elementow odpowiadajacych katalogom, na ktore
     // mozna upuscic pliki i inne katalogi
-    self._dropTargets = [];
+    self._dropTargets = {};
 
     // etykieta wyswietlana podczas przenoszenia katalogu lub pliku
     // z informacja o docelowej operacji
@@ -277,11 +277,11 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     function dirLink(dir) {
         var attrs = {
                 href: self._dirUrl(dir) //,
-                //'data-dir': dir.id
+                //'data-dir': dir.dir_id
             };
 
         if (dir.perms.write) {
-            attrs['data-drop-dir'] = dir.id;
+            attrs['data-drop-dir'] = dir.dir_id;
         }
 
         return '<a' + Viewtils.attrs(attrs) + '>' + Viewtils.esc(dir.name) + '</a>';
@@ -320,7 +320,7 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     breadcrumbs.container.append(item);
 
     breadcrumbs.container.find('[data-drop-dir]').each(function() {
-        self._dropTargets.push(this);
+        self._dropTargets[this.getAttribute('data-drop-dir')] = this;
     });
 }; // }}}
 
@@ -487,7 +487,7 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
         dirName, url;
 
     self._currentDir = dir;
-    self._dropTargets = [];
+    self._dropTargets = {};
 
     self._updateBreadcrumbs(dir);
     self._updateAuxmenu(dir);
@@ -566,11 +566,11 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
             var responseDir = response.data.dir,
                 dirName = responseDir.name;
 
-            Drive.Util.assert(responseDir.id == dir.id, 'Unexpected directory ID in response');
+            Drive.Util.assert(responseDir.dir_id == dir.dir_id, 'Unexpected directory ID in response');
 
             // zaktualizuj nazwe katalogu wyswietlona w naglowku oraz w okruchach,
             // o ile modyfikowany katalog jest katalogiem biezacym
-            if (self._currentDir && responseDir.id == self._currentDir.id) {
+            if (self._currentDir && responseDir.dir_id == self._currentDir.dir_id) {
                 self._view.hooks.dirName.text(dirName);
                 if (self._breadcrumbs) {
                     self._breadcrumbs.container.find(':last-child').text(dirName);
@@ -587,9 +587,9 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
 
                 oldElement.replaceWith(newElement);
 
-                newElement.find('[data-drop-dir]').each(function() {
-                    self._dropTargets.push(this);
-                });
+                // newElement.find('[data-drop-dir]').each(function() {
+                //    self._dropTargets.push(this);
+                // });
 
                 self._removeDropTarget(oldElement);
                 // self._dropTargets.push(view.el);
@@ -838,13 +838,13 @@ DirBrowser.prototype.opDirDetails = function(dir) { // {{{
                 return value.replace(/\s\(.*$/g, '');
             },
             process_value: function(value, response) {
-                return response.owner.id + ' (' + response.owner.name + ')';
+                return response.owner.user_id + ' (' + response.owner.name + ')';
             },
             prepare_data: function(context) {
-                return {id: dir.id};
+                return {dir_id: dir.dir_id};
             },
             after_save: function(response) {
-                Drive.Util.assert(response.id == dir.id, 'Unexpected directory ID in response');
+                Drive.Util.assert(response.dir_id == dir.dir_id, 'Unexpected directory ID in response');
 
                 dir.owner = response.owner;
                 dir.mtime = response.mtime;
@@ -903,7 +903,7 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
         complete: function (response) {
             var responseFile = response.file;
 
-            Drive.Util.assert(responseFile.id == file.id, 'Unexpected file id in response');
+            Drive.Util.assert(responseFile.file_id == file.file_id, 'Unexpected file id in response');
             $.extend(file, responseFile);
 
             if (file.element) {
@@ -1007,13 +1007,13 @@ DirBrowser.prototype.opFileDetails = function(file) { // {{{
                 return value.replace(/\s\(.*$/g, '');
             },
             process_value: function(value, response) {
-                return response.owner.id + ' (' + response.owner.name + ')';
+                return response.owner.user_id + ' (' + response.owner.name + ')';
             },
             prepare_data: function(context) {
-                return {id: file.id};
+                return {file_id: file.file_id};
             },
             after_save: function(response) {
-                Drive.Util.assert(response.id == file.id, 'Unexpected file id in response');
+                Drive.Util.assert(response.file_id == file.file_id, 'Unexpected file id in response');
 
                 file.owner = response.owner;
                 file.mtime = response.mtime;
@@ -1215,12 +1215,27 @@ DirBrowser.prototype._fileOpdd = function(file) { // {{{
     return opdd;
 }; // }}}
 
-DirBrowser.prototype._removeDropTarget = function(element) { // {{{
+DirBrowser.prototype._addDropTarget = function (dir, element) { // {{{
+    var self = this;
+
+    element.attr('data-drop-dir', dir.dir_id);
+    element.attr('data-name', dir.name).each(function() {
+        self._dropTargets[dir.dir_id] = this;
+    });
+}; // }}}
+
+DirBrowser.prototype._removeDropTarget = function (element) { // {{{
     // element - element dokumentu reprezentujacy wpis w katalogu
     var $ = this.$,
         self = this;
 
-    element.find('[data-drop-dir]').each(function() {
+    // addBack is available since jQuery 1.8
+    element.find('[data-drop-dir]').addBack('[data-drop-dir]').each(function() {
+        var key = this.getAttribute('data-drop-dir');
+        if (self._dropTargets[key] === this) {
+            delete self._dropTargets[key];
+        }
+        return;
         var index = $.inArray(this, self._dropTargets);
         if (index != -1) {
             self._dropTargets.splice(index, 1);
@@ -1237,7 +1252,7 @@ DirBrowser.prototype._getDropDirElement = function(position, dragDirId) { // {{{
         self = this,
         target = null;
 
-    $.each(self._dropTargets, function() {
+    $.each(self._dropTargets, function () {
         var $this = $(this),
             o = $this.offset(),
             x1 = o.left,
@@ -1261,7 +1276,7 @@ DirBrowser.prototype._getDropDirElement = function(position, dragDirId) { // {{{
     return target;
 }; // }}}
 
-DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {{{
+DirBrowser.prototype._addGrab = function (entry, isDir, element, callback) { // {{{
     var $ = this.$,
         self = this,
         str = Drive.Util.i18n('DirBrowser.grab'),
@@ -1272,7 +1287,7 @@ DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {
     // wyznaczajacej element docelowy upuszczenia (odpowiadajacy innemu
     // katalogowi)
     if (isDir) {
-        dragDirId = entry.id;
+        dragDirId = entry.dir_id;
     }
 
     element.grab({
@@ -1298,7 +1313,7 @@ DirBrowser.prototype._addGrab = function(entry, isDir, element, callback) { // {
             if (target) {
                 tooltipText = self._strInterp.interp(str.dropDirTooltip, {
                     source: entry.name,
-                    target: target.attr('title') || target.text()
+                    target: target.attr('data-name') || target.text()
                 });
             } else {
                 tooltipText = self._strInterp.interp(str.noDropDirTooltip, {
@@ -1371,9 +1386,8 @@ DirBrowser.prototype._renderUpdir = function (dir) { // {{{
     // jezeli katalog jest dostepny do zapisu, zezwol na upuszczanie
     // na niego plikow lub katalogow.
     if (dir.perms.write) {
-        hooks.name.attr('data-drop-dir', dir.dir_id).each(function() {
-            self._dropTargets.push(this);
-        });
+        // hooks.name.
+        self._addDropTarget(dir, element);
     }
 
     return element;
@@ -1388,7 +1402,7 @@ DirBrowser.prototype._renderSubdir = function(dir, replace) { // {{{
             wrapper: self.$
         });
 
-    // view.attr('data-dir', dir.id);
+    // view.attr('data-dir', dir.dir_id);
 
     if (dir.perms.read) {
         // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
@@ -1398,12 +1412,10 @@ DirBrowser.prototype._renderSubdir = function(dir, replace) { // {{{
     if (dir.perms.write) {
         // ustaw atrybut data-drop-dir wskazujacy, ze na ten katalog mozna
         // upuscic plik lub inny katalog
-        hooks.name.attr('data-drop-dir', dir.id).each(function() {
-            self._dropTargets.push(this);
-        });
+        self._addDropTarget(dir, element);
 
         // ustaw obsluge metody przeciagnij-i-upusc dla tego katalogu
-        self._addGrab(dir, true, hooks.grab, function(targetDirId) {
+        self._addGrab(dir, true, hooks.grab, function (targetDirId) {
             self.opMoveDir(dir, targetDirId);
         });
     }
@@ -1451,7 +1463,7 @@ DirBrowser.prototype._renderFile = function(file, replace) { // {{{
 
     // TODO isFileMovable? file.perms.move?
     if (self._currentDir.perms.write) {
-        self._addGrab(file, false, hooks.grab, function(targetDirId) {
+        self._addGrab(file, false, hooks.grab, function (targetDirId) {
             self.opMoveFile(file, targetDirId);
         });
     }
