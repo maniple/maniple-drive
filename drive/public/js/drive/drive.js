@@ -992,17 +992,18 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 url = Drive.Util.uri(self._uriTemplates.file.remove, file),
                 str = Drive.Util.i18n('DirBrowser.opRemoveFile');
 
-            App.traits.modalForm({
+            ajaxForm({
                 width:       440,
                 height:      120,
                 url:         url,
                 title:       str.title,
                 submitLabel: str.submit,
-                complete: function (response) {
+                complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
                         self._removeFile(file);
                         self._updateDiskUsage(response.disk_usage, response.quota);
+                        dialog.close();
                     }
                 }
             });
@@ -1013,16 +1014,17 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 url = Drive.Util.uri(self._uriTemplates.file.edit, file),
                 str = Drive.Util.i18n('DirBrowser.opEditFile');
 
-            App.traits.modalForm({
+            ajaxForm({
                 width:       440,
                 height:      120,
                 url:         url,
                 title:       str.title,
                 submitLabel: str.submit,
-                complete: function (response) {
+                complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
                         App.flash(str.messageSuccess);
+                        dialog.close();
                     }
                 }
             });
@@ -1068,20 +1070,17 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 });
             }
 
-            ajaxForm({
+            (new Dialog({
                 title: str.title,
                 width: 440,
-                content: function (dialog) {
-                    content.appendTo(this);
-                    dialog.adjustHeight();
-                },
+                content: content,
                 buttons: [{
                     label: str.submit,
                     action: function (dialog) {
                         dialog.close();
                     }
                 }]
-            });
+            })).open();
 
         }; // }}}
 
@@ -1555,7 +1554,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             }
 
             self._bindOpHandler(element, ops);
-        console.log(ops);
+
             // podepnij widok do pliku
             file.element = element;
 
@@ -3923,17 +3922,17 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         function program1(depth0,data) {
 
           var buffer = "", stack1;
-          buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" style=\"background:red\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
+          buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" class=\"dropdown-toggle\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
           stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.share)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(6, program6, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(8, program8, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</ul>\n</div>\n";
           return buffer;
@@ -3945,7 +3944,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\">";
+            + "\"><i class=\"fa fa-share-alt\"></i> ";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
@@ -3956,11 +3955,41 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         function program4(depth0,data) {
 
           var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\"><i class=\"fa fa-font\"></i> ";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program6(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\"><i class=\"fa fa-list\"></i> ";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program8(depth0,data) {
+
+          var buffer = "", stack1, helper;
           buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\">";
+            + "\"><i class=\"fa fa-trash-o\"></i> ";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
@@ -3994,20 +4023,20 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         function program1(depth0,data) {
 
           var buffer = "", stack1;
-          buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" style=\"background:red\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
+          buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" class=\"dropdown-toggle\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
           stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(6, program6, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(8, program8, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(10, program10, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</ul>\n</div>\n";
           return buffer;
@@ -4019,7 +4048,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\">";
+            + "\"><i class=\"fa fa-download\"></i> ";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
@@ -4030,11 +4059,56 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         function program4(depth0,data) {
 
           var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\"><i class=\"fa fa-pencil\"></i> ";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program6(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\"><i class=\"fa fa-font\"></i> ";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program8(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\"><i class=\"fa fa-list\"></i> ";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program10(depth0,data) {
+
+          var buffer = "", stack1, helper;
           buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\">";
+            + "\"><i class=\"fa fa-trash-o\"></i> ";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)

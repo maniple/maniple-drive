@@ -990,17 +990,18 @@ DirBrowser.prototype.opRemoveFile = function(file) { // {{{
         url = Drive.Util.uri(self._uriTemplates.file.remove, file),
         str = Drive.Util.i18n('DirBrowser.opRemoveFile');
 
-    App.traits.modalForm({
+    ajaxForm({
         width:       440,
         height:      120,
         url:         url,
         title:       str.title,
         submitLabel: str.submit,
-        complete: function (response) {
+        complete: function (dialog, response) {
             response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
                 self._removeFile(file);
                 self._updateDiskUsage(response.disk_usage, response.quota);
+                dialog.close();
             }
         }
     });
@@ -1011,16 +1012,17 @@ DirBrowser.prototype.opEditFile = function(file) { // {{{
         url = Drive.Util.uri(self._uriTemplates.file.edit, file),
         str = Drive.Util.i18n('DirBrowser.opEditFile');
 
-    App.traits.modalForm({
+    ajaxForm({
         width:       440,
         height:      120,
         url:         url,
         title:       str.title,
         submitLabel: str.submit,
-        complete: function (response) {
+        complete: function (dialog, response) {
             response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
                 App.flash(str.messageSuccess);
+                dialog.close();
             }
         }
     });
@@ -1066,20 +1068,17 @@ DirBrowser.prototype.opFileDetails = function(file) { // {{{
         });
     }
 
-    ajaxForm({
+    (new Dialog({
         title: str.title,
         width: 440,
-        content: function (dialog) {
-            content.appendTo(this);
-            dialog.adjustHeight();
-        },
+        content: content,
         buttons: [{
             label: str.submit,
             action: function (dialog) {
                 dialog.close();
             }
         }]
-    });
+    })).open();
 
 }; // }}}
 
@@ -1553,7 +1552,7 @@ DirBrowser.prototype._renderFile = function (file, replace) { // {{{
     }
 
     self._bindOpHandler(element, ops);
-console.log(ops);
+
     // podepnij widok do pliku
     file.element = element;
 

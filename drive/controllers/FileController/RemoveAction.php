@@ -1,23 +1,23 @@
 <?php
 
-class Drive_FileController_RemoveAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_FileController_RemoveAction extends Zefram_Controller_Action_StandaloneForm
 {
+    protected $_ajaxFormHtml = true;
+
     protected $_file;
 
-    protected function _init() // {{{
+    protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
 
-        $helper = $this->_helper->drive;
+        $helper = $this->getDriveHelper();
 
-        $id = $this->_getParam('id');
-        $file = $helper->fetchFile($id);
+        $file_id = $this->getScalarParam('file_id');
+        $file = $helper->fetchFile($file_id);
 
         $this->assertAccess($helper->isFileRemovable($file));
 
-        $form = new Form(array('elements' => array(
-            new Form_Element_Token('token'),
-        )));
+        $form = new Zefram_Form;
 
         $this->_file = $file;
         $this->_form = $form;
@@ -25,14 +25,14 @@ class Drive_FileController_RemoveAction extends Zefram_Controller_Action_Standal
         $this->view->name= $file->name;
     } // }}}
 
-    protected function _processForm() // {{{
+    protected function _process() // {{{
     {
         $file = $this->_file;
         $drive = $file->Dir->Drive;
 
         // pobierz teraz identyfikator pliku, poniewaz po usunieciu pliku
         // nie bedzie on dostepny
-        $id = $file->id;
+        $file_id = $file->file_id;
         $name = $file->name;
 
         $db = $file->getAdapter();
@@ -47,11 +47,13 @@ class Drive_FileController_RemoveAction extends Zefram_Controller_Action_Standal
             throw $e;
         }
 
-        return $this->_helper->dialog->completionUrl(array(
-            'id' => $id,
+        $response = $this->_helper->ajaxResponse();
+        $response->setData(array(
+            'file_id' => $file_id,
             'name' => $name,
             'disk_usage' => (float) $drive->disk_usage,
             'quota' => (float) $drive->quota,
         ));
+        $response->sendAndExit();
     } // }}}
 }

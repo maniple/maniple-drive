@@ -561,6 +561,14 @@
     border: solid #eaeaea;
     border-width: 0 0 1px 0;
 }
+#drive-dir-contents tbody td .dropdown-menu i.fa {
+    display: inline-block;
+    width: 1.35em;
+    text-align: left;
+}
+#drive-dir-contents tbody td .dropdown-toggle {
+    cursor: pointer;
+}
 #drive-dir-contents tbody tr.moving {
     opacity: 0.5;
 }
@@ -901,4 +909,7 @@ tbody > tr.not-grabbable:hover .col-grab {
 }
 /* }}} */
 
-
+.seamless {
+    border: none;
+    background: none;
+}

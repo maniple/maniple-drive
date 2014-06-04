@@ -160,20 +160,20 @@
         <td class="col-ops">
         {{#if ops }}
             <div class="dropdown">
-                <div data-toggle="dropdown" style="background:red"><span class="caret"></span></div>
+                <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
                 <ul class="dropdown-menu dropdown-menu-right has-tip">
                 {{# ops.share }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-share-alt"></i> {{ title }}</a></li>
                 {{/ ops.share }}
                 {{# ops.rename }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
                 {{/ ops.rename }}
                 {{# ops.details }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
                 {{/ ops.details }}
                 {{# ops.remove }}
                     <li class="divider"></li>
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
                 {{/ ops.remove }}
                 </ul>
             </div>
@@ -200,23 +200,23 @@
         <td class="col-ops">
         {{#if ops }}
             <div class="dropdown">
-                <div data-toggle="dropdown" style="background:red"><span class="caret"></span></div>
+                <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
                 <ul class="dropdown-menu dropdown-menu-right has-tip">
                 {{# ops.open }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-download"></i> {{ title }}</a></li>
                 {{/ ops.open }}
                 {{# ops.edit }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-pencil"></i> {{ title }}</a></li>
                 {{/ ops.edit }}
                 {{# ops.rename }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
                 {{/ ops.rename }}
                 {{# ops.details }}
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
                 {{/ ops.details }}
                 {{# ops.remove }}
                     <li class="divider"></li>
-                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
                 {{/ ops.remove }}
                 </ul>
             </div>

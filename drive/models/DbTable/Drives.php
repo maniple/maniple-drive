@@ -91,7 +91,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
         $result = false;
 
         if (count($parts)) {
-            $dirs = $db->getTable('Drive_Model_DbTable_Dirs')->getQuotedName();
+            $dirs = $this->getTable('Drive_Model_DbTable_Dirs')->getQuotedName();
 
             // lista identyfikatorow napotkanych katalogow
             $id_path = array();
@@ -158,7 +158,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
             // identyfikator katalogu, w ktorym znajduje sie ostatni element
             // podanej sciezki (plik lub katalog).
 
-            $result = $db->getTable('Drive_Model_DbTable_Files')
+            $result = $this->getTable('Drive_Model_DbTable_Files')
                 ->fetchRow("name = $last_part AND dir_id = $d0_parent_id");
         }
 

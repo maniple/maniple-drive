@@ -19,7 +19,7 @@ class Drive_IndexController extends Drive_Controller_Action
                 $dir->Drive, implode('/', $path)
             );
             if ($file) {
-                if ($this->_helper->drive->isFileReadable($file)) {
+                if ($this->getDriveHelper()->isFileReadable($file)) {
                     $this->_helper->serveFile(
                         $file->getPath(),
                         array(
@@ -28,13 +28,13 @@ class Drive_IndexController extends Drive_Controller_Action
                         )
                     );
                 } else {
-                    if ($this->getSecurity()->isAuthenticated()) {
+                    if ($this->getSecurityContext()->isAuthenticated()) {
                         echo 'Nie masz uprawnień do oglądania tego pliku';
                         exit;
                     } else {
                         $this->_forward(
                             'login', 'auth', 'core', array(
-                                'continue' => $this->_helper->drive->getFileUrl($file, array(
+                                'continue' => $this->getDriveHelper()->drive->getFileUrl($file, array(
                                     'absolute' => false,
                                 )),
                                 'auth_required' => true
