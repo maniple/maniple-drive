@@ -65,9 +65,15 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
             self._initWidthChecker();
 
-            // dodaj obsluge klikniec w elementy posiadajace atrybut data-url
-            self._view.element.on('click', '[data-url]', function() {
-                document.location.href = this.getAttribute('data-url');
+            // click on elements with data-goto-url attribute triggers redirection
+            // to url given in data-url attribute of first matching ancestor element
+            self._view.element.on('click', '[data-goto-url]', function () {
+                var url = $(this).closest('[data-url]').attr('data-url');
+                if (url) {
+                    setTimeout(function () {
+                        document.location.href = url;
+                    }, 10);
+                }
             });
 
             // ustaw referencje do tego obiektu w powiazanym elemencie drzewa
@@ -463,10 +469,19 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         }; // }}}
 
         DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
-            var $ = this.$,
-                url = Drive.Util.uri(this._uriTemplates.dir.read, {dir_id: dirId});
+            var self = this,
+                $ = this.$,
+                url = Drive.Util.uri(this._uriTemplates.dir.read, {dir_id: dirId}),
+                dirName = self._view.hooks.dirName;
 
-            $('#drive-loading').text('Ładowanie zawartości katalogu...');
+            if (!this._currentDir) {
+                $('#drive-loading').text('Ładowanie zawartości katalogu...');
+            } else if (dirName) {
+                var title = self._view.hooks.dirName.attr('title');
+                self._view.hooks.dirName
+                    .addClass('loading')
+                    .attr('title', 'Ładowanie zawartości katalogu...');
+            }
 
             App.ajax({
                 url: url,
@@ -474,8 +489,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 dataType: 'json',
                 complete: function () {
                     $('#drive-loading').text('');
+                    self._view.hooks.dirName.removeClass('loading');
                 },
                 error: function (response) {
+                    self._view.hooks.dirName.attr('title', title);
                     $('#drive-loading').html('<div class="error">' + response.error + '</div>');
                 },
                 success: function (response) {
@@ -498,12 +515,12 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             dirName = self._view.hooks.dirName
                 .text(dir.name)
                 .unbind('click')
-                .removeAttr('title')
-                .addClass('disabled');
+                .removeClass('renamable')
+                .removeAttr('title');
 
             if (dir.perms.rename) {
                 dirName
-                    .removeClass('disabled')
+                    .addClass('renamable')
                     .attr('title', Drive.Util.i18n('DirBrowser.clickToRenameTooltip'))
                     .click(function() {
                         self.opRenameDir(dir);
@@ -603,6 +620,8 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     if (typeof complete === 'function') {
                         complete(response);
                     }
+
+                    dialog.close();
                 }
             });
         }; // }}}
@@ -610,6 +629,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
             var self = this,
                 url = Drive.Util.uri(self._uriTemplates.dir.move, dir);
+
+            if (dir.element) {
+                dir.element.addClass('moving');
+            }
 
             App.ajax({
                 url: url,
@@ -621,6 +644,11 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         dir.element.remove();
                         self._removeDropTarget(dir.element);
                         delete dir.element;
+                    }
+                },
+                error: function () {
+                    if (dir.element) {
+                        dir.element.removeClass('moving');
                     }
                 }
             });
@@ -939,6 +967,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             var self = this,
                 url = Drive.Util.uri(self._uriTemplates.file.move, file);
 
+            if (file.element) {
+                file.element.addClass('moving');
+            }
+
             App.ajax({
                 url: url,
                 type: 'post',
@@ -946,6 +978,11 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 dataType: 'json',
                 success: function () {
                     self._removeFile(file);
+                },
+                error: function () {
+                    if (file.element) {
+                        file.element.removeClass('moving');
+                    }
                 }
             });
         }; // }}}
@@ -1120,101 +1157,124 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             return opdd;
         }; // }}}
 
-        DirBrowser.prototype._subdirOpdd = function(dir) { // {{{
+        DirBrowser.prototype._subdirOps = function (dir) { // {{{
             var self = this,
-                opdd = self._dirEntryOpdd(dir, [
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
-                        disabled: !dir.perms.share,
-                        click: function() {
-                            self.opShareDir(dir);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
-                        disabled: !dir.perms.rename,
-                        click: function() {
-                            self.opRenameDir(dir);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opDirDetails.opname'),
-                        click: function() {
-                            self.opDirDetails(dir);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opRemoveDir.opname'),
-                        disabled: !dir.perms.remove,
-                        click: function() {
-                            self.opRemoveDir(dir);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    }
-                ]);
+                ops = {};
 
-            return opdd;
+            ops.details = {
+                op: 'details',
+                title: Drive.Util.i18n('DirBrowser.opDirDetails.opname'),
+                handler: function () {
+                    self.opDirDetails(dir);
+                    self._closeOpdd();
+                    return false;
+                }
+            };
+
+            if (dir.perms.share) {
+                ops.share = {
+                    op: 'share',
+                    title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
+                    handler: function () {
+                        self.opShareDir(dir);
+                        self._closeOpdd();
+                        return false;
+                    }
+                };
+            }
+
+            if (dir.perms.rename) {
+                ops.rename = {
+                    op: 'rename',
+                    title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
+                    handler: function () {
+                        self.opRenameDir(dir);
+                        self._closeOpdd();
+                        return false;
+                    }
+                };
+            }
+
+            if (dir.perms.remove) {
+                ops.remove = {
+                    op: 'remove',
+                    title: Drive.Util.i18n('DirBrowser.opRemoveDir.opname'),
+                    handler: function () {
+                        self.opRemoveDir(dir);
+                        self._closeOpdd();
+                        return false;
+                    }
+                };
+            }
+
+            return ops;
         }; // }}}
 
-        DirBrowser.prototype._fileOpdd = function(file) { // {{{
+        DirBrowser.prototype._fileOps = function (file) { // {{{
             var self = this,
-                opdd = self._dirEntryOpdd(file, [
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opOpenFile.opname'),
-                        url: Drive.Util.uri(self._uriTemplates.file.read, file),
-                        click: function() {
-                            // zwrocenie false spowoduje, ze nie otworzy sie plik,
-                            // trzeba puscic event i zamknac opdd w osobnym watku
-                            setTimeout(function() {
-                                self._closeOpdd();
-                            }, 500);
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opEditFile.opname'),
-                        disabled: !file.perms.write,
-                        click: function() {
-                            self.opEditFile(file);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opRenameFile.opname'),
-                        disabled: !file.perms.rename,
-                        click: function() {
-                            self.opRenameFile(file);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opFileDetails.opname'),
-                        click: function() {
-                            self.opFileDetails(file);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    },
-                    {
-                        title: Drive.Util.i18n('DirBrowser.opRemoveFile.opname'),
-                        disabled: !file.perms.remove,
-                        click: function() {
-                            self.opRemoveFile(file);
-                            self._closeOpdd();
-                            return false;
-                        }
-                    }
-                ]);
+                ops = {};
 
-            return opdd;
+            ops.open = {
+                op: 'open',
+                title: Drive.Util.i18n('DirBrowser.opOpenFile.opname'),
+                handler: function () {
+                    document.location.href = Drive.Util.uri(self._uriTemplates.file.read, file);
+
+                    // zwrocenie false spowoduje, ze nie otworzy sie plik,
+                    // trzeba puscic event i zamknac opdd w osobnym watku
+                    setTimeout(function () {
+                        self._closeOpdd();
+                    }, 500);
+                }
+            };
+
+            ops.details = {
+                op: 'details',
+                title: Drive.Util.i18n('DirBrowser.opFileDetails.opname'),
+                handler: function() {
+                    self.opFileDetails(file);
+                    self._closeOpdd();
+                    return false;
+                }
+            };
+
+            if (file.perms.write) {
+                ops.edit = {
+                    op: 'edit',
+                    title: Drive.Util.i18n('DirBrowser.opEditFile.opname'),
+                    handler: function () {
+                        self.opEditFile(file);
+                        self._closeOpdd();
+                        return false;
+                    }
+                };
+            }
+
+            if (file.perms.rename) {
+                ops.rename = {
+                    op: 'rename',
+                    title: Drive.Util.i18n('DirBrowser.opRenameFile.opname'),
+                    handler: function () {
+                        self.opRenameFile(file);
+                        self._closeOpdd();
+                        return false;
+                    }
+                };
+            }
+
+            if (file.perms.remove) {
+                ops.remove = {
+                    op: 'remove',
+                    title: Drive.Util.i18n('DirBrowser.opRemoveFile.opname'),
+                    handler: function() {
+                        self.opRemoveFile(file);
+                        self._closeOpdd();
+                        return false;
+                    }
+                };
+            }
+
+            return ops;
         }; // }}}
 
         DirBrowser.prototype._addDropTarget = function (dir, element) { // {{{
@@ -1379,7 +1439,8 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
             if (dir.perms.read) {
                 // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
-                hooks.name.attr('data-url', self._dirUrl(dir));
+                element.attr('data-goto-url', '');
+                element.attr('data-url', self._dirUrl(dir));
             }
 
             // Katalog nadrzedny nie moze byc przenoszony metoda przeciagnij-i-upusc.
@@ -1395,20 +1456,23 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             return element;
         }; // }}}
 
-        DirBrowser.prototype._renderSubdir = function(dir, replace) { // {{{
+        DirBrowser.prototype._renderSubdir = function (dir, replace) { // {{{
             var self = this;
 
-            var element = self._renderTemplate('DirBrowser.dirContents.subdir', {dir: dir}),
+            var ops = self._subdirOps(dir),
+                element = self._renderTemplate('DirBrowser.dirContents.subdir', {dir: dir, ops: ops}),
                 hooks = Viewtils.hooks(element, {
-                    required: ['grab', 'name', 'ops'],
+                    required: ['grab', 'icon', 'name'],
                     wrapper: self.$
                 });
 
-            // view.attr('data-dir', dir.dir_id);
-
             if (dir.perms.read) {
                 // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
-                hooks.name.attr('data-url', self._dirUrl(dir));
+                element.attr('data-url', self._dirUrl(dir));
+
+                [hooks.icon, hooks.name].forEach(function (elem) {
+                    elem.attr('data-goto-url', '');
+                });
             }
 
             if (dir.perms.write) {
@@ -1422,8 +1486,6 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 });
             }
 
-            hooks.ops.append(self._subdirOpdd(dir));
-
             // zastap juz istniejacy element jeszcze raz wygenerowanym widokiem
             if (replace && dir.element) {
                 var old = dir.element;
@@ -1434,34 +1496,48 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 old.remove();
             }
 
+            self._bindOpHandler(element, ops);
+
             // podepnij widok do katalogu
             dir.element = element;
 
             return element;
         }; // }}}
 
-        DirBrowser.prototype._renderFile = function(file, replace) { // {{{
+        DirBrowser.prototype._bindOpHandler = function (element, ops) { // {{{
+            element.on('click', '[data-op]', function (e) {
+                var op = ops[this.getAttribute('data-op')];
+                if (op && typeof op.handler === 'function') {
+                    return op.handler();
+                }
+            });
+        }; // }}}
+
+        DirBrowser.prototype._renderFile = function (file, replace) { // {{{
             var self = this,
-                element = self._renderTemplate('DirBrowser.dirContents.file', {file: file}),
+                ops = self._fileOps(file),
+                element = self._renderTemplate('DirBrowser.dirContents.file', {file: file, ops: ops}),
                 hooks = Viewtils.hooks(element, {
-                    required: ['grab', 'name', 'ops'],
+                    required: ['grab', 'icon', 'name'],
                     wrapper: self.$
-                });
+                }),
+                url = Drive.Util.uri(self._uriTemplates.file.read, file),
+                ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1];
+
+            // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
+            // w nim zawarte rowniez sa czytelne
+            element.attr('data-url', url);
+
+            [hooks.icon, hooks.name].forEach(function (elem) {
+                elem.attr('data-goto-url', '');
+            });
 
             // dodaj klase wskazujaca na konkretny typ pliku. W tym celu wyodrebnij
             // z nazwy pliku rozszerzenie, i o ile nie zawiera niebezpiecznych znakow
             // uzyj je.
-            if (hooks.icon) {
-                var ext = file.name.match(/(?=.)[-_a-z0-9]+$/i);
-                if (ext) {
-                    hooks.icon.addClass(ext);
-                }
+            if (ext) {
+                hooks.icon.addClass(ext.toLowerCase());
             }
-
-            // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
-            // w nim zawarte rowniez sa czytelne
-            var url = Drive.Util.uri(self._uriTemplates.file.read, file);
-            hooks.name.attr('data-url', url);
 
             // TODO isFileMovable? file.perms.move?
             if (self._currentDir.perms.write) {
@@ -1469,8 +1545,6 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     self.opMoveFile(file, targetDirId);
                 });
             }
-
-            hooks.ops.append(self._fileOpdd(file));
 
             // zastap juz istniejacy element jeszcze raz wygenerowanym widokiem
             if (replace && file.element) {
@@ -1480,6 +1554,8 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 old.remove();
             }
 
+            self._bindOpHandler(element, ops);
+        console.log(ops);
             // podepnij widok do pliku
             file.element = element;
 
@@ -3724,7 +3800,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
 
 
-          return "<div data-hook=\"disk-usage\"></div>\n<h1 id=\"drive-dir-name\"><span class=\"renamable\" data-hook=\"dir-name\"></span></h1>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>";
+          return "<div data-hook=\"disk-usage\"></div>\n<h1 id=\"drive-dir-name\" data-hook=\"dir-name\"></h1>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>";
           }
 
         ),
@@ -3842,10 +3918,57 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             "DirBrowser.dirContents.subdir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
 
+        function program1(depth0,data) {
 
-          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-folder\"></span></td>\n<td class=\"col-name\">\n<span title=\""
+          var buffer = "", stack1;
+          buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" style=\"background:red\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.share)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</ul>\n</div>\n";
+          return buffer;
+          }
+        function program2(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\">";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program4(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\">";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-folder\" data-hook=\"icon\"></span></td>\n<td class=\"col-name\">\n<span title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "\" data-hook=\"name\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
@@ -3855,7 +3978,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['short'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n<div class=\"date-only\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</div>\n</td>\n<td class=\"col-ops\" data-hook=\"ops\"></td>\n</tr>";
+            + "</div>\n</td>\n<td class=\"col-ops\">\n";
+          stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</td>\n</tr>";
           return buffer;
           }
 
@@ -3863,8 +3989,58 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             "DirBrowser.dirContents.file": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing, helperMissing=helpers.helperMissing;
 
+        function program1(depth0,data) {
+
+          var buffer = "", stack1;
+          buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" style=\"background:red\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</ul>\n</div>\n";
+          return buffer;
+          }
+        function program2(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\">";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program4(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\">";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
 
           buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.filter)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
@@ -3880,7 +4056,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['short'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n<div class=\"date-only\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</div>\n</td>\n<td class=\"col-ops\" data-hook=\"ops\"></td>\n</tr>";
+            + "</div>\n</td>\n<td class=\"col-ops\">\n";
+          stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</td>\n</tr>";
           return buffer;
           }
 

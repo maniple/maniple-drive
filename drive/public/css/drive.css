@@ -450,20 +450,34 @@
 }
 /* }}} */
 
-
-#drive-dir-name .renamable:hover {
-  border: 1px solid #ddd;
-  border-bottom-width: 0;
-  background-color: #ddd;
-  margin: -1px 0 0 -1px;
-  cursor: text;
-}
-#drive-dir-name .renamable.disabled:hover {
-  border: none;
-  background: none;
-  margin: 0;
+#drive-dir-name {
+    font-size: 24px;
+    margin: 10px 0 10px 40px;
+    position: relative;
+    display: inline-block;
 }
 
+#drive-dir-name.renamable:hover {
+    border: 1px solid #ddd;
+    border-bottom-width: 0;
+    background-color: #ddd;
+    margin: 9px 0 10px 39px;
+    cursor: text;
+}
+#drive-dir-name:before {
+    content: '';
+    display: block;
+    position: absolute;
+    background: url(../img/drive-dir-name.png) no-repeat 0 50%;
+    left: -40px;
+    width: 32px;
+    height: 32px;
+}
+#drive-dir-name.loading {
+}
+#drive-dir-name.loading:before {
+    background-image: url(../img/drive-loading.gif);
+}
 
 #drive-dir-contents .mtime > .date-only {
     display: none;
@@ -547,6 +561,9 @@
     border: solid #eaeaea;
     border-width: 0 0 1px 0;
 }
+#drive-dir-contents tbody tr.moving {
+    opacity: 0.5;
+}
 #drive-dir-contents tbody tr:hover {
   background: #ffffd6;
 }
@@ -595,6 +612,9 @@ tbody > tr.not-grabbable:hover .col-grab {
 }
 .drive-icon-pdf {
   background-position: 0 -88px;
+}
+.loading .drive-icon {
+  background: red;
 }
 /* }}} */
 

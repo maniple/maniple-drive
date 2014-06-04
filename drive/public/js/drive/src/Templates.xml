@@ -53,7 +53,7 @@
 <template id="DirBrowser">
 <![CDATA[
 <div data-hook="disk-usage"></div>
-<h1 id="drive-dir-name"><span class="renamable" data-hook="dir-name"></span></h1>
+<h1 id="drive-dir-name" data-hook="dir-name"></h1>
 <div id="opnav">
  <div id="drive-loading" data-hook="message-area"></div>
  <div id="drive-dir-menu" data-hook="aux-menu"></div>
@@ -90,7 +90,7 @@
 {{#ops}}
     <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
 {{/ops}}
-{{#if moreOps.length}}
+{{#if moreOps.length }}
     <li id="drive-more-ops" class="dropdown">
         <a href="#drive-more-ops" data-toggle="dropdown">
             {{ str.moreOps }} <span class="caret"></span>
@@ -101,7 +101,7 @@
         {{/moreOps}}
         </ul>
     </li>
-{{/if}}
+{{/ if }}
 </ul>
 ]]>
 </template>
@@ -147,7 +147,7 @@
 <![CDATA[
     <tr>
         <td class="col-grab" data-hook="grab"></td>
-        <td class="col-icon"><span class="drive-icon drive-icon-folder"></span></td>
+        <td class="col-icon"><span class="drive-icon drive-icon-folder" data-hook="icon"></span></td>
         <td class="col-name">
             <span title="{{ dir.name }}" data-hook="name">{{ dir.name }}</span>
         </td>
@@ -157,7 +157,28 @@
             <div class="full">{{ dir.mtime.short }}</div>
             <div class="date-only">{{ dir.mtime.date }}</div>
         </td>
-        <td class="col-ops" data-hook="ops"></td>
+        <td class="col-ops">
+        {{#if ops }}
+            <div class="dropdown">
+                <div data-toggle="dropdown" style="background:red"><span class="caret"></span></div>
+                <ul class="dropdown-menu dropdown-menu-right has-tip">
+                {{# ops.share }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.share }}
+                {{# ops.rename }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.rename }}
+                {{# ops.details }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.details }}
+                {{# ops.remove }}
+                    <li class="divider"></li>
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.remove }}
+                </ul>
+            </div>
+        {{/ if }}
+        </td>
     </tr>
 ]]>
 </template>
@@ -176,7 +197,31 @@
             <div class="full">{{ file.mtime.short }}</div>
             <div class="date-only">{{ file.mtime.date }}</div>
         </td>
-        <td class="col-ops" data-hook="ops"></td>
+        <td class="col-ops">
+        {{#if ops }}
+            <div class="dropdown">
+                <div data-toggle="dropdown" style="background:red"><span class="caret"></span></div>
+                <ul class="dropdown-menu dropdown-menu-right has-tip">
+                {{# ops.open }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.open }}
+                {{# ops.edit }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.edit }}
+                {{# ops.rename }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.rename }}
+                {{# ops.details }}
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.details }}
+                {{# ops.remove }}
+                    <li class="divider"></li>
+                    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+                {{/ ops.remove }}
+                </ul>
+            </div>
+        {{/if }}
+        </td>
     </tr>
 ]]>
 </template>
