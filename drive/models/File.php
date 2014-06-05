@@ -18,31 +18,23 @@ class Drive_Model_File extends Zefram_Db_Table_Row
 
         $result = parent::_insert();
 
-        $is_direct_parent = true;
-        $dir = $this->Dir;
-
-        while ($dir) {
-            if ($is_direct_parent) {
-                $is_direct_parent = false;
-                $dir->file_count = new Zend_Db_Expr('file_count + 1');
-            }
-            $dir->total_file_count = new Zend_Db_Expr('total_file_count + 1');
-            $dir->total_file_size = new Zend_Db_Expr(sprintf('total_file_size + %d', $this->size));
-            $dir->save();
-
-            $dir = $dir->ParentDir;
-        }
+        $this->_updateCounters($this->Dir, true, $this->size);
 
         return $result;
     } // }}}
 
     protected function _update() // {{{
     {
-        // TODO trzeba zadbac o aktualizacje licznika plikow i podkatalogow przy przenoszeniu katalogow i plikow
         $this->mtime = time();
 
-
-
+        if ($this->_cleanData['dir_id'] != $this->dir_id) {
+            // fetch previous parent dir
+            $dir = $this->_getTable('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['dir_id']);
+            if ($dir) {
+                $this->_updateCounters($dir, false, $this->size);
+            }
+            $this->_updateCounters($this->Dir, true, $this->size);
+        }
 
         return parent::_update();
     } // }}}
@@ -77,28 +69,7 @@ class Drive_Model_File extends Zefram_Db_Table_Row
         $size = (int) $this->size;
         $drive = $this->Dir->Drive;
 
-        $is_direct_parent = true;
-        $dir = $this->Dir;
-
-        while ($dir) {
-            // update file_count only in direct parent dir of this file
-            if ($is_direct_parent) {
-                $is_direct_parent = false;
-                $dir->file_count = new Zend_Db_Expr(
-                    'CASE WHEN file_count > 0 THEN file_count - 1 ELSE 0 END'
-                );
-            }
-            $dir->total_file_count = new Zend_Db_Expr(
-                'CASE WHEN total_file_count > 0 THEN total_file_count - 1 ELSE 0 END'
-            );
-            $dir->total_file_size = new Zend_Db_Expr(sprintf(
-                'CASE WHEN total_file_size >= %d THEN total_file_size - %d ELSE 0 END',
-                $size, $size
-            ));
-            $dir->save();
-
-            $dir = $dir->ParentDir;
-        }
+        $this->_updateCounters($this->Dir, false, $size);
 
         // TODO co z usuwaniem pliku z dysku?
         $result = parent::delete();
@@ -110,5 +81,51 @@ class Drive_Model_File extends Zefram_Db_Table_Row
         }
 
         return $result;
+    } // }}}
+
+    protected function _updateCounters(Drive_Model_Dir $dir = null, $inc, $size) // {{{
+    {
+        $size = abs($size);
+        $is_direct_parent = true;
+
+        while ($dir) {
+            if ($is_direct_parent) {
+                $is_direct_parent = false;
+
+                if ($inc) {
+                    $dir->file_count = new Zend_Db_Expr(
+                        'file_count + 1'
+                    );
+                } else {
+                    $dir->file_count = new Zend_Db_Expr(
+                        'CASE WHEN file_count > 0 THEN file_count - 1 ELSE 0 END'
+                    );
+                }
+            }
+
+            if ($inc) {
+                $dir->total_file_count = new Zend_Db_Expr(
+                    'total_file_count + 1'
+                );
+            } else {
+                $dir->total_file_count = new Zend_Db_Expr(
+                    'CASE WHEN total_file_count > 0 THEN total_file_count - 1 ELSE 0 END'
+                );
+            }
+
+            if ($inc) {
+                $dir->total_file_size = new Zend_Db_Expr(sprintf(
+                    'total_file_size + %d', $size
+                ));
+            } else {
+                $dir->total_file_size = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN total_file_size >= %d THEN total_file_size - %d ELSE 0 END',
+                    $size, $size
+                ));
+            }
+
+            $dir->save();
+            $dir = $dir->ParentDir;
+        }
     } // }}}
 }

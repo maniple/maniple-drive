@@ -72,7 +72,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
     public function saveFile(array $data) // {{{
     {
         if (empty($data['tmp_name']) || !is_file($path = $data['tmp_name'])) {
-            throw new App_Exception_InvalidAdrument('Plik nie został znaleziony');
+            throw new InvalidArgumentException('Plik nie został znaleziony');
         }
 
         try {
@@ -80,7 +80,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             $size = (int) filesize($path);
 
             if ($drive->quota && $drive->disk_usage + $size > $drive->quota) {
-                throw new App_Exception_ApplicationLogic('Brak miejsca na dysku aby zapisać plik');
+                throw new Exception('Brak miejsca na dysku aby zapisać plik');
             }
 
             $md5 = md5_file($path);
@@ -104,7 +104,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
                     // usuniety z docelowej lokalizacji
                     $path = $dest;
                 } else {
-                    throw new App_Exception('Nie udało się zapisać pliku na dysku');
+                    throw new Exception('Nie udało się zapisać pliku na dysku');
                 }
             }
 
@@ -228,20 +228,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 
         $result = parent::_insert();
 
-        // zaktualizuj licznik podkatalogow w katalogu nadrzednym
-        $is_direct_parent = true;
-        $dir = $this->ParentDir;
-
-        while ($dir) {
-            if ($is_direct_parent) {
-                $is_direct_parent = false;
-                $dir->dir_count = new Zend_Db_Expr('dir_count + 1');
-            }
-            $dir->total_dir_count = new Zend_Db_Expr('total_dir_count + 1');
-            $dir->save();
-
-            $dir = $dir->ParentDir;
-        }
+        $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
 
         return $result;
     } // }}}
@@ -251,37 +238,13 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
      */
     public function _update() // {{{
     {
-        // TODO trzeba zadbac o aktualizacje licznika plikow i podkatalogow przy przenoszeniu katalogow i plikow
         if ($this->_cleanData['parent_id'] != $this->parent_id) {
-            // previous parent dir
+            // fetch previous parent dir
             $dir = $this->_getTable('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
             if ($dir) {
-                $sub_dir_count = 1 + $this->sub_dir_count;
-                $sub_file_count = $this->sub_file_count;
-
-                while ($dir) {
-                    // dir_count stores number of direct children
-                    $dir->dir_count = new Zend_Db_Expr(
-                        'CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE dir_count END'
-                    );
-                    // sub_dir_count stores number of all children in this dirs
-                    // subtree
-                    $dir->sub_dir_count = new Zend_Db_Expr(sprintf(
-                        'CASE WHEN sub_dir_count >= %d THEN sub_dir_count - %d ELSE 0 END',
-                        $sub_dir_count, $sub_dir_count
-                    ));
-                    $dir->sub_file_count = new Zend_Db_Expr(sprintf(
-                        'CASE WHEN sub_file_count >= %d THEN sub_file_count - %d ELSE 0 END',
-                        $sub_file_count, $sub_file_count
-                    ));
-                    $dir->save();
-
-                    $sub_dir_count += 1 + $dir->dir_count;
-                    $sub_file_count += $dir->file_count;
-
-                    $dir = $dir->ParentDir;
-                }
+                $this->_updateCounters($dir, false, $this->total_file_count, $this->total_file_size);
             }
+            $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
         }
 
         $this->mtime = time();
@@ -299,19 +262,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         }
 
         // zmniejsz licznik podkatalogow w katalogu nadrzednym
-        $is_direct_parent = true;
-        $dir = $this->ParentDir;
-
-        while ($dir) {
-            if ($is_direct_parent) {
-                $is_direct_parent = false;
-                $dir->dir_count = new Zend_Db_Expr('CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE 0 END');
-            }
-            $dir->total_dir_count = new Zend_Db_Expr('CASE WHEN total_dir_count > 0 THEN total_dir_count - 1 ELSE 0 END');
-            $dir->save();
-
-            $dir = $dir->ParentDir;
-        }
+        $this->_updateCounters($this->ParentDir, false, $this->total_file_count, $thit->total_file_size);
 
         // usun udostepnienia
         $this->_getTable('Drive_Model_DbTable_DirShares')->delete(array(
@@ -366,5 +317,60 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             'fileCount' => $row['file_count'],
             'dirCount'  => $dir_count,
         );
+    } // }}}
+
+    protected function _updateCounters(Drive_Model_Dir $dir = null, $inc, $file_count, $file_size) // {{{
+    {
+        $file_count = abs($file_count);
+        $file_size = abs($file_size);
+
+        $is_direct_parent = true;
+
+        while ($dir) {
+            if ($is_direct_parent) {
+                $is_direct_parent = false;
+
+                if ($inc) {
+                    $dir->dir_count = new Zend_Db_Expr('dir_count + 1');
+                } else {
+                    $dir->dir_count = new Zend_Db_Expr(
+                        'CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE 0 END'
+                    );
+                }
+            }
+
+            if ($inc) {
+                $dir->total_dir_count = new Zend_Db_Expr('total_dir_count + 1');
+            } else {
+                $dir->total_dir_count = new Zend_Db_Expr(
+                    'CASE WHEN total_dir_count > 0 THEN total_dir_count - 1 ELSE 0 END'
+                );
+            }
+
+            if ($inc) {
+                $dir->total_file_count = new Zend_Db_Expr(sprintf(
+                    'total_file_count + %d', $file_count
+                ));
+            } else {
+                $dir->total_file_count = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN total_file_count >= %d THEN total_file_count - %d ELSE 0 END',
+                    $file_count, $file_count
+                ));
+            }
+
+            if ($inc) {
+                $dir->total_file_size = new Zend_Db_Expr(sprintf(
+                    'total_file_size + %d', $file_size
+                ));
+            } else {
+                $dir->total_file_size = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN total_file_size >= %d THEN total_file_size - %d ELSE 0 END',
+                    $file_size, $file_size
+                ));
+            }
+
+            $dir->save();
+            $dir = $dir->ParentDir;
+        }
     } // }}}
 }
