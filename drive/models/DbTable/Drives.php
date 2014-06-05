@@ -114,7 +114,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
                 // identyfikatorow kolejnych katalogow
                 $query = '';
                 for ($i = 0; $i < $nblock; ++$i) {
-                    $query .= (empty($query) ? 'SELECT' : ',') . " d$i.id AS id_$i";
+                    $query .= (empty($query) ? 'SELECT' : ',') . " d$i.dir_id AS id_$i";
                 }
                 $query .= " FROM $dirs d0";
 
@@ -124,7 +124,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
                 for ($i = 1; $i < $nblock; ++$i) {
                     // alias aktualnej tabeli
                     $curr = 'd' . $i;
-                    $query .= " JOIN $dirs $curr ON $curr.parent_id = $prev.id"
+                    $query .= " JOIN $dirs $curr ON $curr.parent_id = $prev.dir_id"
                             . " AND $curr.name = {$db->quote($block[$i])}";
                     $prev = $curr;
                 }

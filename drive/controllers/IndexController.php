@@ -34,7 +34,7 @@ class Drive_IndexController extends Drive_Controller_Action
                     } else {
                         $this->_forward(
                             'login', 'auth', 'core', array(
-                                'continue' => $this->getDriveHelper()->drive->getFileUrl($file, array(
+                                'continue' => $this->getDriveHelper()->getFileUrl($file, array(
                                     'absolute' => false,
                                 )),
                                 'auth_required' => true
