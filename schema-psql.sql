@@ -68,6 +68,13 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     file_count      INTEGER NOT NULL DEFAULT 0 CHECK (file_count >= 0),
 
+    -- liczba wszystkich plikow i podkatalogow tego katalogu
+    total_dir_count INTEGER NOT NULL DEFAULT 0 CHECK (total_dir_count >= 0),
+
+    total_file_count INTEGER NOT NULL DEFAULT 0 CHECK (total_file_count >= 0),
+
+    total_file_size BIGINT NOT NULL DEFAULT 0 CHECK (total_file_size >= 0),
+
     owner           INTEGER NOT NULL,
 
     -- czas utworzenia katalogu

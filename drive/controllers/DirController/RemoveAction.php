@@ -1,23 +1,23 @@
 <?php
 
-class Drive_DirController_RemoveAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_DirController_RemoveAction extends Zefram_Controller_Action_StandaloneForm
 {
+    protected $_ajaxFormHtml = true;
+
     protected $_dir;
 
-    protected function _init() // {{{
+    protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
 
-        $helper = $this->_helper->drive;
+        $helper = $this->getDriveHelper();
 
-        $id = $this->_getParam('id');
-        $dir = $helper->fetchDir($id);
+        $dir_id = $this->getScalarParam('dir_id');
+        $dir = $helper->fetchDir($dir_id);
 
         $this->assertAccess($helper->isDirRemovable($dir));
 
-        $form = new Form(array('elements' => array(
-            new Form_Element_Token('token'),
-        )));
+        $form = new Zefram_Form;
 
         $this->_dir = $dir;
         $this->_form = $form;
@@ -26,14 +26,14 @@ class Drive_DirController_RemoveAction extends Zefram_Controller_Action_Standalo
         $this->view->name = $dir->name;
     } // }}}
 
-    protected function _processForm() // {{{
+    protected function _process() // {{{
     {
         $dir = $this->_dir;
         $drive = $dir->Drive;
 
         // pobierz teraz identyfikator katalogu, poniewaz po usunieciu
         // katalogu nie bedzie on dostepny
-        $id = $dir->id;
+        $dir_id = $dir->dir_id;
         $name = $dir->name;
 
         $db = $dir->getAdapter();
@@ -48,11 +48,13 @@ class Drive_DirController_RemoveAction extends Zefram_Controller_Action_Standalo
             throw $e;
         }
 
-        return $this->_helper->dialog->completionUrl(array(
-            'id' => $id,
+        $response = $this->_helper->ajaxResponse();
+        $response->setData(array(
+            'dir_id' => $dir_id,
             'name' => $name,
             'disk_usage' => (float) $drive->disk_usage,
             'quota' => (float) $drive->quota,
         ));
+        $response->sendAndExit();
     } // }}}
 }

@@ -229,10 +229,18 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         $result = parent::_insert();
 
         // zaktualizuj licznik podkatalogow w katalogu nadrzednym
-        $parentDir = $this->ParentDir;
-        if ($parentDir) {
-            $parentDir->dir_count = new Zend_Db_Expr('dir_count + 1');
-            $parentDir->save();
+        $is_direct_parent = true;
+        $dir = $this->ParentDir;
+
+        while ($dir) {
+            if ($is_direct_parent) {
+                $is_direct_parent = false;
+                $dir->dir_count = new Zend_Db_Expr('dir_count + 1');
+            }
+            $dir->total_dir_count = new Zend_Db_Expr('total_dir_count + 1');
+            $dir->save();
+
+            $dir = $dir->ParentDir;
         }
 
         return $result;
@@ -244,6 +252,38 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
     public function _update() // {{{
     {
         // TODO trzeba zadbac o aktualizacje licznika plikow i podkatalogow przy przenoszeniu katalogow i plikow
+        if ($this->_cleanData['parent_id'] != $this->parent_id) {
+            // previous parent dir
+            $dir = $this->_getTable('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
+            if ($dir) {
+                $sub_dir_count = 1 + $this->sub_dir_count;
+                $sub_file_count = $this->sub_file_count;
+
+                while ($dir) {
+                    // dir_count stores number of direct children
+                    $dir->dir_count = new Zend_Db_Expr(
+                        'CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE dir_count END'
+                    );
+                    // sub_dir_count stores number of all children in this dirs
+                    // subtree
+                    $dir->sub_dir_count = new Zend_Db_Expr(sprintf(
+                        'CASE WHEN sub_dir_count >= %d THEN sub_dir_count - %d ELSE 0 END',
+                        $sub_dir_count, $sub_dir_count
+                    ));
+                    $dir->sub_file_count = new Zend_Db_Expr(sprintf(
+                        'CASE WHEN sub_file_count >= %d THEN sub_file_count - %d ELSE 0 END',
+                        $sub_file_count, $sub_file_count
+                    ));
+                    $dir->save();
+
+                    $sub_dir_count += 1 + $dir->dir_count;
+                    $sub_file_count += $dir->file_count;
+
+                    $dir = $dir->ParentDir;
+                }
+            }
+        }
+
         $this->mtime = time();
         return parent::_update();
     } // }}}
@@ -259,10 +299,18 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         }
 
         // zmniejsz licznik podkatalogow w katalogu nadrzednym
-        $parentDir = $this->ParentDir;
-        if ($parentDir) {
-            $parentDir->dir_count = new Zend_Db_Expr('CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE 0 END');
-            $parentDir->save();
+        $is_direct_parent = true;
+        $dir = $this->ParentDir;
+
+        while ($dir) {
+            if ($is_direct_parent) {
+                $is_direct_parent = false;
+                $dir->dir_count = new Zend_Db_Expr('CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE 0 END');
+            }
+            $dir->total_dir_count = new Zend_Db_Expr('CASE WHEN total_dir_count > 0 THEN total_dir_count - 1 ELSE 0 END');
+            $dir->save();
+
+            $dir = $dir->ParentDir;
         }
 
         // usun udostepnienia

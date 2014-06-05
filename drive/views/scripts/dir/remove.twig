@@ -1,0 +1,40 @@
+<style>
+body {
+  font-size: .9em;
+}
+</style>
+
+<p>Czy na pewno usunąć katalog <strong>{{ name }}</strong>?
+Wszystkie zawarte w nim pliki i katalogi zostaną bezpowrotnie usunięte.</p>
+
+<p>
+{% if fileCount %}
+{%     if (1 == fileCount) %}
+W katalogu znajduje się jeden plik o rozmiarze {{ fileSize(size) }}.
+{%     else %}
+{{  translate().plural(
+        'W katalogu znajduje się 1 plik',
+        'W katalogu znajdują się %d pliki',
+        'W katalogu znajduje się %d plików',
+        fileCount
+    ) | format(fileCount)
+}} o łącznym rozmiarze {{ fileSize(size) }}.
+{%     endif %}
+{% elseif dirCount %}
+{{  translate().plural(
+        'W katalogu znajduje się 1 pusty katalog.',
+        'W katalogu znajdują się %d puste katalogi.',
+        'W katalogu znajduje się %d pustych katalogów.',
+        dirCount
+    ) | format(dirCount)
+}}
+{% else %}
+Katalog nie zawiera plików ani innych katalogów.
+{% endif %}
+</p>
+
+<p><strong>Tej operacji nie można cofnąć.</strong></p>
+
+{{ form().openTag(form) | raw }}
+{{ form.renderElements() | raw }}
+{{ form().closeTag() | raw }}

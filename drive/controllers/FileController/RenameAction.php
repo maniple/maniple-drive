@@ -5,24 +5,31 @@
  *
  * @version 2012-12-13
  */
-class Drive_FileController_RenameAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_FileController_RenameAction extends Zefram_Controller_Action_StandaloneForm
 {
-    protected function _init() // {{{
+    protected $_ajaxFormHtml = true;
+
+    protected $_file;
+
+    protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
 
-        $user = App::get('user');
-        $this->assertAccess($user->isAuthenticated());
+        $security = $this->getSecurityContext();
+        $this->assertAccess($security->isAuthenticated());
 
-        $helper = $this->_helper->drive;
-        $file = $helper->fetchFile($this->getParam('id'));
+        $helper = $this->getDriveHelper();
+
+        $file_id = $this->getScalarParam('file_id');
+        $file = $helper->fetchFile($file_id);
+
         $this->assertAccess(
             $helper->isFileWritable($file),
             'Nie masz uprawnien do zmiany nazwy tego pliku'
         );
 
-        $form = new Form(array('elements' => array(
-            new Form_Element_Token('token'),
+        $form = new Zefram_Form(array('elements' => array(
+            // new Form_Element_Token('token'),
             'name' => array(
                 'type' => 'text',
                 'options' => array(
@@ -45,17 +52,17 @@ class Drive_FileController_RenameAction extends Zefram_Controller_Action_Standal
         $this->_file = $file;
     } // }}}
 
-    protected function _processForm($values) // {{{
+    protected function _process() // {{{
     {
-        $user = App::get('user');
+        $security = $this->getSecurityContext();
         $file = $this->_file;
 
         $db = $file->getAdapter();
         $db->beginTransaction();
 
         try {
-            $file->name = $values['name'];
-            $file->modified_by = $user->id;
+            $file->name = $this->_form->getValue('name');
+            $file->modified_by = $security->getUser()->getId();
             $file->save();
             $db->commit();
 
@@ -64,10 +71,10 @@ class Drive_FileController_RenameAction extends Zefram_Controller_Action_Standal
             throw $e;
         }
 
-        $result = $this->_helper->drive->getViewableData($file, true);
+        $result = $this->getDriveHelper()->getViewableData($file, true);
 
-        return $this->_helper->dialog->completionUrl(array(
-            'file' => $result,
-        ));
+        $response = $this->_helper->ajaxResponse();
+        $response->setData($result);
+        $response->sendAndExit();
     } // }}}
 }
