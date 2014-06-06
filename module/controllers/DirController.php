@@ -31,6 +31,8 @@ class Drive_DirController extends Drive_Controller_Action
             ),
         );
 
+        $this->view->locale = preg_replace('/\\..+$/', '', $this->getResource('locale'));
+
         $this->view->user_search_url = $this->view->routeUrl(
             (string) $this->getDriveHelper()->getUserSearchRoute()
         );

@@ -1,17 +1,19 @@
-I18N = en_GB
-OUTPUT = drive.js
+LOCALES := $(patsubst %.js,%, $(wildcard src/i18n/*.js))
+LOCALES := $(LOCALES:src/i18n/%=%)
+
+OUTPUT = $(addprefix dist/drive., $(addsuffix .js, $(LOCALES)))
 MODULE = Drive
 
 all: $(OUTPUT)
+	@mkdir -p dist
 
-$(OUTPUT): $(wildcard src/*.js) src/I18n.js src/Templates.js
-	php build-tools/build-src $(MODULE) -o $@ $^
-
-src/I18n.js: src/i18n/$(I18N).js
-	cp $< src/I18n.js
+src/%.js: $(wildcard src/i18n/*.js)
 
 src/Templates.js: src/Templates.xml
 	php build-tools/build-templates $< $@
+
+dist/drive.%.js: $(wildcard src/*.js) src/Templates.js
+	php build-tools/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ $^
 
 
 .PHONY: install clean
@@ -20,4 +22,4 @@ install: all
 	cp -f $(OUTPUT) ..
 
 clean:
-	rm -rf $(OUTPUT) src/Templates.js src/I18n.js
+	rm -rf $(OUTPUT) src/Templates.js

@@ -8,7 +8,7 @@
 <!--<script type="text/javascript" src="{{ baseUrl('/assets/drive/js/drive.js') }}"></script>-->
 <script type="text/javascript">
 $(function() {
-    require(['{{ baseUrl('/assets/drive/js/drive.js') }}'], function (Drive) {
+    require(['{{ baseUrl('/assets/drive/js/drive.' ~ locale ~ '.js') }}'], function (Drive) {
         new Drive.DirBrowser('#drive-dir-browser', {{ json({
             uriTemplates: uri_templates,
             dirId: dir_id,

@@ -70,8 +70,9 @@ for ($i = 2, $n = count($argv); $i < $n; ++$i) {
             }
 
             $input = $argv[$i];
-            if (!is_file($input)) {
-                fprintf(STDERR, "%s: %s: File not found\n", $SELF, $input);
+            $path = ($pos = strpos($input, ':')) === false ? $input : substr($input, 0, $pos);
+            if (!is_file($path)) {
+                fprintf(STDERR, "%s: %s: File not found\n", $SELF, $path);
                 exit(1);
             }
             $INPUTS[] = $input;
@@ -90,15 +91,15 @@ ob_start();
 
 $JS_IDENT_RX = '/^[_a-z][_a-z0-9]*$/i';
 
-echo "define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], function ($, Dialog, ajaxForm) { var Drive = {\n";
+echo "define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], function ($, Dialog, ajaxForm) { var $NAME = {\n";
 for ($i = 0, $n = count($INPUTS); $i < $n; ++$i) {
     $input = $INPUTS[$i];
     $property = null;
 
     // filename.js:target_property
-    if ($pos = strpos($input, ':')) {
+    if (false !== ($pos = strpos($input, ':'))) {
         $property = substr($input, $pos + 1);
-        $input = substr($input, $pos);
+        $input = substr($input, 0, $pos);
 
         if (!preg_match($JS_IDENT_RX, $property)) {
             ob_clean();
@@ -108,7 +109,7 @@ for ($i = 0, $n = count($INPUTS); $i < $n; ++$i) {
     }
 
     if (!is_file($input)) {
-        ob_clean();
+        ob_end_clean();
         fprintf(STDERR, "%s: %s: Input file not found\n", $SELF, $input);
         exit(1);
     }
@@ -141,7 +142,7 @@ for ($i = 0, $n = count($INPUTS); $i < $n; ++$i) {
     echo $indent, $indent, "return ", $property, ";\n";
     echo $indent, "})()", ($i < $n - 1 ? ",\n" : "\n");
 }
-echo "}; return Drive; });\n";
+echo "}; return $NAME; });\n";
 
 if ($OUTPUT) {
     file_put_contents($OUTPUT, ob_get_clean());
