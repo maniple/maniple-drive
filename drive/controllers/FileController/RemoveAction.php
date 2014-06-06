@@ -51,7 +51,7 @@ class Drive_FileController_RemoveAction extends Zefram_Controller_Action_Standal
         $response->setData(array(
             'file_id' => $file_id,
             'name' => $name,
-            'disk_usage' => (float) $drive->disk_usage,
+            'disk_usage' => $drive->getDiskUsage(),
             'quota' => (float) $drive->quota,
         ));
         $response->sendAndExit();

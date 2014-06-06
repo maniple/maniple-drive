@@ -79,7 +79,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             $drive = $this->Drive;
             $size = (int) filesize($path);
 
-            if ($drive->quota && $drive->disk_usage + $size > $drive->quota) {
+            if ($drive->quota && $drive->getDiskUsage() + $size > $drive->quota) {
                 throw new Exception('Brak miejsca na dysku aby zapisać plik');
             }
 
@@ -152,8 +152,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             $file->save();
 
             // zaktualizuj zajmowane miejsce na dysku
-            $drive->disk_usage = new Zend_Db_Expr('disk_usage + ' . $size);
-            $drive->save();
+            $drive->refreshDiskUsage();
 
             return $file;
 
@@ -228,7 +227,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 
         $result = parent::_insert();
 
-        $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
+        // $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
 
         return $result;
     } // }}}
@@ -238,14 +237,14 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
      */
     public function _update() // {{{
     {
-        if ($this->_cleanData['parent_id'] != $this->parent_id) {
+        /*if ($this->_cleanData['parent_id'] != $this->parent_id) {
             // fetch previous parent dir
             $dir = $this->_getTable('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
             if ($dir) {
                 $this->_updateCounters($dir, false, $this->total_file_count, $this->total_file_size);
             }
             $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
-        }
+        }*/
 
         $this->mtime = time();
         return parent::_update();
@@ -262,7 +261,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
         }
 
         // zmniejsz licznik podkatalogow w katalogu nadrzednym
-        $this->_updateCounters($this->ParentDir, false, $this->total_file_count, $thit->total_file_size);
+        // $this->_updateCounters($this->ParentDir, false, $this->total_file_count, $thit->total_file_size);
 
         // usun udostepnienia
         $this->_getTable('Drive_Model_DbTable_DirShares')->delete(array(

@@ -17,8 +17,7 @@ class Drive_Model_File extends Zefram_Db_Table_Row
         }
 
         $result = parent::_insert();
-
-        $this->_updateCounters($this->Dir, true, $this->size);
+        // $this->_updateCounters($this->Dir, true, $this->size);
 
         return $result;
     } // }}}
@@ -69,16 +68,11 @@ class Drive_Model_File extends Zefram_Db_Table_Row
         $size = (int) $this->size;
         $drive = $this->Dir->Drive;
 
-        $this->_updateCounters($this->Dir, false, $size);
+        // $this->_updateCounters($this->Dir, false, $size);
 
         // TODO co z usuwaniem pliku z dysku?
         $result = parent::delete();
-
-        if ($drive) {
-            // zaktualizuj zajmowane miejsce na dysku
-            $drive->disk_usage = new Zend_Db_Expr(sprintf('disk_usage - %d', $size));
-            $drive->save();
-        }
+        $drive->refreshDiskUsage();
 
         return $result;
     } // }}}

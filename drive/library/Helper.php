@@ -442,7 +442,7 @@ class Drive_Helper
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         $drive = $dir->Drive;
-        $result['disk_usage'] = (float) $drive->disk_usage;
+        $result['disk_usage'] = $drive->getDiskUsage();
         $result['quota'] = (float) $drive->quota;
 
         return $result;

@@ -69,6 +69,46 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
     } // }}}
 
     /**
+     * @param int|int[] $drive
+     * @return float[]
+     */
+    public function getDiskUsageReport($drive_ids = null) // {{{
+    {
+        if (!is_array($drive_ids)) {
+            $drive_ids = (array) $drive_ids;
+        }
+
+        $drive_ids = array_map('intval', $drive_ids);
+
+        $select = new Zefram_Db_Select($this->getAdapter());
+        $select->from(
+            array('dirs' => $this->getTable('Drive_Model_DbTable_Dirs')),
+            array(
+                'drive_id',
+                'disk_usage' => new Zend_Db_Expr('COALESCE(SUM(size), 0)'),
+            )
+        );
+        $select->joinLeft(
+            array('files' => $this->getTable('Drive_Model_DbTable_Files')),
+            'files.dir_id = dirs.dir_id',
+            array()
+        );
+        $select->group('drive_id');
+
+        if ($drive_ids) {
+            $select->where('drive_id IN (?)', $drive_ids);
+        }
+
+        $report = array();
+
+        foreach ($select->query()->fetchAll() as $row) {
+            $report[$row['drive_id']] = $row;
+        }
+
+        return $report;
+    } // }}}
+
+    /**
      * FIXME chyba fetchFileByPath
      * Znajdz plik opisywany sciezka znajdujacy sie w obrebie
      * podanego dysku.

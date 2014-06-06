@@ -1,5 +1,5 @@
 -- maniple-drive database schema
--- Version: 2014-05-14
+-- Version: 2014-06-06
 
 -- Dyski
 CREATE TABLE {PREFIX}drives (
@@ -17,10 +17,7 @@ CREATE TABLE {PREFIX}drives (
     -- podstawie rozmiarow plikow, a nie miejsca zajmowanego na dysku (przy
     -- okazji, USAGE jest zarezerwowanym slowem w MySQL 5.1, PostgreSQL i DB2)
 
-    -- wykorzystanie miejsca na dysku
-    disk_usage      BIGINT NOT NULL DEFAULT 0 CHECK (disk_usage >= 0),
-
-    -- ograniczenie
+    -- ograniczenie zuzycia miejsca na dysku
     quota           BIGINT NOT NULL DEFAULT 0 CHECK (quota >= 0),
 
     owner           INTEGER NOT NULL,
@@ -68,13 +65,6 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     file_count      INTEGER NOT NULL DEFAULT 0 CHECK (file_count >= 0),
 
-    -- liczba wszystkich plikow i podkatalogow tego katalogu
-    total_dir_count INTEGER NOT NULL DEFAULT 0 CHECK (total_dir_count >= 0),
-
-    total_file_count INTEGER NOT NULL DEFAULT 0 CHECK (total_file_count >= 0),
-
-    total_file_size BIGINT NOT NULL DEFAULT 0 CHECK (total_file_size >= 0),
-
     owner           INTEGER NOT NULL,
 
     -- czas utworzenia katalogu
@@ -118,10 +108,18 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- indeks pilnujacy, zeby katalogi mialy unikalne nazwy jezeli naleza
     -- do tego samego katalogu nadrzednego, przy okazji wspomagajacy klucz
     -- obcy oraz wyszukiwanie katalogu po nazwie
-    CONSTRAINT {PREFIX}drive_dirs_parent_id_name_idx UNIQUE (parent_id, name),
+    CONSTRAINT {PREFIX}drive_dirs_parent_id_name_idx
+        UNIQUE (parent_id, name),
 
-    CONSTRAINT {PREFIX}drive_dirs_parent_id_fkey
-        FOREIGN KEY (parent_id) REFERENCES {PREFIX}drive_dirs (dir_id)
+    -- ten indeks wynika bezposrednio z unikalnosci dir_id, ale jest potrzebny
+    -- do zapewnienia, ze wszystkie katalogi w poddrzewie naleza do tego samego
+    -- dysku
+    CONSTRAINT {PREFIX}drive_dirs_dir_id_drive_id_idx
+        UNIQUE (dir_id, drive_id),
+
+    CONSTRAINT {PREFIX}drive_dirs_parent_id_drive_id_fkey
+        FOREIGN KEY (parent_id, drive_id)
+        REFERENCES {PREFIX}drive_dirs (dir_id, drive_id)
 
 );
 

@@ -183,7 +183,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
 
         // zwroc te wartosci jako floaty, zeby uniknac przekroczenia zakresu
         // liczb calkowitych na 32-bitowych maszynach
-        $result['disk_usage'] = (float) $drive->disk_usage;
+        $result['disk_usage'] = $drive->getDiskUsage();
         $result['quota'] = (float) $drive->quota;
 
         return $result;

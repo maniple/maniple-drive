@@ -24,14 +24,21 @@ class Drive_DriveController extends Drive_Controller_Action
             ->order('name')
             ->fetchAll();
 
+        $disk_usage = $this->getTable('Drive_Model_DbTable_Drives')->getDiskUsageReport(array_column($drives, 'drive_id'));
+
         $user_ids = array();
-        foreach ($drives as $drive) {
+        foreach ($drives as &$drive) {
+            $drive_id = $drive['drive_id'];
+            $drive['disk_usage'] = $disk_usage[$drive_id]['disk_usage'];
+
+
             $user_ids[$drive['owner']] = true;
             $user_ids[$drive['created_by']] = true;
         }
+        unset($drive);
         $user_ids = array_keys($user_ids);
 
-        $users = $this->getResource('profile.mapper')->getUsers($user_ids);
+        $users = $this->getDriveHelper()->getUserMapper()->getUsers($user_ids);
 
         foreach ($drives as &$drive) {
             // uzupelnij rekord dysku adresami akcji

@@ -14,6 +14,8 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
      */
     protected $_name;
 
+    protected $_diskUsage;
+
     public function getName() // {{{
     {
         if (null === $this->_name) {
@@ -79,7 +81,6 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
     protected function _insert() // {{{
     {
         $this->create_time = date('Y-m-d H:i:s');
-        $this->disk_usage  = 0;
         $this->root_dir    = null;
 
         return parent::_insert();
@@ -148,5 +149,36 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
     public function prepareFilePath($md5) // {{{
     {
         return $this->getTable()->prepareFilePath($md5);
+    } // }}}
+
+    public function refresh() // {{{
+    {
+        $this->refreshDiskUsage();
+        return parent::refresh();
+    } // }}}
+
+    /**
+     * @return float|false
+     */
+    public function getDiskUsage() // {{{
+    {
+        if (null === $this->_diskUsage) {
+            $report = $this->getTable()->getDiskUsageReport($this->drive_id);
+            if (isset($report[$this->drive_id])) {
+                $this->_diskUsage = $report[$this->drive_id]['disk_usage'];
+            } else {
+                $this->_diskUsage = 0;
+            }
+        }
+        return $this->_diskUsage;
+    } // }}}
+
+    /**
+     * @return Drive_Model_Drive
+     */
+    public function refreshDiskUsage() // {{{
+    {
+        $this->_diskUsage = null;
+        return $this;
     } // }}}
 }
