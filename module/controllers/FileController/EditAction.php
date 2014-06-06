@@ -1,25 +1,31 @@
 <?php
 
-class Drive_FileController_EditAction extends Zefram_Controller_Action_Standalone_Form
+class Drive_FileController_EditAction extends Zefram_Controller_Action_StandaloneForm
 {
+    /**
+     * @var Drive_Model_File
+     */
     protected $_file;
 
-    protected function _init() // {{{
+    protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
 
-        $user = App::get('user');
-        $this->assertAccess($user->isAuthenticated());
+        $security = $this->getSecurityContext();
+        $this->assertAccess($security->isAuthenticated());
 
-        $helper = $this->_helper->drive;
-        $file = $helper->fetchFile($this->getParam('id'));
+        $helper = $this->getDriveHelper();
+
+        $file_id = $this->getScalarParam('file_id');
+        $file = $helper->fetchFile($file_id);
+
         $this->assertAccess(
             $helper->isFileWritable($file),
             'Nie masz uprawnień do edycji metadanych tego pliku'
         );
 
-        $form = new Form(array('elements' => array(
-            new Form_Element_Token('token'),
+        $form = new Zefram_Form(array('elements' => array(
+            // new Form_Element_Token('token'),
             'title' => array(
                 'type' => 'text',
                 'options' => array(
@@ -47,9 +53,9 @@ class Drive_FileController_EditAction extends Zefram_Controller_Action_Standalon
         $this->_file = $file;
     } // }}}
 
-    public function _processForm($values) // {{{
+    protected function _process() // {{{
     {
-        $user = App::get('user');
+        $values = $this->_form->getValues();
         $file = $this->_file;
 
         $db = $file->getAdapter();
@@ -57,7 +63,7 @@ class Drive_FileController_EditAction extends Zefram_Controller_Action_Standalon
 
         try {
             $file->setFromArray($values);
-            $file->modified_by = $user->id;
+            $file->modified_by = $this->getSecurityContext()->getUser()->getId();
             $file->save();
             $db->commit();
 
@@ -66,8 +72,10 @@ class Drive_FileController_EditAction extends Zefram_Controller_Action_Standalon
             throw $e;
         }
 
-        return $this->_helper->dialog->completionUrl(array(
-            'id' => $file->id,
+        $response = $this->_helper->ajaxResponse();
+        $response->setData(array(
+            'file_id' => $file->file_id,
         ));
+        $response->sendAndExit();
     } // }}}
 }

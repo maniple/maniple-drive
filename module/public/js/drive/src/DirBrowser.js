@@ -832,7 +832,7 @@ DirBrowser.prototype._removeDir = function (dir) { // {{{
     }
 }; // }}}
 
-DirBrowser.prototype.opRemoveDir = function(dir) { // {{{
+DirBrowser.prototype.opRemoveDir = function (dir) { // {{{
     var self = this,
         url = Drive.Util.uri(self._uriTemplates.dir.remove, dir),
         str = Drive.Util.i18n('DirBrowser.opRemoveDir');
@@ -847,7 +847,9 @@ DirBrowser.prototype.opRemoveDir = function(dir) { // {{{
             response = response || {error: 'Nieoczekiwana odpowiedz od serwera'};
             if (!response.error) {
                 self._removeDir(dir);
-                self._updateDiskUsage(response.disk_usage, response.quota);
+                self._updateDiskUsage(response.data.disk_usage, response.data.quota);
+
+                dialog.close();
             }
         }
     });

@@ -1,4 +1,4 @@
-I18N = pl_PL
+I18N = en_GB
 OUTPUT = drive.js
 MODULE = Drive
 
