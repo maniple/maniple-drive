@@ -27,17 +27,12 @@ function DirBrowser(selector, options) { // {{{
 
     self.$ = $;
 
+    self._element = $(selector).first();
     self._options = $.extend({}, options);
 
     // zainicjuj interpolatory stringow
     self._strInterp = new Viewtils.Interp();
     // TODO self._uriInterp = new Viewtils.Interp({esc: escape});
-
-    // zainicjuj widok
-    self._initView(selector);
-
-    // zainicjuj widget informujacy o stanie zajetosci dysku
-    self._initDiskUsage();
 
     // biezacy katalog
     self._currentDir = null;
@@ -65,7 +60,7 @@ function DirBrowser(selector, options) { // {{{
 
     // click on elements with data-goto-url attribute triggers redirection
     // to url given in data-url attribute of first matching ancestor element
-    self._view.element.on('click', '[data-goto-url]', function () {
+    self._element.on('click', '[data-goto-url]', function () {
         var url = $(this).closest('[data-url]').attr('data-url');
         if (url) {
             setTimeout(function () {
@@ -75,7 +70,12 @@ function DirBrowser(selector, options) { // {{{
     });
 
     // ustaw referencje do tego obiektu w powiazanym elemencie drzewa
-    self._view.element.data('DirBrowser', self);
+    self._element.data('DirBrowser', self);
+
+    self._element.empty().append(self._renderTemplate(
+        'DirBrowser.loading',
+        {str: Drive.Util.i18n('DirBrowser.loading')}
+    ));
 
     // zainicjuj obsluge zmiany hasha w adresie
     $.History.bind(function (state) {
@@ -95,20 +95,24 @@ function DirBrowser(selector, options) { // {{{
     }
 } // }}}
 
-DirBrowser.prototype._initView = function (selector) { // {{{
-    var element = this.$(selector).first(),
-        view;
+DirBrowser.prototype._initMainView = function (selector) { // {{{
+    if (!this._view) {
+        this._element.empty().append(this._renderTemplate('DirBrowser.main'));
 
-    element.append(this._renderTemplate('DirBrowser'));
-    view = new Drive.View(element, [
-        'dirName', 'messageArea', 'auxMenu', 'dirContents',
-        'uploader', 'diskUsage'
-    ]);
+        this._view = new Drive.View(this._element, [
+            'dirName', 'messageArea', 'auxMenu', 'dirContents',
+            'uploader', 'diskUsage'
+        ]);
 
-    this._view = view;
+        // zainicjuj widget informujacy o stanie zajetosci dysku
+        this._initDiskUsageView();
+
+        // umiesc wyrenderowany widok w miejscu wskazanym przez hook uploadQueue
+        this._uploader.injectInto('uploader', this._view);
+    }
 }; // }}}
 
-DirBrowser.prototype._initDiskUsage = function () { // {{{
+DirBrowser.prototype._initDiskUsageView = function () { // {{{
     var str = Drive.Util.i18n('DirBrowser.diskUsage'),
         element = this._renderTemplate('DirBrowser.diskUsage', {str: str}),
         view = new Drive.View(element, [
@@ -118,7 +122,7 @@ DirBrowser.prototype._initDiskUsage = function () { // {{{
         progressBar = view.hooks.progressBar;
 
     // szybsze niz .hide()
-    element.css('display', 'none');
+    // element.css('display', 'none');
 
     // zapamietaj poczatkowa klase paska postepu, zeby ulatwic pozniejsze
     // operacje na niej
@@ -193,11 +197,6 @@ DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
             progressBar.attr('class', progressBarClass);
         });
     }
-
-    // pokaz, o ile to konieczne, element ukryty podczas inicjalizacji widoku
-    if ('none' === element.css('display')) {
-        element.css('display', '');
-    }
 }; // }}}
 
 DirBrowser.prototype._initUploader = function () { // {{{
@@ -208,8 +207,6 @@ DirBrowser.prototype._initUploader = function () { // {{{
             disabled: true
         });
 
-    // umiesc wyrenderowany widok w miejscu wskazanym przez hook uploadQueue
-    uploader.injectInto('uploader', self._view);
     uploader.bind('uploadsuccess', function (response) {
         self.addFile(response);
         self._currentDir.files.push(response);
@@ -330,7 +327,7 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     });
 }; // }}}
 
-DirBrowser.prototype._updateAuxmenu = function(dir) { // {{{
+DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
     var $ = this.$,
         self = this,
         ops,
@@ -424,7 +421,7 @@ DirBrowser.prototype._initWidthChecker = function() { // {{{
         narrowMaxWidth = 650;
 
     function widthChecker() {
-        var container = self._view.element;
+        var container = self._element;
 
         if (container.width() <= narrowMaxWidth) {
             if (!isNarrow) {
@@ -470,13 +467,12 @@ DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
     var self = this,
         $ = this.$,
         url = Drive.Util.uri(this._uriTemplates.dir.read, {dir_id: dirId}),
-        dirName = self._view.hooks.dirName;
+        dirNameHook;
 
-    if (!this._currentDir) {
-        $('#drive-loading').text('Ładowanie zawartości katalogu...');
-    } else if (dirName) {
-        var title = self._view.hooks.dirName.attr('title');
-        self._view.hooks.dirName
+    if (self._view) {
+        dirNameHook = self._view.hooks.dirName;
+        var title = dirNameHook.attr('title');
+        dirNameHook
             .addClass('loading')
             .attr('title', 'Ładowanie zawartości katalogu...');
     }
@@ -486,11 +482,14 @@ DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
         type: 'get',
         dataType: 'json',
         complete: function () {
-            $('#drive-loading').text('');
-            self._view.hooks.dirName.removeClass('loading');
+            if (self._view) {
+                self._view.hooks.dirName.removeClass('loading');
+            }
         },
         error: function (response) {
-            self._view.hooks.dirName.attr('title', title);
+            if (self._view) {
+                self._view.hooks.dirName.attr('title', title);
+            }
             $('#drive-loading').html('<div class="error">' + response.error + '</div>');
         },
         success: function (response) {
@@ -505,6 +504,9 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
 
     self._currentDir = dir;
     self._dropTargets = {};
+
+    // zainicjuj glowny widok widgetu
+    self._initMainView();
 
     self._updateBreadcrumbs(dir);
     self._updateAuxmenu(dir);
@@ -757,7 +759,6 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
                     users: dir.shares,
                     autocomplete: {
                         renderItem: function (user) {
-console.log(Drive.Templates['DirBrowser.opShareDir.userAutocomplete'](user), user);
                             return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
                         },
                         renderValue: function (user) {
@@ -1135,7 +1136,7 @@ DirBrowser.prototype.addFile = function(file) { // {{{
 }; // }}}
 
 DirBrowser.prototype._closeOpdd = function() { // {{{
-    this._view.element.find('[data-toggle="dropdown"]').each(function () {
+    this._element.find('[data-toggle="dropdown"]').each(function () {
         var el = $(this),
             target = el.attr('data-target') || el.attr('href'),
             parent;

@@ -50,7 +50,14 @@
 </tr>
 ]]>
 </template>
-<template id="DirBrowser">
+
+<template id="DirBrowser.loading">
+<![CDATA[
+Loading directory contents...
+]]>
+</template>
+
+<template id="DirBrowser.main">
 <![CDATA[
 <div data-hook="disk-usage"></div>
 <h1 id="drive-dir-name" data-hook="dir-name"></h1>
@@ -62,6 +69,7 @@
 <div data-hook="uploader"></div>
 ]]>
 </template>
+
 <template id="DirBrowser.diskUsage">
 <![CDATA[
 <div id="drive-du">
