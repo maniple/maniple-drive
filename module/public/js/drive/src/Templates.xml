@@ -300,6 +300,13 @@
 </tr>
 ]]>
 </template>
+<template id="DirBrowser.opShareDir.userAutocomplete">
+<![CDATA[
+{{ user.first_name }} {{ user.last_name }}
+{{#if user.username }} ({{ user.username }}){{/if }}
+]]>
+</template>
+
 <template id="DirBrowser.opDirDetails">
 <![CDATA[
 <div id="drive-dir-details">

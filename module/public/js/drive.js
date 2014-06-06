@@ -758,10 +758,13 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                             url: self._options.userSearchUrl,
                             users: dir.shares,
                             autocomplete: {
-                                renderItem: function(item) { // TODO templejt!
-                                    var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
-                                    return str;
+                                renderItem: function (user) {
+        console.log(Drive.Templates['DirBrowser.opShareDir.userAutocomplete'](user), user);
+                                    return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
                                 },
+                                renderValue: function (user) {
+                                    return user.first_name + ' ' + user.last_name;
+                                }
                             }
                         });
 
@@ -942,6 +945,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 submitLabel: 'Zastosuj',
                 content: function (dialog, response) {
                     var content = $(response.data);
+
                     setTimeout(function() {
                         content.find('input[type="text"]').first().each(function() {
                             var j = $(this),
@@ -1447,8 +1451,11 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             element.addClass('grabbable').attr('title', str.tooltipText);
         }; // }}}
 
-        DirBrowser.prototype._renderTemplate = function(id, vars) { // {{{
-            return Drive.Util.render(id, vars || {}, this.$);
+        DirBrowser.prototype._renderTemplate = function (id, vars) { // {{{
+            var $ = this.$;
+            return Drive.Util.render(id, vars || {}, function (value) {
+                return $('<div/>').append(value).contents();
+            });
         }; // }}}
 
         DirBrowser.prototype._renderHeader = function() { // {{{
@@ -4234,6 +4241,30 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             + "</option>\n</select>\n</td>\n<td class=\"user-delete\">\n<button type=\"button\" data-hook=\"user-delete\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userDelete)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "\">&times;</button>\n</td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.opShareDir.userAutocomplete": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this;
+
+        function program1(depth0,data) {
+
+          var buffer = "", stack1;
+          buffer += " ("
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.username)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + ")";
+          return buffer;
+          }
+
+          buffer += escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.first_name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + " "
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.last_name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\n";
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.username), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
           return buffer;
           }
 

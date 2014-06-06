@@ -756,10 +756,13 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
                     url: self._options.userSearchUrl,
                     users: dir.shares,
                     autocomplete: {
-                        renderItem: function(item) { // TODO templejt!
-                            var str = item.first_name + ' ' + item.last_name + ' (' + item.username + ')';
-                            return str;
+                        renderItem: function (user) {
+console.log(Drive.Templates['DirBrowser.opShareDir.userAutocomplete'](user), user);
+                            return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
                         },
+                        renderValue: function (user) {
+                            return user.first_name + ' ' + user.last_name;
+                        }
                     }
                 });
 
@@ -1446,8 +1449,11 @@ DirBrowser.prototype._addGrab = function (entry, isDir, element, callback) { // 
     element.addClass('grabbable').attr('title', str.tooltipText);
 }; // }}}
 
-DirBrowser.prototype._renderTemplate = function(id, vars) { // {{{
-    return Drive.Util.render(id, vars || {}, this.$);
+DirBrowser.prototype._renderTemplate = function (id, vars) { // {{{
+    var $ = this.$;
+    return Drive.Util.render(id, vars || {}, function (value) {
+        return $('<div/>').append(value).contents();
+    });
 }; // }}}
 
 DirBrowser.prototype._renderHeader = function() { // {{{
