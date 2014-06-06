@@ -10,10 +10,10 @@ all: $(OUTPUT)
 src/%.js: $(wildcard src/i18n/*.js)
 
 src/Templates.js: src/Templates.xml
-	php build-tools/build-templates $< $@
+	php build/build-templates $< $@
 
 dist/drive.%.js: $(wildcard src/*.js) src/Templates.js
-	php build-tools/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ $^
+	php build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ $^
 
 
 .PHONY: install clean
