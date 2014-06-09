@@ -398,6 +398,9 @@
 #drive-dir-share-acl-users .user-perms {
   width: 30%
 }
+#drive-dir-share-acl-users .user-perms select {
+  width: 100%;
+}
 #drive-dir-share-acl-users .user-delete {
   width: 5%;
 }
@@ -912,4 +915,70 @@ tbody > tr.not-grabbable:hover .col-grab {
 .seamless {
     border: none;
     background: none;
+}
+
+.maniple-modal {
+    width: 100%;
+    max-width: 600px;
+}
+
+.maniple-modal-close {
+    color: #aaa;
+    cursor: pointer;
+    display: block;
+    filter: none;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1.1;
+    opacity: 1;
+}
+.maniple-modal-close:hover {
+    color: #444;
+}
+.maniple-modal-header {
+    padding: 10px;
+}
+.maniple-modal-header:after {
+    display: block;
+    clear: both;
+    content: '';
+}
+.maniple-modal-title {
+    color: #444444;
+    cursor: default;
+    float: left;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 30px;
+    margin-left: 0;
+}
+
+.maniple-modal-footer button {
+    background: #efefef;
+    color: #444;
+    padding: 6px 12px;
+    border: 1px solid #b3b3b3;
+    font-weight: 400;
+    line-height: 1.4;
+}
+.maniple-modal-footer button:hover {
+    background: #e6e6e6;
+    border-color: #a0a0a0;
+}
+.maniple-modal-footer button.btn-primary {
+    background: #428bca;
+    border: 1px solid #357ebd;
+    color: #fff;
+}
+.maniple-modal-footer button.btn-primary:hover {
+    background-color: #3276b1;
+    border-color: #285e8e;
+    color: #fff;
+}
+.maniple-modal-buttons {
+    text-align: right;
+}
+.maniple-modal-body {
+    min-height: 64px;
 }

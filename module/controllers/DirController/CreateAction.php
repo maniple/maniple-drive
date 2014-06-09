@@ -24,7 +24,7 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
             'name' => array(
                 'type' => 'text',
                 'options' => array(
-                    'label'      => 'Nazwa katalogu',
+                    'label'      => 'Directory name',
                     'required'   => true,
                     'filters'    => array('StringTrim'),
                     'validators' => array(

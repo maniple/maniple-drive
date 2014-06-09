@@ -49,12 +49,21 @@ class Drive_Helper
      */
     public function getDir($dir_id) // {{{
     {
-        $dir = $this->getMapper()->getDir($dir_id);
+        if ($dir_id === 'shared') {
+        
+        } elseif ($dir_id === 'public') {
+            $dir = new Drive_Model_PublicDir(
+                $this->getSecurityContext()->getUserId(),
+                $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+            );
+        
+        } else {
+            $dir = $this->getMapper()->getDir($dir_id);
 
-        if (!$this->isDirReadable($dir)) {
-            throw new Exception('Nie masz uprawnień dostępu do tego katalogu');
+            if (!$this->isDirReadable($dir)) {
+                throw new Exception('Nie masz uprawnień dostępu do tego katalogu');
+            }
         }
-
         return $dir;
     } // }}}
 
@@ -93,6 +102,21 @@ class Drive_Helper
     public function getDirPermissions(Drive_Model_Dir $dir, $property = null) // {{{
     {
         $dir_id = $dir->dir_id;
+
+        if ($dir instanceof Drive_Model_SharedDir ||
+            $dir instanceof Drive_Model_PublicDir
+        ) {
+            return array(
+                self::READ   => true,
+                self::WRITE  => false,
+                self::RENAME => false,
+                self::REMOVE => false,
+                self::SHARE  => false,
+                self::CHOWN  => false,
+            );
+        }
+
+
 
         if (empty($this->_dirPermissions[$dir_id])) {
             $user = $this->getSecurityContext()->getUser();
@@ -297,7 +321,7 @@ class Drive_Helper
     public function browseDir($dir, $options = null) // {{{
     {
         if (!$dir instanceof Drive_Model_Dir) {
-            $dir = $this->fetchDir($dir);
+            $dir = $this->getDir($dir);
         }
 
         $user_ids = array(
@@ -442,8 +466,10 @@ class Drive_Helper
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         $drive = $dir->Drive;
-        $result['disk_usage'] = $drive->getDiskUsage();
-        $result['quota'] = (float) $drive->quota;
+        if ($drive) {
+            $result['disk_usage'] = $drive->getDiskUsage();
+            $result['quota'] = (float) $drive->quota;
+        }
 
         return $result;
     } // }}}

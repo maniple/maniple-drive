@@ -2,7 +2,7 @@
     'drive.drive' => array(
         'route' => 'drive/:drive_id/:action',
         'reqs' => array(
-            'drive_id' => '\d+',
+            'drive_id' => '\\d+',
         ),
         'defaults' => array(
             'module'     => 'drive',
@@ -13,7 +13,7 @@
     'drive.drive.edit' => array(
         'route' => 'drive/:drive_id/edit',
         'reqs' => array(
-            'drive_id' => '\d+',
+            'drive_id' => '\\d+',
         ),
         'defaults' => array(
             'module'     => 'drive',
@@ -24,7 +24,7 @@
     'drive.dir' => array(
         'route' => 'drive/dir/:dir_id/:action',
         'reqs' => array(
-            'dir_id' => '\d+',
+            'dir_id' => '(\\d+|shared|public)',
         ),
         'defaults' => array(
             'module'     => 'drive',
@@ -35,7 +35,7 @@
     'drive.file' => array(
         'route' => 'drive/file/:file_id/:action',
         'reqs' => array(
-            'file_id' => '\d+',
+            'file_id' => '\\d+',
         ),
         'defaults' => array(
             'module'     => 'drive',

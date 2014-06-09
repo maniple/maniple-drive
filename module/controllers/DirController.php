@@ -9,7 +9,7 @@ class Drive_DirController extends Drive_Controller_Action
     {
         // TODO access perms
 
-        $this->view->dir_id = (int) $this->getScalarParam('dir_id', 0);
+        $this->view->dir_id = $this->getScalarParam('dir_id');
         $this->view->uri_templates = array(
             'dir' => array(
                 'read'   => $this->_helper->urlTemplate('drive.dir', array('action' => 'read')),
@@ -58,7 +58,7 @@ class Drive_DirController extends Drive_Controller_Action
         // filter     - file type filter value, !value
         // files-only - do not include subdirectories
 
-        $dir_id = (int) $this->getScalarParam('dir_id');
+        $dir_id = $this->getScalarParam('dir_id');
         $files_only = $this->getScalarParam('files-only');
 
         $filter = $this->getScalarParam('filter');
@@ -125,7 +125,7 @@ class Drive_DirController extends Drive_Controller_Action
     {
         $drive_helper = $this->getDriveHelper();
 
-        $dir_id = (int) $this->getScalarParam('dir_id');
+        $dir_id = $this->getScalarParam('dir_id');
         $dir = $drive_helper->fetchDir($dir_id);
 
         $this->assertAccess($drive_helper->isDirShareable($dir));
@@ -187,7 +187,7 @@ class Drive_DirController extends Drive_Controller_Action
     {
         $drive_helper = $this->getDriveHelper();
 
-        $dir_id = (int) $this->_request->getPost('dir_id');
+        $dir_id = $this->_request->getPost('dir_id');
         $dir = $drive_helper->fetchDir($dir_id);
 
         $this->assertAccess($drive_helper->isDirChownable($dir));

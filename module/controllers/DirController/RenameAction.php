@@ -38,7 +38,7 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
             'name' => array(
                 'type' => 'text',
                 'options' => array(
-                    'label'      => 'Nowa nazwa katalogu',
+                    'label'      => 'New directory name',
                     'required'   => true,
                     'filters'    => array('StringTrim'),
                     'validators' => array(

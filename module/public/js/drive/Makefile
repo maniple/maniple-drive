@@ -4,22 +4,30 @@ LOCALES := $(LOCALES:src/i18n/%=%)
 OUTPUT = $(addprefix dist/drive., $(addsuffix .js, $(LOCALES)))
 MODULE = Drive
 
-all: $(OUTPUT)
-	@mkdir -p dist
+ifeq ($(windir),)
+    BIN_SUFFIX =
+else
+    BIN_SUFFIX = .exe
+endif
+
+all: dist $(OUTPUT)
+
+dist:
+	mkdir$(BIN_SUFFIX) -p dist
 
 src/%.js: $(wildcard src/i18n/*.js)
 
 src/Templates.js: src/Templates.xml
-	php build/build-templates $< $@
+	php$(BIN_SUFFIX) build/build-templates $< $@
 
 dist/drive.%.js: $(wildcard src/*.js) src/Templates.js
-	php build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ $^
+	php$(BIN_SUFFIX) build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ $^
 
 
-.PHONY: install clean
+.PHONY: install clean dist
 
 install: all
-	cp -f $(OUTPUT) ..
+	cp$(BIN_SUFFIX) -f $(OUTPUT) ..
 
 clean:
-	rm -rf $(OUTPUT) src/Templates.js
+	rm$(BIN_SUFFIX) -rf $(OUTPUT) src/Templates.js dist
