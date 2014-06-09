@@ -1,12 +1,14 @@
 -- maniple-drive database schema
 -- Version: 2014-06-06
 
+-- sed 's/{PREFIX}/prefix/g' schema-psql.sql | psql
+
 -- Dyski
 CREATE TABLE {PREFIX}drives (
 
     drive_id        SERIAL PRIMARY KEY,
 
-    -- identyfikator katalogu - korzenia dysku, unikalny, NULL dopuszczalny
+    -- identyfikator katalogu - korzenia dysku, unikatowy, NULL dopuszczalny
     -- ze wzgledu na cykliczna zaleznosc dysk-katalog
     root_dir        INTEGER,
 
@@ -53,12 +55,15 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     dir_id          SERIAL PRIMARY KEY,
 
-    -- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog,
-    -- redundancja ulatwiajaca aktualizacje zuzycia miejsca na dysku
+    -- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog
     drive_id        INTEGER NOT NULL,
 
     -- identyfikator nadrzednego katalogu
     parent_id       INTEGER,
+
+    -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
+    -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
+    internal_key    VARCHAR(64),
 
     -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
     dir_count       INTEGER NOT NULL DEFAULT 0 CHECK (dir_count >= 0),
@@ -105,13 +110,13 @@ CREATE TABLE {PREFIX}drive_dirs (
     CONSTRAINT {PREFIX}drive_dirs_modified_by_fkey
         FOREIGN KEY (modified_by) REFERENCES {PREFIX}users (user_id),
 
-    -- indeks pilnujacy, zeby katalogi mialy unikalne nazwy jezeli naleza
+    -- indeks pilnujacy, zeby katalogi mialy unikatowe nazwy jezeli naleza
     -- do tego samego katalogu nadrzednego, przy okazji wspomagajacy klucz
     -- obcy oraz wyszukiwanie katalogu po nazwie
     CONSTRAINT {PREFIX}drive_dirs_parent_id_name_idx
         UNIQUE (parent_id, name),
 
-    -- ten indeks wynika bezposrednio z unikalnosci dir_id, ale jest potrzebny
+    -- ten indeks wynika bezposrednio z unikatowosci dir_id, ale jest potrzebny
     -- do zapewnienia, ze wszystkie katalogi w poddrzewie naleza do tego samego
     -- dysku
     CONSTRAINT {PREFIX}drive_dirs_dir_id_drive_id_idx
@@ -119,7 +124,11 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     CONSTRAINT {PREFIX}drive_dirs_parent_id_drive_id_fkey
         FOREIGN KEY (parent_id, drive_id)
-        REFERENCES {PREFIX}drive_dirs (dir_id, drive_id)
+        REFERENCES {PREFIX}drive_dirs (dir_id, drive_id),
+
+    -- indeks zapewniajacy unikatowosc internal_key
+    CONSTRAINT {PREFIX}drive_dirs_internal_key_idx
+        UNIQUE (internal_key)
 
 );
 
@@ -224,7 +233,7 @@ CREATE TABLE {PREFIX}drive_files (
 
 );
 
--- unikalnosc nazwy pliku w obrebie jednego katalogu nie jest wymagana
+-- unikatowosc nazwy pliku w obrebie jednego katalogu nie jest wymagana
 -- (dla katalogow jest ze wzgledu na wyszukiwanie pliku po sciezce)
 
 CREATE INDEX {PREFIX}drive_files_dir_id_name_idx

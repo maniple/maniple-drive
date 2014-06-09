@@ -50,14 +50,9 @@ class Drive_IndexController extends Drive_Controller_Action
         exit;
     }
 
-    public function dirAction()
-    {
-    
-    }
-
-    public function fileAction()
+    public function dashboardAction()
     {
         
-    
+
     }
 }

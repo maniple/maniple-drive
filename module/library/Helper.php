@@ -110,7 +110,7 @@ class Drive_Helper
                     self::READ   => true,
                     self::WRITE  => true,
                     self::RENAME => (bool) $dir->parent_id,
-                    self::REMOVE => (bool) $dir->parent_id,
+                    self::REMOVE => !$dir->isInternal() && $dir->parent_id,
                     self::SHARE  => true,
                     self::CHOWN  => true,
                 );
@@ -124,7 +124,7 @@ class Drive_Helper
                 // zapisu tego katalogu, oraz miec uprawnienia do zapisu
                 // w katalogu nadrzednym (ten ostatni musi istniec)
                 if ($write && ($parent = $dir->fetchParent()) && $parent->isWritable($user_id)) {
-                    $remove = true;
+                    $remove = !$dir->isInternal();
                     $rename = true;
                 }
 
@@ -561,4 +561,6 @@ class Drive_Helper
     {
         return $this->_userSearchRoute;
     }
+
+    
 }

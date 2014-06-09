@@ -4,6 +4,11 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 {
     protected $_idColumn = 'dir_id';
 
+    public function isInternal() // {{{
+    {
+        return (bool) $this->internal_key;
+    } // }}}
+
     public function isReadable($user_id) // {{{
     {
         return $this->getTable()->isDirReadable($this->dir_id, $user_id);
