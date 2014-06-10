@@ -22,7 +22,7 @@ CREATE TABLE {PREFIX}drives (
     -- ograniczenie zuzycia miejsca na dysku
     quota           BIGINT NOT NULL DEFAULT 0 CHECK (quota >= 0),
 
-    owner           INTEGER NOT NULL,
+    owner           INTEGER,
 
     created_by      INTEGER NOT NULL,
 
@@ -70,7 +70,7 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     file_count      INTEGER NOT NULL DEFAULT 0 CHECK (file_count >= 0),
 
-    owner           INTEGER NOT NULL,
+    owner           INTEGER,
 
     -- czas utworzenia katalogu
     ctime           INTEGER NOT NULL,
@@ -91,10 +91,7 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- public     - dostepne dla wszystkich (internet)
     -- inherited  - dziedziczony dostep do plikow z katalogu nadrzednego, o ile
     --              nie podano jawnie katalog w korzeniu dysku jest prywatny
-    visibility      VARCHAR(16) NOT NULL DEFAULT 'inherited'
-                    CHECK (
-                        visibility IN ('private', 'usersonly', 'public', 'inherited')
-                    ),
+    visibility      VARCHAR(32) NOT NULL,
 
     name            VARCHAR(255) NOT NULL,
 
@@ -174,8 +171,8 @@ CREATE TABLE {PREFIX}drive_files (
     -- id katalogu wirtualnego, w ktorym umieszczony jest plik
     dir_id          INTEGER NOT NULL,
 
-    -- uzytkownik, ktory wgral plik
-    owner           INTEGER NOT NULL,
+    -- wlasciciel pliku
+    owner           INTEGER,
 
     -- data utworzenia pliku na dysku
     ctime           INTEGER NOT NULL,

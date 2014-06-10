@@ -40,6 +40,21 @@ class Drive_Helper
         return $this->getDir($dir_id);
     }
 
+    public function getDirId($dir_id)
+    {
+        if (!is_scalar($dir_id)) {
+            return null;
+        }
+
+        if (strpos($dir_id, ':') !== false) {
+            // mode:dir_id:stop
+            $parts = explode(':', $dir_id);
+            return $parts[1];
+        }
+
+        return $dir_id;
+    }
+
     /**
      * Pobiera z bazy rekord katalogu i sprawdza, czy bieżący użytkownik
      * ma uprawnienia do jego odczytu.
@@ -49,8 +64,15 @@ class Drive_Helper
      */
     public function getDir($dir_id) // {{{
     {
+        $dir_id = $this->getDirId($dir_id);
+        $dir = null;
+
         if ($dir_id === 'shared') {
-        
+            $dir = new Drive_Model_SharedDir(
+                $this->getSecurityContext()->getUserId(),
+                $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+            );
+
         } elseif ($dir_id === 'public') {
             $dir = new Drive_Model_PublicDir(
                 $this->getSecurityContext()->getUserId(),
@@ -63,6 +85,10 @@ class Drive_Helper
             if (!$this->isDirReadable($dir)) {
                 throw new Exception('Nie masz uprawnień dostępu do tego katalogu');
             }
+        }
+
+        if (empty($dir)) {
+            throw new Exception(sprintf('Directory not found (%s)', $dir_id));
         }
         return $dir;
     } // }}}
@@ -320,8 +346,22 @@ class Drive_Helper
      */
     public function browseDir($dir, $options = null) // {{{
     {
+        $pseudoDir = null;
+        $stop = null;
+
         if (!$dir instanceof Drive_Model_Dir) {
-            $dir = $this->getDir($dir);
+            $parts = explode(':', $dir);
+            if (count($parts) > 2) {
+                list($pseudoDir, $dir_id, $stop, ) = $parts;
+            } elseif (count($parts) > 1) {
+                list($pseudoDir, $dir_id, ) = $parts;
+            } else {
+                $dir_id = $parts[0];
+            }
+            if (ctype_alpha(substr($dir_id, 0, 1))) {
+                $pseudoDir = $dir_id;
+            }
+            $dir = $this->getDir($dir_id);
         }
 
         $user_ids = array(
@@ -337,7 +377,7 @@ class Drive_Helper
         while (($row = $row->fetchParent()) && $this->isDirReadable($row)) {
             // $parents[] = $this->getViewableData($row, false);
             $parents[] = array(
-                'dir_id'  => (int) $row->dir_id,
+                'dir_id'  => ($pseudoDir ? $pseudoDir . ':' : '') . (int) $row->dir_id,
                 'name'    => $row->name,
                 'perms'   => $this->getDirPermissions($row),
                 'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
@@ -346,6 +386,30 @@ class Drive_Helper
             $user_ids[$row->owner] = true;
             $user_ids[$row->created_by] = true;
             $user_ids[$row->modified_by] = true;
+
+            if ($stop !== null && $stop == $row->dir_id) {
+                break;
+            }
+        }
+
+        // if within pseudoDir (pseudo:dir_id)
+        if ($pseudoDir && !(
+            $dir instanceof Drive_Model_PublicDir ||
+            $dir instanceof Drive_Model_SharedDir
+        )) {
+            $parents[] = array(
+                'dir_id' => $pseudoDir,
+                'name' => ucfirst($pseudoDir),
+                'perms' => array(
+                    self::READ   => true,
+                    self::WRITE  => false,
+                    self::RENAME => false,
+                    self::REMOVE => false,
+                    self::SHARE  => false,
+                    self::CHOWN  => false,
+                ),
+                'private' => false,
+            );
         }
 
         $files = array();
@@ -390,6 +454,18 @@ class Drive_Helper
                 $subdir = $this->getViewableData($row, false);
                 if ($subdir['perms'][self::SHARE]) {
                     $shares_dir_ids[] = $row->dir_id;
+                }
+                if ($pseudoDir) {
+                    $subdir['perms'] = array(
+                        self::READ   => true,
+                        self::WRITE  => false,
+                        self::RENAME => false,
+                        self::REMOVE => false,
+                        self::SHARE  => false,
+                        self::CHOWN  => false,
+                    );
+
+                    $subdir['dir_id'] = $pseudoDir . ':' . $subdir['dir_id'];
                 }
                 $subdirs[] = $subdir;
                 
@@ -456,6 +532,17 @@ class Drive_Helper
 
         // zwroc dane potrzebne do wyswietlenia zawartosci katalogu
         $result = $this->getViewableData($dir);
+        if ($pseudoDir) {
+            $result['dir_id'] = $pseudoDir . ':' . $result['dir_id'];
+            $result['perms'] = array(
+                self::READ   => true,
+                self::WRITE  => false,
+                self::RENAME => false,
+                self::REMOVE => false,
+                self::SHARE  => false,
+                self::CHOWN  => false,
+            );
+        }
         $result['parents'] = $parents;
         $result['subdirs'] = $subdirs;
         $result['files']   = $files;
@@ -466,7 +553,7 @@ class Drive_Helper
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         $drive = $dir->Drive;
-        if ($drive) {
+        if ($drive && empty($pseudoDir)) {
             $result['disk_usage'] = $drive->getDiskUsage();
             $result['quota'] = (float) $drive->quota;
         }

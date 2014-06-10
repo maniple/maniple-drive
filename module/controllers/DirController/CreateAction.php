@@ -11,7 +11,7 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $parent_id = (int) $this->getScalarParam('dir_id');
+        $parent_id = $this->getScalarParam('dir_id');
         $parent_dir = $this->getDriveHelper()->getDir($parent_id);
 
         $this->assertAccess(

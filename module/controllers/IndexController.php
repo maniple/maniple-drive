@@ -2,7 +2,7 @@
 
 class Drive_IndexController extends Drive_Controller_Action
 {
-    public function indexAction()
+    public function fileAction()
     {
         $path = explode('/', $this->getScalarParam('path'));
 
@@ -52,7 +52,24 @@ class Drive_IndexController extends Drive_Controller_Action
 
     public function dashboardAction()
     {
-        
+        $user_id = $this->getSecurityContext()->getUser()->getId();
 
+        // list my drives
+        $this->view->drives = 
+            Zefram_Db_Select::factory(
+                $this->getDriveHelper()->getTableProvider()->getAdapter()
+            )
+            ->from(
+                array('drives' => $this->getTable('Drive_Model_DbTable_Drives'))
+            )
+            ->joinLeft(
+                array('dirs' => $this->getTable('Drive_Model_DbTable_Dirs')),
+                'drives.root_dir = dirs.dir_id',
+                'dirs.name'
+            )
+            ->where('drives.owner = ?', $user_id)
+            ->order('dirs.name')
+            ->query()
+            ->fetchAll();
     }
 }

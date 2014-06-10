@@ -230,6 +230,10 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             $this->owner = $this->created_by;
         }
 
+        if (empty($this->visibility)) {
+            $this->visibility = 'inherited';
+        }
+
         $result = parent::_insert();
 
         // $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);

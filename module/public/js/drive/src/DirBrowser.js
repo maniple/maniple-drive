@@ -80,7 +80,7 @@ function DirBrowser(selector, options) { // {{{
     // zainicjuj obsluge zmiany hasha w adresie
     $.History.bind(function (state) {
         state = String(state);
-        if (state.match(/^dir:(\d+|shared|public)$/)) {
+        if (state.match(/^dir:.+/)) {
             self.loadDir(state.substr(4), function (dir) {
                 self.setDir(dir);
             });
@@ -90,7 +90,7 @@ function DirBrowser(selector, options) { // {{{
 
     // jezeli hash nie jest poprawnym identyfikatorem katalogu, uzyj
     // identyfikatora przekazanego do funkcji
-    if (!document.location.hash.match(/^#dir:\d+$/) && self._options.dirId) {
+    if (!document.location.hash.match(/^#dir:.+$/) && self._options.dirId) {
         Drive.Util.gotoHash('dir:' + self._options.dirId);
     }
 } // }}}

@@ -1,4 +1,12 @@
 <?php return array(
+    'drive.dashboard' => array(
+        'route' => 'drive',
+        'defaults' => array(
+            'module'     => 'drive',
+            'controller' => 'index',
+            'action'     => 'dashboard',
+        ),
+    ),
     'drive.drive' => array(
         'route' => 'drive/:drive_id/:action',
         'reqs' => array(
@@ -24,12 +32,13 @@
     'drive.dir' => array(
         'route' => 'drive/dir/:dir_id/:action',
         'reqs' => array(
-            'dir_id' => '(\\d+|shared|public)',
+            'dir_id' => '^(\\d+)|([a-zA-Z]+)|([a-zA-Z]:\\d+(:\\d+)?)$',
         ),
         'defaults' => array(
             'module'     => 'drive',
             'controller' => 'dir',
             'action'     => 'index',
+            'dir_id'     => null,
         ),
     ),
     'drive.file' => array(
@@ -79,7 +88,7 @@ defaults.d          =
         'defaults' => array(
             'module' => 'drive',
             'controller' => 'index',
-            'action'     => 'index',
+            'action'     => 'file',
         ),
         'map' => array(
             'path'  => 1,

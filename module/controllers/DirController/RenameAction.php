@@ -18,8 +18,8 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $id  = $this->getScalarParam('dir_id');
-        $dir = $this->getDriveHelper()->fetchDir($id);
+        $dir_id  = $this->getScalarParam('dir_id');
+        $dir = $this->getDriveHelper()->fetchDir($dir_id);
 
         // za pomoca tej akcji nie mozna zmienic nazwy katalogu,
         // ktory jest w korzeniu dysku (innymi slowy nie mozna

@@ -1,0 +1,9 @@
+<h2>My drives</h2>
+{% if drives|length %}
+{% for drive in drives %}
+<a href="{{ routeUrl('drive.dir') }}#dir:{{ drive.root_dir }}">{{ drive.name }}</a>
+{% endfor %}
+{% endif %}
+<a href="{{ routeUrl('drive.dir') }}#dir:shared">Shared with me</a>
+<a href="{{ routeUrl('drive.dir') }}#dir:public">Public resources</a>
+

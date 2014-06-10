@@ -31,6 +31,7 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
                 'ctime' => null,
                 'mtime' => null,
                 'visibility' => 'private',
+                'drive_id' => null,
                 'Drive' => null,
             ),
             'stored' => true,
@@ -47,11 +48,22 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
     {
         // fetch all dirs explicitly marked as public
         // and drive_id does not belong to user
-        return $this->getTable()->fetchAll(array(
-            'visibility = ?' => 'visible',
-        ), array(
-            'name'
+        $select = Zefram_Db_Select::factory($this->getAdapter());
+        $select->from(array(
+            'dirs' => $this->getTable()
         ));
+        $select->where('visibility = ?', 'public');
+        $select->where('drive_id NOT IN ?',
+            Zefram_Db_Select::factory($this->getAdapter())
+            ->from(
+                $this->_getTableFromString('Drive_Model_DbTable_Drives'),
+                'drive_id'
+            )
+            ->where('owner = ?', $this->getUserId())
+        );
+        $select->order('name');
+
+        return $this->getTable()->fetchAll($select);
     }
 
     public function save()

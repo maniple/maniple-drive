@@ -216,7 +216,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             // zainicjuj obsluge zmiany hasha w adresie
             $.History.bind(function (state) {
                 state = String(state);
-                if (state.match(/^dir:(\d+|shared|public)$/)) {
+                if (state.match(/^dir:.+/)) {
                     self.loadDir(state.substr(4), function (dir) {
                         self.setDir(dir);
                     });

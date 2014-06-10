@@ -982,3 +982,7 @@ tbody > tr.not-grabbable:hover .col-grab {
 .maniple-modal-body {
     min-height: 64px;
 }
+
+.maniple-modal-buttons button + button {
+    margin-left: 4px;
+}
