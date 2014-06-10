@@ -45,25 +45,9 @@ class Drive_Helper
         if (!is_scalar($dir_id)) {
             return null;
         }
-            if (strlen($dir_id) && ctype_digit($dir_id)) {
-                return $dir_id;
-            }
-            if (preg_match('/^
-                    (
-                        (?P<view>[a-z][a-z0-9]*)
-                        (
-                            \\(
-                                (?P<params>[^)]*)
-                            \\)
-                        )?
-                    :)?
-                    (?P<dir_id>\\d+)
-                $/xi', $dir_id, $match)
-            ) {//print_r($match);exit;
-                return $match['dir_id'];
-            }
 
-        return null;
+        $parsed = $this->parseDirId($dir_id);
+        return $parsed ? $parsed['dir_id'] : null;
     }
 
     /**
@@ -77,13 +61,13 @@ class Drive_Helper
     {
         $parts = $this->parseDirId($dir_id);
 
-        if ($parts['dir_id']) {
+        if ($parts && $parts['dir_id']) {
             $dir = $this->getMapper()->getDir($parts['dir_id']);
 
             if (!$this->isDirReadable($dir)) {
                 throw new Exception('Nie masz uprawnień dostępu do tego katalogu');
             }
-        } elseif ($parts['view']) {
+        } elseif ($parts && $parts['view']) {
             switch ($parts['view']['name']) {
                 case 'shared':
                     $dir = new Drive_Model_SharedDir(
@@ -270,6 +254,7 @@ class Drive_Helper
             case $row instanceof Drive_Model_Dir:
                 $data = array(
                     'dir_id' => (int) $row->dir_id,
+                    'dir_key' => $row->dir_key,
                     'name'  => $row->name,
                     'owner' => (int) $row->owner,
                     'ctime' => $this->getDate($row->ctime),
@@ -284,6 +269,7 @@ class Drive_Helper
             case $row instanceof Drive_Model_File:
                 $data = array(
                     'file_id' => (int) $row->file_id,
+                    'file_key' => $row->file_key,
                     'name'  => $row->name,
                     'owner' => (int) $row->owner,
                     'size'  => (int) $row->size,
@@ -432,11 +418,18 @@ class Drive_Helper
         $row = $dir;
 
         $root_dir_id = null;
-        if ($parts['view'] && $parts['view']['params']) {
-            $root_dir_id = reset($parts['view']['params']);
-        }
 
-        if ($dir->dir_id != $root_dir_id) {
+        if ($parts['view']) {
+            if ($parts['view']['params']) {
+                $root_dir_id = reset($parts['view']['params']);
+            } else {
+                // no root dir specified, mount this directory only
+                $root_dir_id = $dir->dir_id;
+            }
+        }
+        $root_dir_found = $dir->dir_id == $root_dir_id;
+
+        if (!$root_dir_found) {
             while (($row = $row->fetchParent()) && $this->isDirReadable($row)) {
                 // $parents[] = $this->getViewableData($row, false);
                 $parents[] = array(
@@ -451,9 +444,16 @@ class Drive_Helper
                 $user_ids[$row->modified_by] = true;
 
                 if ($root_dir_id == $row->dir_id) {
+                    $root_dir_found = true;
                     break;
                 }
             }
+        }
+
+        if ($root_dir_id && !$root_dir_found) {
+            // invalid root id given, ignore parents -> this is to disable peeking
+            // to upward directories
+            $parents = array();
         }
 
         // if within pseudoDir (pseudo:dir_id)

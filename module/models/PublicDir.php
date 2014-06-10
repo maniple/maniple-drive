@@ -21,6 +21,7 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
             'table' => $table,
             'data' => array(
                 'dir_id' => null,
+                'dir_key' => null,
                 'name' => 'Public',
                 'parent_id' => null,
                 'owner' => $userId,
