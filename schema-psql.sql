@@ -55,6 +55,8 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     dir_id          SERIAL PRIMARY KEY,
 
+    dir_key         CHAR(32) NOT NULL,
+
     -- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog
     drive_id        INTEGER NOT NULL,
 
@@ -106,6 +108,9 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     CONSTRAINT {PREFIX}drive_dirs_modified_by_fkey
         FOREIGN KEY (modified_by) REFERENCES {PREFIX}users (user_id),
+
+    CONSTRAINT {PREFIX}drive_dirs_dir_key_idx
+        UNIQUE (dir_key),
 
     -- indeks pilnujacy, zeby katalogi mialy unikatowe nazwy jezeli naleza
     -- do tego samego katalogu nadrzednego, przy okazji wspomagajacy klucz
@@ -168,6 +173,8 @@ CREATE TABLE {PREFIX}drive_files (
 
     file_id         SERIAL PRIMARY KEY,
 
+    file_key        CHAR(32) NOT NULL,
+
     -- id katalogu wirtualnego, w ktorym umieszczony jest plik
     dir_id          INTEGER NOT NULL,
 
@@ -226,7 +233,10 @@ CREATE TABLE {PREFIX}drive_files (
         FOREIGN KEY (modified_by) REFERENCES {PREFIX}users (user_id),
 
     CONSTRAINT {PREFIX}drive_files_dir_id_fkey
-        FOREIGN KEY (dir_id) REFERENCES {PREFIX}drive_dirs (dir_id)
+        FOREIGN KEY (dir_id) REFERENCES {PREFIX}drive_dirs (dir_id),
+
+    CONSTRAINT {PREFIX}drive_files_file_key_idx
+        UNIQUE (file_key)
 
 );
 

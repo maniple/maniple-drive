@@ -234,6 +234,10 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
             $this->visibility = 'inherited';
         }
 
+        if (empty($this->dir_key)) {
+            $this->dir_key = Zefram_Math_Rand::getString(32, Zefram_Math_Rand::ALNUM);
+        }
+
         $result = parent::_insert();
 
         // $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);

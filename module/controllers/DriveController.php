@@ -4,6 +4,8 @@ class Drive_DriveController extends Drive_Controller_Action
 {
     public function indexAction() // {{{
     {
+        $this->assertAccess($this->getSecurityContext()->isSuperUser());
+
         $this->view->url_create = $this->_helper->url('create');
         $this->view->url_list = $this->_helper->url('list');
         $this->view->breadcrumbs = array(

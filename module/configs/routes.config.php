@@ -49,7 +49,7 @@
         'defaults' => array(
             'module'     => 'drive',
             'controller' => 'file',
-            'action'     => 'read',            
+            'action'     => 'read',
         ),
     ),
 /*

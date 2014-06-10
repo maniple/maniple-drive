@@ -15,7 +15,7 @@ class Drive_DriveController_CreateAction extends Zefram_Controller_Action_Standa
         $this->_helper->layout->setLayout('dialog');
         $this->_helper->viewRenderer->setRender('form');
 
-        $this->getSecurity()->requireAuthentication();
+        $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
         $form = new Drive_Form_Drive(array(
             'tableProvider' => $this->getDriveHelper()->getTableProvider(),

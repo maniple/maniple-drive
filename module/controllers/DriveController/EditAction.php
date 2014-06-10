@@ -17,7 +17,7 @@ class Drive_DriveController_EditAction extends Zefram_Controller_Action_Standalo
         $this->_helper->layout->setLayout('dialog');
         $this->_helper->viewRenderer->setRender('form');
 
-        $this->getSecurity()->requireAuthentication();
+        $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
         $drive_id = $this->getScalarParam('drive_id', 0);
         $drive = $this->getResource('db.table_provider')->getTable('Drive_Model_DbTable_Drives')->findRow($drive_id);
