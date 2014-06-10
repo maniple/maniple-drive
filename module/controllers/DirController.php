@@ -168,9 +168,15 @@ class Drive_DirController extends Drive_Controller_Action
                 $shares = array();
             }
 
+            $parts = $this->getDriveHelper()->parseDirId($this->getScalarParam('dir_id'));
+            $dir_id = $dir->dir_id;
+            if ($parts['view']) {
+                $dir_id = $parts['view']['name'] . '(' . implode(',', $parts['view']['params']) . '):' . $dir_id;
+            }
+
             $ajaxResponse = $this->_helper->ajaxResponse();
             $ajaxResponse->setData(array(
-                'dir_id' => $dir->dir_id,
+                'dir_id' => $dir_id,
                 'visibility' => $dir->visibility,
                 'can_inherit_visibility' => (bool) $dir->parent_id,
                 'shares' => $shares,

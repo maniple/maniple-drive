@@ -767,32 +767,6 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
                     }
                 });
 
-            if (0) {
-            dialog.buttons([
-                {
-                    id: 'submit',
-                    label: str.submit,
-                    action: function () {
-                        dialog.setStatus(str.messageSending);
-                        App.ajax({
-                            url: url,
-                            type: 'post',
-                            data: content.find('form').serialize(),
-                            dataType: 'json',
-                            success: function (response) {
-                                App.flash(str.messageSuccess, 'success');
-                                dialog.close();
-                            },
-                            error: function (response) {
-                                dialog.status(response.message || str.messageError);
-                            }
-                        });
-                    }
-                },
-            'cancel'
-            ]);
-            }
-
             // podepnij zawartosc okna do drzewa dokumentu, przed
             // inicjalizacja obslugi zdarzen
             // dialog.content(content).adjustHeight(true);
@@ -958,11 +932,10 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
                 });
             }, 25);
 
-            dialog.setContent(content);
             return content;
         },
         complete: function (dialog, response) {
-            var responseFile = response.data.file;
+            var responseFile = response.data;
 
             Drive.Util.assert(responseFile.file_id == file.file_id, 'Unexpected file id in response');
             $.extend(file, responseFile);
@@ -1056,7 +1029,7 @@ DirBrowser.prototype.opEditFile = function(file) { // {{{
         complete: function (dialog, response) {
             response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
-                App.flash(str.messageSuccess);
+                // App.flash(str.messageSuccess);
                 dialog.close();
             }
         }

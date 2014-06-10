@@ -299,7 +299,7 @@ Loading directory contents...
  <td class="user-perms">
   <select name="shares[{{ user.user_id }}]">
    <option value="0">{{ str.aclRead }}</option>
-   <option value="1"{{# user.can_write }}selected{{/ user.can_write }}>{{ str.aclReadWrite }}</option>
+   <option value="1"{{#if user.can_write }}selected{{/if }}>{{ str.aclReadWrite }}</option>
   </select>
  </td>
  <td class="user-delete">

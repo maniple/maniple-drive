@@ -226,7 +226,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
 
             // jezeli hash nie jest poprawnym identyfikatorem katalogu, uzyj
             // identyfikatora przekazanego do funkcji
-            if (!document.location.hash.match(/^#dir:\d+$/) && self._options.dirId) {
+            if (!document.location.hash.match(/^#dir:.+$/) && self._options.dirId) {
                 Drive.Util.gotoHash('dir:' + self._options.dirId);
             }
         } // }}}
@@ -903,32 +903,6 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                             }
                         });
 
-                    if (0) {
-                    dialog.buttons([
-                        {
-                            id: 'submit',
-                            label: str.submit,
-                            action: function () {
-                                dialog.setStatus(str.messageSending);
-                                App.ajax({
-                                    url: url,
-                                    type: 'post',
-                                    data: content.find('form').serialize(),
-                                    dataType: 'json',
-                                    success: function (response) {
-                                        App.flash(str.messageSuccess, 'success');
-                                        dialog.close();
-                                    },
-                                    error: function (response) {
-                                        dialog.status(response.message || str.messageError);
-                                    }
-                                });
-                            }
-                        },
-                    'cancel'
-                    ]);
-                    }
-
                     // podepnij zawartosc okna do drzewa dokumentu, przed
                     // inicjalizacja obslugi zdarzen
                     // dialog.content(content).adjustHeight(true);
@@ -1094,11 +1068,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         });
                     }, 25);
 
-                    dialog.setContent(content);
                     return content;
                 },
                 complete: function (dialog, response) {
-                    var responseFile = response.data.file;
+                    var responseFile = response.data;
 
                     Drive.Util.assert(responseFile.file_id == file.file_id, 'Unexpected file id in response');
                     $.extend(file, responseFile);
@@ -1192,7 +1165,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
-                        App.flash(str.messageSuccess);
+                        // App.flash(str.messageSuccess);
                         dialog.close();
                     }
                 }
@@ -3044,7 +3017,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             "DirBrowser.opShareDir.user": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
+          var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this;
 
         function program1(depth0,data) {
 
@@ -3063,7 +3036,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             + "]\">\n<option value=\"0\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclRead)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</option>\n<option value=\"1\"";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.can_write)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data}));
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.user)),stack1 == null || stack1 === false ? stack1 : stack1.can_write), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += ">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclReadWrite)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))

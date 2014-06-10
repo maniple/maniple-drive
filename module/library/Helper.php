@@ -218,16 +218,9 @@ class Drive_Helper
             : false;
     } // }}}
 
-    public function getFilePermissions(Drive_Model_File $dir, $property = null) // {{{
+    public function getFilePermissions(Drive_Model_File $file, $property = null) // {{{
     {
-        // TODO
-        return array(
-            self::READ   => true,
-            self::REMOVE => true,
-            self::RENAME => true,
-            self::WRITE  => true,
-            self::CHOWN  => true,
-        );
+        return $this->getDirPermissions($file->Dir);
     } // }}}
 
     public function getDate($time) // {{{

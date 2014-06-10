@@ -81,6 +81,10 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         }
 
         $result = $this->getDriveHelper()->getViewableData($dir, true);
+        $parts = $this->getDriveHelper()->parseDirId($this->getScalarParam('dir_id'));
+        if ($parts['view']) {
+            $result['dir_id'] = $parts['view']['name'] . '(' . implode(',', $parts['view']['params']) . '):' . $result['dir_id'];
+        }
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(
