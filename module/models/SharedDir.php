@@ -10,7 +10,7 @@ class Drive_Model_SharedDir extends Drive_Model_Dir
             'table' => $table,
             'data' => array(
                 'dir_id' => null,
-                'name' => 'Public',
+                'name' => 'Shared with me',
                 'parent_id' => null,
                 'owner' => $userId,
                 'created_at' => null,
