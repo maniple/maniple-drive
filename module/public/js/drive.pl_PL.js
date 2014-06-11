@@ -4165,10 +4165,6 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 }
             }
 
-            this.getHook = function (name) {
-                return hooks.hasOwnProperty(name) ? hooks[name] : null;
-            };
-
             init();
         } // }}}
 

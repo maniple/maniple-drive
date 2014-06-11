@@ -229,10 +229,6 @@ var UserPicker = function(selector, itemBuilder, options) { // {{{
         }
     }
 
-    this.getHook = function (name) {
-        return hooks.hasOwnProperty(name) ? hooks[name] : null;
-    };
-
     init();
 } // }}}
 
