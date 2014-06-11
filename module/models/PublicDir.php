@@ -20,7 +20,7 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
         parent::__construct(array(
             'table' => $table,
             'data' => array(
-                'dir_id' => null,
+                'dir_id' => 'public',
                 'dir_key' => null,
                 'name' => 'Public',
                 'parent_id' => null,
@@ -48,20 +48,9 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
     public function fetchSubDirs()
     {
         // fetch all dirs explicitly marked as public
-        // and drive_id does not belong to user
         $select = Zefram_Db_Select::factory($this->getAdapter());
-        $select->from(array(
-            'dirs' => $this->getTable()
-        ));
+        $select->from(array('dirs' => $this->getTable()));
         $select->where('visibility = ?', 'public');
-        $select->where('drive_id NOT IN ?',
-            Zefram_Db_Select::factory($this->getAdapter())
-            ->from(
-                $this->_getTableFromString('Drive_Model_DbTable_Drives'),
-                'drive_id'
-            )
-            ->where('owner = ?', $this->getUserId())
-        );
         $select->order('name');
 
         return $this->getTable()->fetchAll($select);

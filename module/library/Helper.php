@@ -40,53 +40,16 @@ class Drive_Helper
         return $this->getDir($dir_id);
     }
 
-    public function getDirId($dir_id)
-    {
-        if (!is_scalar($dir_id)) {
-            return null;
-        }
-
-        $parsed = $this->parseDirId($dir_id);
-        return $parsed ? $parsed['dir_id'] : null;
-    }
-
     /**
      * Pobiera z bazy rekord katalogu i sprawdza, czy bieżący użytkownik
      * ma uprawnienia do jego odczytu.
      *
-     * @param int $dir_id
+     * @param int|string $dir_id
      * @return Drive_Model_Dir
      */
     public function getDir($dir_id) // {{{
     {
-        $parts = $this->parseDirId($dir_id);
-
-        if ($parts && $parts['dir_id']) {
-            $dir = $this->getMapper()->getDir($parts['dir_id']);
-
-            if (!$this->isDirReadable($dir)) {
-                throw new Exception('Nie masz uprawnień dostępu do tego katalogu');
-            }
-        } elseif ($parts && $parts['view']) {
-            switch ($parts['view']['name']) {
-                case 'shared':
-                    $dir = new Drive_Model_SharedDir(
-                        $this->getSecurityContext()->getUserId(),
-                        $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
-                    );
-                    break;
-
-                case 'public':
-                    $dir = new Drive_Model_PublicDir(
-                        $this->getSecurityContext()->getUserId(),
-                        $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
-                    );
-                    break;
-
-                default:
-                    throw new Exception(sprintf('Unsupported directory view (%s)', $parts['view']));
-            }
-        }
+        $dir = $this->getMapper()->getDir($dir_id);
 
         if (empty($dir)) {
             throw new Exception(sprintf('Directory not found (%s)', $dir_id));
@@ -143,8 +106,6 @@ class Drive_Helper
                 self::CHOWN  => false,
             );
         }
-
-
 
         if (empty($this->_dirPermissions[$dir_id])) {
             $user = $this->getSecurityContext()->getUser();
@@ -330,49 +291,28 @@ class Drive_Helper
         }
     } // }}}
 
-    public function parseDirId($dir_id)
+    protected function _isPseudoRootDir($name)
     {
-        if (strlen($dir_id)) {
-            if (ctype_digit($dir_id)) {
-                return array(
-                    'dir_id' => $dir_id,
-                    'view'   => null,
-                );
-            } elseif (ctype_alpha(substr($dir_id, 0, 1)) && ctype_alnum($dir_id)) {
-                return array(
-                    'dir_id' => null,
-                    'view'   => array(
-                        'name'   => $dir_id,
-                        'params' => null,
-                    ),
-                );
-            }
+        return in_array($name, array('shared', 'public'), true);
+    }
 
-            if (preg_match('/^
-                    (?P<view_name>[a-z][a-z0-9]*)
-                    (
-                        \\(
-                            (?P<view_params>[^)]*)
-                        \\)
-                    )?
-                    :
-                    (?P<dir_id>\\d+)
-                $/xi', $dir_id, $match)
-            ) {
-                return array(
-                    'dir_id' => $match['dir_id'],
-                    'view'   => array(
-                        'name'   => $match['view_name'],
-                        'params' => array_filter(
-                            array_map('trim', explode(',', $match['view_params'])),
-                            'strlen'
-                        ),
-                    )
+    protected function _getPseudoRootDir($name)
+    {
+        switch ($name) {
+            case 'shared':
+                return new Drive_Model_SharedDir(
+                    $this->getSecurityContext()->getUserId(),
+                    $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
                 );
-            }
+
+            case 'public':
+                return new Drive_Model_PublicDir(
+                    $this->getSecurityContext()->getUserId(),
+                    $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+                );
         }
 
-        return null;
+        throw new Exception(sprintf('Invalid pseudo-root directory ID specified (%s)', $name));
     }
 
     /**
@@ -390,21 +330,18 @@ class Drive_Helper
     {
         $parts = null;
 
-        if (!$dir instanceof Drive_Model_Dir) {
-            $parts = $this->parseDirId($dir);
-            $dir = $this->getDir($dir);
-        }        
-
-        $id_prefix = '';
-        if ($parts['view']) {
-            $id_prefix = $parts['view']['name'];
-            if ($parts['view']['params']) {
-                $id_prefix .= '(' . implode(',', (array) $parts['view']['params']) . ')';
+        if ($dir instanceof Drive_Model_Dir) {
+            $context = Drive_DirBrowsingContext::create($dir->dir_id);
+        } else {
+            $context = Drive_DirBrowsingContext::createFromString($dir);
+            if ($this->_isPseudoRootDir($context->getDirId())) {
+                $dir = $this->_getPseudoRootDir($context->getDirId());
+            } else {
+                $dir = $this->getDir($context->getDirId());
             }
-            $id_prefix .= ':';
         }
 
-        $in_view_root = ($dir instanceof Drive_Model_PublicDir || $dir instanceof Drive_Model_SharedDir);
+        $in_pseudo_dir = ($dir instanceof Drive_Model_PublicDir || $dir instanceof Drive_Model_SharedDir);
 
         $user_ids = array(
             $dir->owner       => true,
@@ -415,62 +352,52 @@ class Drive_Helper
         // pobierz kolejno nadrzedne katalogi, przerwij na pierwszym katalogu,
         // do ktorego biezacy uzytkownik nie ma dostepu
         $parents = array();
-        $row = $dir;
 
-        $root_dir_id = null;
+        $root_dir_id = $context->getPseudoRoot(); // nie root id ale pseudo
 
-        if ($parts['view']) {
-            if ($parts['view']['params']) {
-                $root_dir_id = reset($parts['view']['params']);
-            } else {
-                // no root dir specified, mount this directory only
-                $root_dir_id = $dir->dir_id;
-            }
-        }
-        $root_dir_found = $dir->dir_id == $root_dir_id;
+        if (!$in_pseudo_dir) {
+            $row = $dir;
 
-        if (!$root_dir_found) {
-            while (($row = $row->fetchParent()) && $this->isDirReadable($row)) {
-                // $parents[] = $this->getViewableData($row, false);
-                $parents[] = array(
-                    'dir_id'  => $id_prefix . (int) $row->dir_id,
-                    'name'    => $row->name,
-                    'perms'   => $this->getDirPermissions($row),
-                    'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
-                );
-                // $set->add($row->owner, $row->created_by, $row->modified_by);
-                $user_ids[$row->owner] = true;
-                $user_ids[$row->created_by] = true;
-                $user_ids[$row->modified_by] = true;
+            $mount_id = $context->getMount();
+            $mount_dir_found = $mount_id && $dir->dir_id == $mount_id;
 
-                if ($root_dir_id == $row->dir_id) {
-                    $root_dir_found = true;
-                    break;
+            if (!$mount_dir_found) {
+                while (($row = $row->fetchParent()) && $this->isDirReadable($row)) {
+                    // $parents[] = $this->getViewableData($row, false);
+                    $parents[] = array(
+                        'dir_id'  => $this->_renderDirId($row->dir_id, $context),
+                        'name'    => $row->name,
+                        'perms'   => $this->getDirPermissions($row),
+                        'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
+                    );
+                    // $set->add($row->owner, $row->created_by, $row->modified_by);
+                    $user_ids[$row->owner] = true;
+                    $user_ids[$row->created_by] = true;
+                    $user_ids[$row->modified_by] = true;
+
+                    if ($mount_id && $mount_id == $row->dir_id) {
+                        $mount_dir_found = true;
+                        break;
+                    }
                 }
             }
-        }
 
-        if ($root_dir_id && !$root_dir_found) {
-            // invalid root id given, ignore parents -> this is to disable peeking
-            // to upward directories
-            $parents = array();
-        }
+            if ($root_dir_id && !$mount_dir_found) {
+                // invalid mount id given (was not found in upward traversal)
+                $parents = array();
+            }
 
-        // if within pseudoDir (pseudo:dir_id)
-        if ($parts['view'] && !$in_view_root) {
-            $parents[] = array(
-                'dir_id' => $parts['view']['name'],
-                'name' => ucfirst($parts['view']['name']),
-                'perms' => array(
-                    self::READ   => true,
-                    self::WRITE  => false,
-                    self::RENAME => false,
-                    self::REMOVE => false,
-                    self::SHARE  => false,
-                    self::CHOWN  => false,
-                ),
-                'private' => false,
-            );
+            // albo jestesmy w pseudo roocie, albo w katalogu w nim umieszczonym
+            if ($root_dir_id) {
+                $pseudo = $this->_getPseudoRootDir($root_dir_id);
+                // sprawdzic czy jest pseudo!
+                $parents[] = array(
+                    'dir_id' => $pseudo->dir_id,
+                    'name' => $pseudo->name,
+                    'perms' => $this->getDirPermissions($pseudo),
+                    'private' => false,
+                );
+            }
         }
 
         $files = array();
@@ -517,12 +444,16 @@ class Drive_Helper
                     $shares_dir_ids[] = $row->dir_id;
                 }
 
-                if ($parts['view'] && $in_view_root) {
+                if ($in_pseudo_dir) {
                     // wejscie do katalogu znajdujacego sie w katalogu wirtualnym
                     // - ograniczamy dostep do katalogu nadrzednego wzgledem tego
-                    $subdir['dir_id'] = $parts['view']['name'] . '(' . $subdir['dir_id'] . '):' . $subdir['dir_id'];
+                    $subdir['dir_id'] = (string) $context->copy()
+                        ->setPseudoRoot($dir->dir_id)
+                        ->setMount($subdir['dir_id'])
+                        ->setDirId($subdir['dir_id']);
+
                 } else {
-                    $subdir['dir_id'] = $id_prefix . $subdir['dir_id'];
+                    $subdir['dir_id'] = $this->_renderDirId($subdir['dir_id'], $context);
                 }
 
                 $subdirs[] = $subdir;
@@ -590,7 +521,7 @@ class Drive_Helper
 
         // zwroc dane potrzebne do wyswietlenia zawartosci katalogu
         $result = $this->getViewableData($dir);
-        $result['dir_id'] = $id_prefix . $result['dir_id'];
+        $result['dir_id'] = $this->_renderDirId($dir->dir_id, $context);
 
         $result['parents'] = $parents;
         $result['subdirs'] = $subdirs;
@@ -609,6 +540,14 @@ class Drive_Helper
 
         return $result;
     } // }}}
+
+    protected function _renderDirId($dir_id, Drive_DirBrowsingContext $context = null)
+    {
+        if ($context) {
+            return (string) $context->copy()->setDirId($dir_id);
+        }
+        return (string) $dir_id;
+    }
 
     /**
      * @param Drive_Model_Dir $dir

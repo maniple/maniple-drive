@@ -9,7 +9,7 @@ class Drive_Model_SharedDir extends Drive_Model_Dir
         parent::__construct(array(
             'table' => $table,
             'data' => array(
-                'dir_id' => null,
+                'dir_id' => 'shared',
                 'dir_key' => null,
                 'name' => 'Shared with me',
                 'parent_id' => null,

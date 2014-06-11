@@ -4,19 +4,22 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
 {
     protected $_ajaxFormHtml = true;
 
-    protected $_parentDir;
+    protected $_dir;
+
+    protected $_dirContext;
 
     protected function _prepare() // {{{
     {
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $parent_id = $this->getScalarParam('dir_id');
-        $parent_dir = $this->getDriveHelper()->getDir($parent_id);
+        $dir_context = Drive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
+        $dir = $this->getDriveHelper()->getDir($dir_context->getDirId());
 
         $this->assertAccess(
-            $this->getDriveHelper()->isDirWritable($parent_dir),
-            'Brak uprawnien do tworzenia nowych katalogów w tym katalogu.'
+            $this->getDriveHelper()->isDirWritable($dir),
+            'You are not allowed to create new directories inside this directory.'
+            // 'Brak uprawnien do tworzenia nowych katalogów w tym katalogu.'
         );
 
         $elements = array(
@@ -31,7 +34,7 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
                         new Drive_Validate_FileName,
                         new Drive_Validate_DirNotExists(array(
                             'tableProvider' => $this->getDriveHelper()->getTableProvider(),
-                            'parentId' => $parent_dir->dir_id
+                            'parentId' => $dir->dir_id
                         )),
                     ),
                     'attribs'    => array(
@@ -42,9 +45,8 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         );
 
         $this->_form = new Zefram_Form(array('elements' => $elements));
-        $this->_parentDir = $parent_dir;
-
-        $this->_helper->layout->setLayout('dialog');
+        $this->_dir = $dir;
+        $this->_dirContext = $dir_context;
     } // }}}
 
     protected function _process() // {{{
@@ -55,20 +57,16 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         $data['created_by']  = $user->getId();
         $data['modified_by'] = $user->getId();
         $data['owner']       = $user->getId();
-        $data['drive_id']    = $this->_parentDir->drive_id;
-        $data['parent_id']   = $this->_parentDir->dir_id;
+        $data['drive_id']    = $this->_dir->drive_id;
+        $data['parent_id']   = $this->_dir->dir_id;
 
         $mapper = $this->getDriveHelper()->getMapper();
 
-        $dir = $mapper->createDir($data);
-        $dir = $mapper->saveDir($dir);
+        $subdir = $mapper->createDir($data);
+        $subdir = $mapper->saveDir($subdir);
 
-        $result = $this->getDriveHelper()->getViewableData($dir, true);
-
-        $parts = $this->getDriveHelper()->parseDirId($this->getScalarParam('dir_id'));
-        if ($parts['view']) {
-            $result['dir_id'] = $parts['view']['name'] . '(' . implode(',', $parts['view']['params']) . '):' . $result['dir_id'];
-        }
+        $result = $this->getDriveHelper()->getViewableData($subdir, true);
+        $result['dir_id'] = (string) $this->_dirContext->copy()->setDirId($subdir->dir_id);
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(

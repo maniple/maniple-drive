@@ -11,6 +11,16 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
 {
     protected $_ajaxFormHtml = true;
 
+    /**
+     * @var Drive_Model_Dir
+     */
+    protected $_dir;
+
+    /**
+     * @var Drive_DirBrowsingContext
+     */
+    protected $_dirContext;
+
     protected function _prepare() // {{{
     {
         $this->_helper->viewRenderer->setRender('create');
@@ -18,8 +28,8 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $dir_id  = $this->getScalarParam('dir_id');
-        $dir = $this->getDriveHelper()->fetchDir($dir_id);
+        $dir_context = Drive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
+        $dir = $this->getDriveHelper()->getDir($dir_context->getDirId());
 
         // za pomoca tej akcji nie mozna zmienic nazwy katalogu,
         // ktory jest w korzeniu dysku (innymi slowy nie mozna
@@ -58,7 +68,8 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         )));
 
         $this->_form = $form;
-        $this->_dir  = $dir;
+        $this->_dir = $dir;
+        $this->_dirContext = $dir_context;
     } // }}}
 
     protected function _process() // {{{
@@ -81,10 +92,7 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         }
 
         $result = $this->getDriveHelper()->getViewableData($dir, true);
-        $parts = $this->getDriveHelper()->parseDirId($this->getScalarParam('dir_id'));
-        if ($parts['view']) {
-            $result['dir_id'] = $parts['view']['name'] . '(' . implode(',', $parts['view']['params']) . '):' . $result['dir_id'];
-        }
+        $result['dir_id'] = (string) $this->_dirContext;
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(

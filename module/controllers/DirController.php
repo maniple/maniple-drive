@@ -125,8 +125,8 @@ class Drive_DirController extends Drive_Controller_Action
     {
         $drive_helper = $this->getDriveHelper();
 
-        $dir_id = $this->getScalarParam('dir_id');
-        $dir = $drive_helper->fetchDir($dir_id);
+        $dir_context = Drive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
+        $dir = $drive_helper->getDir($dir_context->getDirId());
 
         $this->assertAccess($drive_helper->isDirShareable($dir));
 
@@ -168,18 +168,12 @@ class Drive_DirController extends Drive_Controller_Action
                 $shares = array();
             }
 
-            $parts = $this->getDriveHelper()->parseDirId($this->getScalarParam('dir_id'));
-            $dir_id = $dir->dir_id;
-            if ($parts['view']) {
-                $dir_id = $parts['view']['name'] . '(' . implode(',', $parts['view']['params']) . '):' . $dir_id;
-            }
-
             $ajaxResponse = $this->_helper->ajaxResponse();
             $ajaxResponse->setData(array(
-                'dir_id' => $dir_id,
+                'dir_id'     => (string) $dir_context,
                 'visibility' => $dir->visibility,
                 'can_inherit_visibility' => (bool) $dir->parent_id,
-                'shares' => $shares,
+                'shares'     => $shares,
             ));
             $ajaxResponse->sendAndExit();
         }
