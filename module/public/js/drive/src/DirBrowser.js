@@ -721,51 +721,68 @@ DirBrowser.prototype.opShareDir = function(dir) { // {{{
                 $(this).val(visibility).change();
             });
 
-            // pobierz kolor podswietlenia elementow reprezentujacych
-            // uzytkownika, usun element przechowujacy kolor
-            var usersContainer = content.find('#drive-dir-share-acl-users'),
-                highlight = usersContainer.find('.highlight'),
-                highlightColor = highlight.backgroundColor;
+            content.find('#drive-dir-share-acl-users').addClass('loading');
+            App.ajax({
+                url: url,
+                type: 'get',
+                success: function (response) {
+                    content.find('#drive-dir-share-acl-users').removeClass('loading');
 
-            function highlightUser(element) {
-                $(element).effect('highlight', {color: highlightColor}, 1000);
-            }
+                    var responseDir = response.data;
 
-            function userBuilder(user) {
-                var vars = {
-                        user: user,
-                        str: str
-                    },
-                    element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
+                    // pobierz kolor podswietlenia elementow reprezentujacych
+                    // uzytkownika, usun element przechowujacy kolor
+                    var usersContainer = content.find('#drive-dir-share-acl-users'),
+                        highlight = usersContainer.find('.highlight'),
+                        highlightColor = highlight.backgroundColor;
 
-                element.bind('append', function (e) {
-                    if (usersContainer.scrollTo) {
-                        usersContainer.scrollTo(this, 100);
+                    function highlightUser(element) {
+                        $(element).effect('highlight', {color: highlightColor}, 1000);
                     }
-                });
-                element.bind('exists', function (e) {
-                    highlightUser(this);
-                });
 
-                return element;
-            }
+                    function userBuilder(user) {
+                        var vars = {
+                                user: user,
+                                str: str
+                            },
+                            element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
 
-            highlight.remove();
+                        element.bind('append', function (e) {
+                            if (usersContainer.scrollTo) {
+                                usersContainer.scrollTo(this, 100);
+                            }
+                        });
+                        element.bind('exists', function (e) {
+                            highlightUser(this);
+                        });
 
-            // zainicjuj widget listy uzytkownikow
-            new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
-                    idColumn: 'user_id',
-                    url: self._options.userSearchUrl,
-                    users: dir.shares,
-                    autocomplete: {
-                        renderItem: function (user) {
-                            return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
-                        },
-                        renderValue: function (user) {
-                            return user.first_name + ' ' + user.last_name;
+                        return element;
+                    }
+
+                    highlight.remove();
+
+                    content.find('#drive-dir-share-acl-no-users').html(String(str.aclNoUsers));
+
+                    // zainicjuj widget listy uzytkownikow
+                    new Drive.UserPicker(
+                        content.find('#drive-dir-share-acl'),
+                        userBuilder,
+                        {
+                            idColumn: 'user_id',
+                            url: self._options.userSearchUrl,
+                            users: responseDir.shares,
+                            autocomplete: {
+                                renderItem: function (user) {
+                                    return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
+                                },
+                                renderValue: function (user) {
+                                    return user.first_name + ' ' + user.last_name;
+                                }
+                            }
                         }
-                    }
-                });
+                    );
+                }
+            });
 
             // podepnij zawartosc okna do drzewa dokumentu, przed
             // inicjalizacja obslugi zdarzen

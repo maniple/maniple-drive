@@ -412,9 +412,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visDescInherited)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
     + "</div>\n</td>\n</tr>\n</table>\n</div>\n<div id=\"drive-dir-share-acl\">\n<label for=\"drive-dir-share-acl-search-user\">"
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclLabel)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-    + "</label>\n<div id=\"drive-dir-share-acl-users\">\n<div class=\"highlight\"></div>\n<table>\n<tbody data-hook=\"user-list\">\n<tr data-hook=\"empty-list-message\">\n<td colspan=\"3\" class=\"no-users\">"
-    + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclNoUsers)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-    + "</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div id=\"drive-dir-share-acl-search\">\n<table>\n<tr>\n<td>\n<input type=\"text\" id=\"drive-dir-share-acl-search-user\" data-hook=\"user-search\" placeholder=\""
+    + "</label>\n<div id=\"drive-dir-share-acl-users\">\n<div class=\"highlight\"></div>\n<table>\n<tbody data-hook=\"user-list\">\n<tr data-hook=\"empty-list-message\">\n<td id=\"drive-dir-share-acl-no-users\" colspan=\"3\"></td>\n</tr>\n</tbody>\n</table>\n</div>\n<div id=\"drive-dir-share-acl-search\">\n<table>\n<tr>\n<td>\n<input type=\"text\" id=\"drive-dir-share-acl-search-user\" data-hook=\"user-search\" placeholder=\""
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userSearch)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
     + "\" />\n</td>\n<td>\n<button type=\"button\" class=\"btn btn-primary disabled\" data-hook=\"user-add\">"
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userAdd)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))

@@ -353,7 +353,10 @@
   overflow: hidden;
   overflow-y: auto;
 }
-#drive-dir-share-acl-users .no-users {
+#drive-dir-share-acl-users.loading {
+  background: url(../img/drive-loading.gif) no-repeat 50% 50%;
+}
+#drive-dir-share-acl-no-users {
   color: #777;
   font-style: italic;
   font-size: .9em;
@@ -400,6 +403,7 @@
 }
 #drive-dir-share-acl-users .user-perms select {
   width: 100%;
+  margin: 0;
 }
 #drive-dir-share-acl-users .user-delete {
   width: 5%;
@@ -409,8 +413,12 @@
   border: none;
   color: #777;
   font-weight: bold;
-  font-size: 20px;
-  padding: 2px;
+  font-size: 24px;
+  padding: 0 2px;
+  line-height: 20px;
+  margin: 0;
+  position: relative;
+  top: -4px;
 }
 #drive-dir-share-acl-users .user-delete button:hover {
   color: #000;

@@ -39,8 +39,8 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 },
                 grab: {
                     tooltip:            'Przeciągnij aby przenieść do innego katalogu',
-                    dropDirTooltip:     'Przenieś <strong>{source}</strong> do <strong>{target}</strong>',
-                    noDropDirTooltip:   'Przenieś <strong>{source}</strong>'
+                    dropDirTooltip:     'Move <strong>{source}</strong> to <strong>{target}</strong>',
+                    noDropDirTooltip:   'Move <strong>{source}</strong>'
                 },
                 dirContents: {
                     name:               'Name',
@@ -89,14 +89,14 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     aclLabel:           'Nadaj uprawnienia dostępu do tego katalogu wybranym użytkownikom',
                     aclRead:            'Read only',
                     aclReadWrite:       'Read and write',
-                    aclNoUsers:         'Nie wybrano użytkowników',
-                    userSearch:         'Szukaj użytkownika',
+                    aclNoUsers:         'No users selected',
+                    userSearch:         'Search for user',
                     userAdd:            'Add',
                     userDelete:         'Remove',
                     searchHint:         'Możesz wyszukać użytkownika wpisując jego imię i nazwisko, adres e-mail albo jego identyfikator w bazie danych.',
-                    messageSending:     'Wysyłanie danych...',
-                    messageError:       'Wystąpił nieoczekiwany błąd',
-                    messageSuccess:     'Ustawienia udostępniania zostały zapisane'
+                    messageSending:     'Sending, please wait...',
+                    messageError:       'Unexpected error',
+                    messageSuccess:     'Sharing settings have been saved successfully'
                 },
                 opOpenFile: {
                     opname:             'Open'
@@ -105,29 +105,29 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     opname:             'Edit',
                     title:              'Edit file metadata',
                     submit:             'Save',
-                    messageSuccess:     'Metadane pliku zostały zapisane'
+                    messageSuccess:     'File metadate have been saved successfully'
                 },
                 opRenameFile: {
                     opname:             'Rename'
                 },
                 opRemoveFile: {
-                    opname:             'Usuń',
-                    title:              'Usunięcie pliku',
-                    submit:             'Wykonaj'
+                    opname:             'Remove',
+                    title:              'File removal',
+                    submit:             'Apply'
                 },
                 opFileDetails: {
-                    opname:             'Właściwości',
-                    title:              'Właściwości pliku',
-                    submit:             'Gotowe',
-                    name:               'Nazwa',
-                    owner:              'Właściciel',
-                    mtime:              'Ostatnia modyfikacja',
-                    ctime:              'Utworzony',
-                    timeSeparator:      'przez',
-                    size:               'Rozmiar',
-                    mimetype:           'Typ MIME',
-                    md5sum:             'Suma kontrolna MD5',
-                    url:                'URL pliku'
+                    opname:             'Properties',
+                    title:              'File properties',
+                    submit:             'Done',
+                    name:               'Name',
+                    owner:              'Owner',
+                    mtime:              'Last modified',
+                    ctime:              'Created',
+                    timeSeparator:      'by',
+                    size:               'Size',
+                    mimetype:           'MIME type',
+                    md5sum:             'MD5 checksum',
+                    url:                'File URL'
                 }
             }
         }
@@ -857,51 +857,68 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         $(this).val(visibility).change();
                     });
 
-                    // pobierz kolor podswietlenia elementow reprezentujacych
-                    // uzytkownika, usun element przechowujacy kolor
-                    var usersContainer = content.find('#drive-dir-share-acl-users'),
-                        highlight = usersContainer.find('.highlight'),
-                        highlightColor = highlight.backgroundColor;
+                    content.find('#drive-dir-share-acl-users').addClass('loading');
+                    App.ajax({
+                        url: url,
+                        type: 'get',
+                        success: function (response) {
+                            content.find('#drive-dir-share-acl-users').removeClass('loading');
 
-                    function highlightUser(element) {
-                        $(element).effect('highlight', {color: highlightColor}, 1000);
-                    }
+                            var responseDir = response.data;
 
-                    function userBuilder(user) {
-                        var vars = {
-                                user: user,
-                                str: str
-                            },
-                            element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
+                            // pobierz kolor podswietlenia elementow reprezentujacych
+                            // uzytkownika, usun element przechowujacy kolor
+                            var usersContainer = content.find('#drive-dir-share-acl-users'),
+                                highlight = usersContainer.find('.highlight'),
+                                highlightColor = highlight.backgroundColor;
 
-                        element.bind('append', function (e) {
-                            if (usersContainer.scrollTo) {
-                                usersContainer.scrollTo(this, 100);
+                            function highlightUser(element) {
+                                $(element).effect('highlight', {color: highlightColor}, 1000);
                             }
-                        });
-                        element.bind('exists', function (e) {
-                            highlightUser(this);
-                        });
 
-                        return element;
-                    }
+                            function userBuilder(user) {
+                                var vars = {
+                                        user: user,
+                                        str: str
+                                    },
+                                    element = self._renderTemplate('DirBrowser.opShareDir.user', vars);
 
-                    highlight.remove();
+                                element.bind('append', function (e) {
+                                    if (usersContainer.scrollTo) {
+                                        usersContainer.scrollTo(this, 100);
+                                    }
+                                });
+                                element.bind('exists', function (e) {
+                                    highlightUser(this);
+                                });
 
-                    // zainicjuj widget listy uzytkownikow
-                    new Drive.UserPicker(content.find('#drive-dir-share-acl'), userBuilder, {
-                            idColumn: 'user_id',
-                            url: self._options.userSearchUrl,
-                            users: dir.shares,
-                            autocomplete: {
-                                renderItem: function (user) {
-                                    return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
-                                },
-                                renderValue: function (user) {
-                                    return user.first_name + ' ' + user.last_name;
+                                return element;
+                            }
+
+                            highlight.remove();
+
+                            content.find('#drive-dir-share-acl-no-users').html(String(str.aclNoUsers));
+
+                            // zainicjuj widget listy uzytkownikow
+                            new Drive.UserPicker(
+                                content.find('#drive-dir-share-acl'),
+                                userBuilder,
+                                {
+                                    idColumn: 'user_id',
+                                    url: self._options.userSearchUrl,
+                                    users: responseDir.shares,
+                                    autocomplete: {
+                                        renderItem: function (user) {
+                                            return self._renderTemplate('DirBrowser.opShareDir.userAutocomplete', {user: user});
+                                        },
+                                        renderValue: function (user) {
+                                            return user.first_name + ' ' + user.last_name;
+                                        }
+                                    }
                                 }
-                            }
-                        });
+                            );
+                        }
+                    });
 
                     // podepnij zawartosc okna do drzewa dokumentu, przed
                     // inicjalizacja obslugi zdarzen
@@ -3001,9 +3018,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.visDescInherited)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n</td>\n</tr>\n</table>\n</div>\n<div id=\"drive-dir-share-acl\">\n<label for=\"drive-dir-share-acl-search-user\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclLabel)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</label>\n<div id=\"drive-dir-share-acl-users\">\n<div class=\"highlight\"></div>\n<table>\n<tbody data-hook=\"user-list\">\n<tr data-hook=\"empty-list-message\">\n<td colspan=\"3\" class=\"no-users\">"
-            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.aclNoUsers)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div id=\"drive-dir-share-acl-search\">\n<table>\n<tr>\n<td>\n<input type=\"text\" id=\"drive-dir-share-acl-search-user\" data-hook=\"user-search\" placeholder=\""
+            + "</label>\n<div id=\"drive-dir-share-acl-users\">\n<div class=\"highlight\"></div>\n<table>\n<tbody data-hook=\"user-list\">\n<tr data-hook=\"empty-list-message\">\n<td id=\"drive-dir-share-acl-no-users\" colspan=\"3\"></td>\n</tr>\n</tbody>\n</table>\n</div>\n<div id=\"drive-dir-share-acl-search\">\n<table>\n<tr>\n<td>\n<input type=\"text\" id=\"drive-dir-share-acl-search-user\" data-hook=\"user-search\" placeholder=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userSearch)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "\" />\n</td>\n<td>\n<button type=\"button\" class=\"btn btn-primary disabled\" data-hook=\"user-add\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.userAdd)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
@@ -4149,6 +4164,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     }
                 }
             }
+
+            this.getHook = function (name) {
+                return hooks.hasOwnProperty(name) ? hooks[name] : null;
+            };
 
             init();
         } // }}}

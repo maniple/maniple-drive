@@ -167,16 +167,40 @@ class Drive_DirController extends Drive_Controller_Action
             } else {
                 $shares = array();
             }
+        } else {
+            $rows = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')->fetchDirShares($dir->dir_id);
+            $shares = array();
 
-            $ajaxResponse = $this->_helper->ajaxResponse();
-            $ajaxResponse->setData(array(
-                'dir_id'     => (string) $dir_context,
-                'visibility' => $dir->visibility,
-                'can_inherit_visibility' => (bool) $dir->parent_id,
-                'shares'     => $shares,
-            ));
-            $ajaxResponse->sendAndExit();
+            $user_ids = array();
+
+            foreach ($rows as $row) {
+                $shares[] = array(
+                    'user_id' => $row->user_id,
+                    'can_write' => $row->can_write ? 1 : 0,
+                );
+                $user_ids[$row->user_id] = true;
+            }
+            // wczytaj wszystkie potrzebne rekordy uzytkownikow
+            if ($user_ids) {
+                $users = $this->getDriveHelper()->getUserMapper()->getUsers(array_keys($user_ids));
+                foreach ($shares as &$share) {
+                    $user_id = $share['user_id'];
+                    if (isset($users[$user_id])) {
+                        $share = array_merge($share, $users[$user_id]->toArray(Maniple_Model::UNDERSCORE));
+                    }
+                }
+                unset($share);
+            }
         }
+
+        $ajaxResponse = $this->_helper->ajaxResponse();
+        $ajaxResponse->setData(array(
+            'dir_id'     => (string) $dir_context,
+            'visibility' => $dir->visibility,
+            'can_inherit_visibility' => (bool) $dir->parent_id,
+            'shares'     => $shares,
+        ));
+        $ajaxResponse->sendAndExit();
     } // }}}
 
     /**

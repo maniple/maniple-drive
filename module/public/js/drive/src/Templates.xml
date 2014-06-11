@@ -266,7 +266,7 @@ Loading directory contents...
     <table>
      <tbody data-hook="user-list">
       <tr data-hook="empty-list-message">
-       <td colspan="3" class="no-users">{{ str.aclNoUsers }}</td>
+       <td id="drive-dir-share-acl-no-users" colspan="3"></td>
       </tr>
      </tbody>
     </table>

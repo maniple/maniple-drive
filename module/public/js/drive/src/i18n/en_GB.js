@@ -37,8 +37,8 @@ var I18n = {
         },
         grab: {
             tooltip:            'Przeciągnij aby przenieść do innego katalogu',
-            dropDirTooltip:     'Przenieś <strong>{source}</strong> do <strong>{target}</strong>',
-            noDropDirTooltip:   'Przenieś <strong>{source}</strong>'
+            dropDirTooltip:     'Move <strong>{source}</strong> to <strong>{target}</strong>',
+            noDropDirTooltip:   'Move <strong>{source}</strong>'
         },
         dirContents: {
             name:               'Name',
@@ -87,14 +87,14 @@ var I18n = {
             aclLabel:           'Nadaj uprawnienia dostępu do tego katalogu wybranym użytkownikom',
             aclRead:            'Read only',
             aclReadWrite:       'Read and write',
-            aclNoUsers:         'Nie wybrano użytkowników',
-            userSearch:         'Szukaj użytkownika',
+            aclNoUsers:         'No users selected',
+            userSearch:         'Search for user',
             userAdd:            'Add',
             userDelete:         'Remove',
             searchHint:         'Możesz wyszukać użytkownika wpisując jego imię i nazwisko, adres e-mail albo jego identyfikator w bazie danych.',
-            messageSending:     'Wysyłanie danych...',
-            messageError:       'Wystąpił nieoczekiwany błąd',
-            messageSuccess:     'Ustawienia udostępniania zostały zapisane'
+            messageSending:     'Sending, please wait...',
+            messageError:       'Unexpected error',
+            messageSuccess:     'Sharing settings have been saved successfully'
         },
         opOpenFile: {
             opname:             'Open'
@@ -103,29 +103,29 @@ var I18n = {
             opname:             'Edit',
             title:              'Edit file metadata',
             submit:             'Save',
-            messageSuccess:     'Metadane pliku zostały zapisane'
+            messageSuccess:     'File metadate have been saved successfully'
         },
         opRenameFile: {
             opname:             'Rename'
         },
         opRemoveFile: {
-            opname:             'Usuń',
-            title:              'Usunięcie pliku',
-            submit:             'Wykonaj'
+            opname:             'Remove',
+            title:              'File removal',
+            submit:             'Apply'
         },
         opFileDetails: {
-            opname:             'Właściwości',
-            title:              'Właściwości pliku',
-            submit:             'Gotowe',
-            name:               'Nazwa',
-            owner:              'Właściciel',
-            mtime:              'Ostatnia modyfikacja',
-            ctime:              'Utworzony',
-            timeSeparator:      'przez',
-            size:               'Rozmiar',
-            mimetype:           'Typ MIME',
-            md5sum:             'Suma kontrolna MD5',
-            url:                'URL pliku'
+            opname:             'Properties',
+            title:              'File properties',
+            submit:             'Done',
+            name:               'Name',
+            owner:              'Owner',
+            mtime:              'Last modified',
+            ctime:              'Created',
+            timeSeparator:      'by',
+            size:               'Size',
+            mimetype:           'MIME type',
+            md5sum:             'MD5 checksum',
+            url:                'File URL'
         }
     }
 }
