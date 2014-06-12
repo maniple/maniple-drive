@@ -120,13 +120,15 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     -- ten indeks wynika bezposrednio z unikatowosci dir_id, ale jest potrzebny
     -- do zapewnienia, ze wszystkie katalogi w poddrzewie naleza do tego samego
-    -- dysku
-    CONSTRAINT {PREFIX}drive_dirs_dir_id_drive_id_idx
-        UNIQUE (dir_id, drive_id),
+    -- dysku,
+    -- drive_id jest w pierwszej kolumnie, zeby latwo wylawiac katalogi
+    -- znajdujace sie w obrebie tego samego dysku
+    CONSTRAINT {PREFIX}drive_dirs_drive_id_dir_id_idx
+        UNIQUE (drive_id, dir_id),
 
-    CONSTRAINT {PREFIX}drive_dirs_parent_id_drive_id_fkey
-        FOREIGN KEY (parent_id, drive_id)
-        REFERENCES {PREFIX}drive_dirs (dir_id, drive_id),
+    CONSTRAINT {PREFIX}drive_dirs_drive_id_parent_id_fkey
+        FOREIGN KEY (drive_id, parent_id)
+        REFERENCES {PREFIX}drive_dirs (drive_id, dir_id),
 
     -- indeks zapewniajacy unikatowosc internal_key
     CONSTRAINT {PREFIX}drive_dirs_internal_key_idx
