@@ -35,7 +35,7 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
     {
         $db = $this->getTable()->getAdapter();
         $where = $this->_childWhereCondition(array(
-             $db->quoteIdentifier($this->_idColumn) . ' = ?' => $id,
+             $db->quoteIdentifier($this->_idColumn) . ' = ?' => (int) $id,
         ));
         return $this->getTable()->fetchRow($where);
     }

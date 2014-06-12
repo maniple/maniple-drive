@@ -47,23 +47,61 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
 
     public function fetchSubDirs()
     {
-        // fetch all dirs explicitly marked as public
+        // fetch all top-level dirs that contain public entries
         $select = Zefram_Db_Select::factory($this->getAdapter());
         $select->from(array('dirs' => $this->getTable()));
-        $select->where('visibility = ?', 'public');
-        $select->order('name');
+        $select->join(
+            array('drives' => $this->_getTableFromString('Drive_Model_DbTable_Drives')),
+            'drives.root_dir = dirs.dir_id',
+            array()
+        );
+        $select->where('0 < ?',
+            Zefram_Db_Select::factory($this->getAdapter())
+            ->from(
+                $this->getTable(),
+                new Zend_Db_Expr('COUNT(1)')
+            )
+            ->where('visibility = ?', 'public')
+            ->where('drive_id = drives.drive_id')
+        );
+        $select->order('dirs.name');
 
-        return $this->getTable()->fetchAll($select);
+        $rows = $this->getTable()->fetchAll($select);
+
+        // teraz zamieniamy z Model_Dir na PublicSubdir - zeby tamten wylawial
+        // tylko publiczne wpisy
+        $result = array();
+        foreach ($rows as $row) {
+            $result[] = new Drive_Model_PublicSubdir($this->getTable(), $row->toArray());
+        }
+
+        return $result;
     }
 
     public function findChild($child_id)
     {
         $db = $this->getTable()->getAdapter();
-        $where = array(
-            $db->quoteIdentifier($this->_idColumn) . ' = ?' => $child_id,
-            'visibility = ?' => 'public',
+
+        $select = Zefram_Db_Select::factory($this->getAdapter());
+        $select->from(array('dirs' => $this->getTable()));
+        $select->join(
+            array('drives' => $this->_getTableFromString('Drive_Model_DbTable_Drives')),
+            'drives.root_dir = dirs.dir_id',
+            array()
         );
-        return $this->getTable()->fetchRow($where);
+        $select->where('dirs.dir_id = ?', (int) $child_id);
+        $select->where('0 < ?',
+            Zefram_Db_Select::factory($this->getAdapter())
+            ->from(
+                $this->getTable(),
+                new Zend_Db_Expr('COUNT(1)')
+            )
+            ->where('visibility = ?', 'public')
+            ->where('drive_id = drives.drive_id')
+        );
+        $select->order('dirs.name');
+
+        return $this->getTable()->fetchRow($select);
     }
 
     public function save()

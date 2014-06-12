@@ -36,8 +36,11 @@ class Drive_BrowseController extends Drive_Controller_Action
                     break;
 
                 default:
-                    $dir = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
-                        ->fetchRow(array('dir_id = ?' => $drive_id, 'parent_id IS NULL'));
+                    $drive = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Drives')->findRow($drive_id);
+                    if (empty($drive)) {
+                        throw new Exception('Drive was not found');
+                    }
+                    $dir = $drive->RootDir;
                     break;
             }
         }

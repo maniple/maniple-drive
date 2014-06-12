@@ -96,7 +96,7 @@ class Drive_Model_SharedDir extends Drive_Model_Dir
                 'usersonly' => 'usersonly',
             )
         );
-        $select->where('dir_shares.dir_id = ?', $child_id);
+        $select->where('dir_shares.dir_id = ?', (int) $child_id);
         $select->order('name');
         return $this->getTable()->fetchRow($select);
     }
