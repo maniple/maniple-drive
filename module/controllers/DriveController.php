@@ -2,7 +2,7 @@
 
 class Drive_DriveController extends Drive_Controller_Action
 {
-    public function indexAction() // {{{
+    public function adminAction() // {{{
     {
         $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
@@ -15,6 +15,8 @@ class Drive_DriveController extends Drive_Controller_Action
 
     public function listAction() // {{{
     {
+        $this->assertAccess($this->getSecurityContext()->isSuperUser());
+
         $db = $this->getResource('db');
 
         $dirs_table = $this->getTable('Drive_Model_DbTable_Dirs');

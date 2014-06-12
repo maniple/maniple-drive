@@ -15,7 +15,7 @@
         'defaults' => array(
             'module'     => 'drive',
             'controller' => 'drive',
-            'action'     => 'index',
+            'action'     => null,
         ),
     ),
     'drive.drive.edit' => array(
@@ -29,6 +29,18 @@
             'action'     => 'edit',
         ),
     ),
+    'drive.drive.browse' => array(
+        'route' => '^drive/browse(?P<path>/.*)?$',
+        'type'  => 'Zend_Controller_Router_Route_Regex',
+        'defaults' => array(
+            'module'     => 'drive',
+            'controller' => 'browse',
+            'action'     => 'browse',
+        ),
+        'map' => array(
+            'path' => 1,
+        ),
+    ),
     'drive.dir' => array(
         'route' => 'drive/dir/:dir_id/:action',
         'reqs' => array(
@@ -40,6 +52,20 @@
             'action'     => 'index',
             'dir_id'     => null,
         ),
+    ),
+    'drive.dir.create' => array(
+        'route' => '^drive/dir/(?P<dir_id>\\d+)/create/(?P<path>.*)$',
+        'type'  => 'Zend_Controller_Router_Route_Regex',
+        'defaults' => array(
+            'module'     => 'drive',
+            'controller' => 'dir',
+            'action'     => 'create',
+        ),
+        'map' => array(
+            'dir_id' => 1,
+            'path'   => 2,
+        ),
+        'reverse' => 'drive/dir/%s/create/%s',
     ),
     'drive.file' => array(
         'route' => 'drive/file/:file_id/:action',

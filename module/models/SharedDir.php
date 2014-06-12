@@ -62,19 +62,42 @@ class Drive_Model_SharedDir extends Drive_Model_Dir
             array()
         );
         $select->whereParams(
-            '(visibility = :private AND dir_shares.user_id IS NOT NULL) OR (visibility = :usersonly)',
+            '(dir_shares.user_id IS NOT NULL) OR (visibility = :usersonly)',
             array(
                 'private' => 'private',
                 'usersonly' => 'usersonly',
             )
         );
-        $select->where('drive_id NOT IN ?',
-            Zefram_Db_Select::factory($this->getAdapter())
-            ->from($this->_getTable('Drive_Model_DbTable_Drives'), 'drive_id')
-            ->where('owner = ?', $this->getUserId())
-        );
         $select->order('name');
 
         return $this->getTable()->fetchAll($select);
+    }
+
+    public function findChild($child_id)
+    {
+        $select = Zefram_Db_Select::factory($this->getAdapter());
+        $select->from(array(
+            'dirs' => $this->getTable()
+        ));
+        $select->joinLeft(
+            array(
+                'dir_shares' => $this->_getTableFromString('Drive_Model_DbTable_DirShares'),
+            ),
+            array(
+                'dir_shares.dir_id = dirs.dir_id',
+                'dir_shares.user_id = ?' => $this->getUserId(),
+            ),
+            array()
+        );
+        $select->whereParams(
+            '(dir_shares.user_id IS NOT NULL) OR (visibility = :usersonly)',
+            array(
+                'private' => 'private',
+                'usersonly' => 'usersonly',
+            )
+        );
+        $select->where('dir_shares.dir_id = ?', $child_id);
+        $select->order('name');
+        return $this->getTable()->fetchRow($select);
     }
 }

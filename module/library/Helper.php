@@ -457,7 +457,7 @@ class Drive_Helper
                 }
 
                 $subdirs[] = $subdir;
-                
+
                 $user_ids[$row->owner] = true;
                 $user_ids[$row->created_by] = true;
                 $user_ids[$row->modified_by] = true;
@@ -500,7 +500,7 @@ class Drive_Helper
             $created_by = $users[$item['created_by']];
             $modified_by = $users[$item['modified_by']];
 
-            $item['owner'] = $owner 
+            $item['owner'] = $owner
                 ? $that->projectUserData($owner->toArray(Maniple_Model::UNDERSCORE))
                 : null;
 
@@ -537,6 +537,132 @@ class Drive_Helper
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         $drive = $dir->Drive;
         if ($drive && empty($pseudoDir)) {
+            $result['disk_usage'] = $drive->getDiskUsage();
+            $result['quota'] = (float) $drive->quota;
+        }
+
+        return $result;
+    } // }}}
+
+
+    public function browseDir2(Drive_Model_Dir $dir, array $parents = null, $options = null) // {{{
+    {
+        $parts = null;
+
+        $user_ids = array(
+            $dir->owner       => true,
+            $dir->created_by  => true,
+            $dir->modified_by => true,
+        );
+
+        $parentsData = array();
+
+        if ($parents) {
+            $parents = array_values($parents);
+            for ($i = count($parents) - 1; $i >= 0; --$i) {
+                $parent = $parents[$i];
+                if (!$this->isDirReadable($parent)) {
+                    break;
+                }
+                $data = array(
+                    'dir_id'  => $parent->dir_id,
+                    'name'    => $parent->name,
+                    'perms'   => $this->getDirPermissions($parent),
+                    'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $parent->visibility,
+                );
+
+                $user_ids[$parent->owner] = true;
+                $user_ids[$parent->created_by] = true;
+                $user_ids[$parent->modified_by] = true;
+
+                array_unshift($parentsData, $data);
+            }
+        }
+
+        $files = array();
+        $subdirs = array();
+
+        // w tym miejscu wiadomo ze biezacy uzytkownik ma dostep do katalogu
+        // przynajmniej w trybie do odczytu - mozna wylistowac wszystkie pliki
+
+        // filtruj pliki
+        $where = array();
+        if (isset($options['filter'])) {
+            if (isset($options['inverseFilter']) && $options['inverseFilter']) {
+                $where['filter <> ?'] = $options['filter'];
+            } else {
+                $where['filter = ?'] = $options['filter'];
+            }
+        }
+
+        // posortuj pliki
+        if (isset($options['orderByWeight']) && $options['orderByWeight']) {
+            $order = 'weight ASC, name ASC';
+        } else {
+            $order = 'name ASC';
+        }
+
+        foreach ($dir->fetchFiles($where) as $row) {
+            $files[] = $this->getViewableData($row, false);
+
+            $user_ids[$row->owner] = true;
+            $user_ids[$row->created_by] = true;
+            $user_ids[$row->modified_by] = true;
+        }
+
+        if (!isset($options['filesOnly']) || !$options['filesOnly']) {
+            // pobierz podkatalogi
+            foreach ($dir->fetchSubDirs() as $row) {
+                $subdir = $this->getViewableData($row, false);
+                $subdirs[] = $subdir;
+
+                $user_ids[$row->owner] = true;
+                $user_ids[$row->created_by] = true;
+                $user_ids[$row->modified_by] = true;
+            }
+        }
+
+        // wczytaj wszystkie potrzebne rekordy uzytkownikow
+        $users = $this->getUserMapper()->getUsers(array_keys($user_ids));
+
+        // w kazdym z plikow i podkatalogow oraz katalogow nadrzednych
+        // zamien identyfikator wlasciciela na odpowiadajacy mu rekord
+        $that = $this;
+        $attach_users = function (&$item) use ($that, $users) {
+            $owner = $users[$item['owner']];
+            $created_by = $users[$item['created_by']];
+            $modified_by = $users[$item['modified_by']];
+
+            $item['owner'] = $owner
+                ? $that->projectUserData($owner->toArray(Maniple_Model::UNDERSCORE))
+                : null;
+
+            $item['created_by'] = $created_by
+                ? $that->projectUserData($created_by->toArray(Maniple_Model::UNDERSCORE))
+                : null;
+
+            $item['modified_by'] = $modified_by
+                ? $that->projectUserData($modified_by->toArray(Maniple_Model::UNDERSCORE))
+                : null;
+        };
+
+        // array_walk($parents, $attach_users);
+        array_walk($subdirs, $attach_users);
+        array_walk($files,   $attach_users);
+
+        // zwroc dane potrzebne do wyswietlenia zawartosci katalogu
+        $result = $this->getViewableData($dir);
+
+        $result['parents'] = $parentsData;
+        $result['subdirs'] = $subdirs;
+        $result['files']   = $files;
+
+        $result['visibility'] = $dir->visibility;
+        $result['can_inherit_visibility'] = (bool) $dir->parent_id;
+
+        // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
+        $drive = $dir->Drive;
+        if ($drive) {
             $result['disk_usage'] = $drive->getDiskUsage();
             $result['quota'] = (float) $drive->quota;
         }
@@ -665,6 +791,4 @@ class Drive_Helper
     {
         return $this->_userSearchRoute;
     }
-
-    
 }

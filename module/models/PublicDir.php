@@ -56,6 +56,16 @@ class Drive_Model_PublicDir extends Drive_Model_Dir
         return $this->getTable()->fetchAll($select);
     }
 
+    public function findChild($child_id)
+    {
+        $db = $this->getTable()->getAdapter();
+        $where = array(
+            $db->quoteIdentifier($this->_idColumn) . ' = ?' => $child_id,
+            'visibility = ?' => 'public',
+        );
+        return $this->getTable()->fetchRow($where);
+    }
+
     public function save()
     {
         throw new Exception();

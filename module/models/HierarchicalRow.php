@@ -31,6 +31,15 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
         return $this->getTable()->fetchAll($where, $order);
     } // }}}
 
+    public function findChild($id)
+    {
+        $db = $this->getTable()->getAdapter();
+        $where = $this->_childWhereCondition(array(
+             $db->quoteIdentifier($this->_idColumn) . ' = ?' => $id,
+        ));
+        return $this->getTable()->fetchRow($where);
+    }
+
     /**
      * @return array
      */
@@ -49,8 +58,8 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
         $id = $this->{$this->_idColumn};
 
         $where = array_merge((array) $where, array(
-            $db->quoteIdentifier($this->_parentColumn) . ' = ' . $db->quote($id),
-            $db->quoteIdentifier($this->_idColumn) . ' <> ' . $db->quote($id),
+            $db->quoteIdentifier($this->_parentColumn) . ' = ?' => $id,
+            $db->quoteIdentifier($this->_idColumn) . ' <> ?' => $id,
         ));
 
         return $where;
