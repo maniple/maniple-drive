@@ -72,8 +72,8 @@ class Drive_Model_PseudoDir_DrivesWithPublicEntries extends Drive_Model_PseudoDi
     {
         $select = $this->_selectDrivesWithRootDirs($where, $limit);
 
-        $drives_table = $this->_tableProvider->getTable('Drive_Model_DbTable_Drives');
-        $dirs_table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
+        $drivesTable = $this->_tableProvider->getTable('Drive_Model_DbTable_Drives');
+        $dirsTable = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
 
         $rows = array();
 
@@ -85,8 +85,8 @@ class Drive_Model_PseudoDir_DrivesWithPublicEntries extends Drive_Model_PseudoDi
                 $data[$key[0]][$key[1]] = $value;
             }
 
-            $drive = $drives_table->_createStoredRow($data['Drive']);
-            $drive->RootDir = $dirs_table->_createStoredRow($data['Dir']);
+            $drive = $drivesTable->_createStoredRow($data['Drive']);
+            $drive->RootDir = $dirsTable->_createStoredRow($data['Dir']);
 
             $rows[] = new Drive_Model_PseudoDir_PublicEntriesInDrive($drive, $this->_tableProvider);
         }
@@ -104,29 +104,25 @@ class Drive_Model_PseudoDir_DrivesWithPublicEntries extends Drive_Model_PseudoDi
         $tableProvider = $this->_tableProvider;
         $dbAdapter = $tableProvider->getAdapter();
 
+        $drivesTable = $tableProvider->getTable('Drive_Model_DbTable_Drives');
+        $dirsTable = $tableProvider->getTable('Drive_Model_DbTable_Dirs');
+
         $select = Zefram_Db_Select::factory($dbAdapter);
         $select->from(
-            array(
-                'drives' => $tableProvider->getTable('Drive_Model_DbTable_Drives'),
-            ),
-            'Drive__*'
+            array('drives' => $drivesTable),
+            $drivesTable->getColsForSelect('Drive__')
         );
         $select->join(
-            array(
-                'dirs' => $tableProvider->getTable('Drive_Model_DbTable_Dirs'),
-            ),
+            array('dirs' => $dirsTable),
             'dirs.dir_id = drives.root_dir',
-            'Dir__*'
+            $dirsTable->getColsForSelect('Dir__')
         );
         // select IDs of drives containing public directories
         $select->join(
             array(
                 'drive_ids' => Zefram_Db_Select::factory($dbAdapter)
                     ->distinct(true)
-                    ->from(
-                        $tableProvider->getTable('Drive_Model_DbTable_Dirs'),
-                        'drive_id'
-                    )
+                    ->from($dirsTable, 'drive_id')
                     ->where('visibility = ?', Drive_DirVisibility::VIS_PUBLIC)
             ),
             'drives.drive_id = drive_ids.drive_id',
