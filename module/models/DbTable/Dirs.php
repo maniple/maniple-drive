@@ -2,10 +2,10 @@
 
 class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 {
-    const VISIBILITY_PUBLIC    = 'public';
-    const VISIBILITY_PRIVATE   = 'private';
-    const VISIBILITY_INHERITED = 'inherited';
-    const VISIBILITY_USERSONLY = 'usersonly';
+    const VISIBILITY_PUBLIC    = Drive_DirVisibility::VIS_PUBLIC;
+    const VISIBILITY_PRIVATE   = Drive_DirVisibility::VIS_PRIVATE;
+    const VISIBILITY_INHERITED = Drive_DirVisibility::VIS_INHERITED;
+    const VISIBILITY_USERSONLY = Drive_DirVisibility::VIS_USERSONLY;
 
     const ACCESS_NONE     = 0;
     const ACCESS_READABLE = 1;

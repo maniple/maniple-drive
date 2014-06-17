@@ -67,17 +67,6 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
         return $this;
     } // }}}
 
-    public function toArray($withName = false) // {{{
-    {
-        $array = parent::toArray();
-
-        if ($withName) {
-            $array['name'] = $this->getName();
-        }
-
-        return $array;
-    } // }}}
-
     protected function _insert() // {{{
     {
         $this->create_time = date('Y-m-d H:i:s');

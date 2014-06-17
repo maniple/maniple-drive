@@ -13,7 +13,7 @@ class Drive_Helper
     protected $_view;
 
     /**
-     * @var Zefram_Db_Table_Provider
+     * @var Zefram_Db_TableProvider
      */
     protected $_tableProvider;
 
@@ -90,13 +90,9 @@ class Drive_Helper
 
     protected $_dirPermissions = array();
 
-    public function getDirPermissions(Drive_Model_Dir $dir, $property = null) // {{{
+    public function getDirPermissions(Drive_Model_DirInterface $dir, $property = null) // {{{
     {
-        $dir_id = $dir->dir_id;
-
-        if ($dir instanceof Drive_Model_SharedDir ||
-            $dir instanceof Drive_Model_PublicDir
-        ) {
+        if ($dir->isPseudo()) {
             return array(
                 self::READ   => true,
                 self::WRITE  => false,
@@ -106,6 +102,10 @@ class Drive_Helper
                 self::CHOWN  => false,
             );
         }
+
+        assert($dir instanceof Drive_Model_Dir);
+
+        $dir_id = $dir->dir_id;
 
         if (empty($this->_dirPermissions[$dir_id])) {
             $user = $this->getSecurityContext()->getUser();
@@ -214,10 +214,9 @@ class Drive_Helper
         switch (true) {
             case $row instanceof Drive_Model_Dir:
                 $data = array(
-                    'dir_id' => (int) $row->dir_id,
-                    'dir_key' => $row->dir_key,
-                    'name'  => $row->name,
-                    'owner' => (int) $row->owner,
+                    'dir_id' => $row->getId(),
+                    'name'  => $row->getName(),
+                    'owner' => $row->getOwner(),
                     'ctime' => $this->getDate($row->ctime),
                     'mtime' => $this->getDate((int) $row->mtime),
                     'perms' => $this->getDirPermissions($row),
@@ -230,7 +229,6 @@ class Drive_Helper
             case $row instanceof Drive_Model_File:
                 $data = array(
                     'file_id' => (int) $row->file_id,
-                    'file_key' => $row->file_key,
                     'name'  => $row->name,
                     'owner' => (int) $row->owner,
                     'size'  => (int) $row->size,
@@ -245,6 +243,21 @@ class Drive_Helper
                     'url' => $this->getFileUrl($row),
                 );
                 break;
+
+            case $row instanceof Drive_Model_DirInterface:
+                $data = array(
+                    'class' => get_class($row),
+                    'dir_id' => $row->getId(),
+                    'name'  => $row->getName(),
+                    'owner' => $row->getOwner(),
+                    'ctime' => null,
+                    'mtime' => null,
+                    'perms' => $this->getDirPermissions($row),
+                    'private' => false,
+                    'created_by' => null,
+                    'modified_by' => null,
+                );
+                break;                
 
             default:
                 $data = null;
@@ -545,35 +558,50 @@ class Drive_Helper
     } // }}}
 
 
-    public function browseDir2(Drive_Model_Dir $dir, array $parents = null, $options = null) // {{{
+    public function browseDir2(Drive_Model_DirInterface $dir, array $parents = null, $options = null) // {{{
     {
-        $parts = null;
+        $user_ids = array();
 
-        $user_ids = array(
-            $dir->owner       => true,
-            $dir->created_by  => true,
-            $dir->modified_by => true,
-        );
+        if ($owner = $dir->getOwner()) {
+            $user_ids[$owner] = true;
+        }
+
+        // build path to the current dir
+
+        $path_segments = array();
+        if ($parents) {
+            foreach ($parents as $parent) {
+                $path_segments[] = $parent->getId();
+            }
+        }
+        $path_segments[] = $dir->getId();
+
+            // $dir->created_by  => true,
+            // $dir->modified_by => true,
 
         $parentsData = array();
 
         if ($parents) {
-            $parents = array_values($parents);
+            $keys = array_keys($parents);
             for ($i = count($parents) - 1; $i >= 0; --$i) {
-                $parent = $parents[$i];
+                $parent = $parents[$keys[$i]];
                 if (!$this->isDirReadable($parent)) {
                     break;
                 }
+                $path = implode('/', array_slice($path_segments, 0, $i + 1));
                 $data = array(
-                    'dir_id'  => $parent->dir_id,
-                    'name'    => $parent->name,
+                    'path'    => $path,
+                    'name'    => $parent->getName(),
                     'perms'   => $this->getDirPermissions($parent),
-                    'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $parent->visibility,
+                    'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == @$parent->visibility,
                 );
 
-                $user_ids[$parent->owner] = true;
-                $user_ids[$parent->created_by] = true;
-                $user_ids[$parent->modified_by] = true;
+                if ($parent->getOwner()) {
+                    $user_ids[$parent->getOwner()] = true;
+                }
+
+                $user_ids[@$parent->created_by] = true;
+                $user_ids[@$parent->modified_by] = true;
 
                 array_unshift($parentsData, $data);
             }
@@ -582,6 +610,7 @@ class Drive_Helper
         $files = array();
         $subdirs = array();
 
+        if ($dir instanceof Drive_Model_Dir) {
         // w tym miejscu wiadomo ze biezacy uzytkownik ma dostep do katalogu
         // przynajmniej w trybie do odczytu - mozna wylistowac wszystkie pliki
 
@@ -609,16 +638,20 @@ class Drive_Helper
             $user_ids[$row->created_by] = true;
             $user_ids[$row->modified_by] = true;
         }
+        }
+
+        $path = implode('/', $path_segments);
 
         if (!isset($options['filesOnly']) || !$options['filesOnly']) {
             // pobierz podkatalogi
-            foreach ($dir->fetchSubDirs() as $row) {
+            foreach ($dir->getSubDirs() as $row) {
                 $subdir = $this->getViewableData($row, false);
+                $subdir['path'] = $path . '/' . $row->getId();
                 $subdirs[] = $subdir;
 
-                $user_ids[$row->owner] = true;
-                $user_ids[$row->created_by] = true;
-                $user_ids[$row->modified_by] = true;
+                $user_ids[@$row->owner] = true;
+                $user_ids[@$row->created_by] = true;
+                $user_ids[@$row->modified_by] = true;
             }
         }
 
@@ -629,9 +662,9 @@ class Drive_Helper
         // zamien identyfikator wlasciciela na odpowiadajacy mu rekord
         $that = $this;
         $attach_users = function (&$item) use ($that, $users) {
-            $owner = $users[$item['owner']];
-            $created_by = $users[$item['created_by']];
-            $modified_by = $users[$item['modified_by']];
+            $owner = @$users[$item['owner']];
+            $created_by = @$users[$item['created_by']];
+            $modified_by = @$users[$item['modified_by']];
 
             $item['owner'] = $owner
                 ? $that->projectUserData($owner->toArray(Maniple_Model::UNDERSCORE))
@@ -653,18 +686,21 @@ class Drive_Helper
         // zwroc dane potrzebne do wyswietlenia zawartosci katalogu
         $result = $this->getViewableData($dir);
 
+        $result['path'] = $path;
         $result['parents'] = $parentsData;
         $result['subdirs'] = $subdirs;
         $result['files']   = $files;
 
-        $result['visibility'] = $dir->visibility;
-        $result['can_inherit_visibility'] = (bool) $dir->parent_id;
+        $result['visibility'] = @$dir->visibility;
+        $result['can_inherit_visibility'] = !$dir->isPseudo() && $dir->parent_id;
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
-        $drive = $dir->Drive;
-        if ($drive) {
-            $result['disk_usage'] = $drive->getDiskUsage();
-            $result['quota'] = (float) $drive->quota;
+        if ($dir instanceof Drive_Model_Dir) {
+            $drive = $dir->Drive;
+            if ($drive) {
+                $result['disk_usage'] = $drive->getDiskUsage();
+                $result['quota'] = (float) $drive->quota;
+            }
         }
 
         return $result;
@@ -691,7 +727,7 @@ class Drive_Helper
      * @param Drive_Model_Dir $dir
      * @return bool
      */
-    public function isDirReadable(Drive_Model_Dir $dir) // {{{
+    public function isDirReadable(Drive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::READ);
     } // }}}
@@ -700,17 +736,17 @@ class Drive_Helper
      * @param Drive_Model_Dir $dir
      * @return bool
      */
-    public function isDirShareable(Drive_Model_Dir $dir) // {{{
+    public function isDirShareable(Drive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::SHARE);
     } // }}}
 
-    public function isDirRemovable(Drive_Model_Dir $dir) // {{{
+    public function isDirRemovable(Drive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::REMOVE);
     } // }}}
 
-    public function isDirChownable(Drive_Model_Dir $dir) // {{{
+    public function isDirChownable(Drive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::CHOWN);
     } // }}}
@@ -737,7 +773,7 @@ class Drive_Helper
 
     // resources
 
-    public function setTableProvider(Zefram_Db_Table_Provider $tableProvider = null)
+    public function setTableProvider(Zefram_Db_TableProvider $tableProvider = null)
     {
         $this->_tableProvider = $tableProvider;
         return $this;

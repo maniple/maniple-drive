@@ -2,34 +2,70 @@
 
 interface Drive_Model_DirInterface
 {
+    // NOPE! Dir ID is not required
+    /**
+     * Gets directory ID.
+     *
+     * @return int|string
+     */
     public function getId();
 
+    /**
+     * Gets directory name
+     *
+     * @return string
+     */
     public function getName();
 
-    // public function getVisibility();
+    /**
+     * Returns the visibility of this directory
+     *
+     * @return string|null
+     */
+    public function getVisibility();
 
-    // public function getOwner();
+    // I'm starting to think that owner is not necessary
+    /**
+     * Returns user ID of the owner of this directory
+     *
+     * @return int|null
+     */
+    public function getOwner();
 
-    public function isReadable($userId);
+    // public function getCreatedAt();
 
-    public function isWritable($userId);
+    // public function getCreatedBy();
 
-    public function isMovable($userId);
+    // public function getLastModifiedAt();
 
-    public function isRemovable($userId);
+    // public function getLastModifiedBy();
 
-    public function isShareable($userId);
+    /**
+     * Is this directory a pseudo-directory, i.e. not stored in the database
+     * and possibly having non-trivial retrieval rules for subdirectories
+     * or files.
+     *
+     * @return bool
+     */
+    public function isPseudo();
+
+    /**
+     * Returns parent directory of this directory.
+     *
+     * @return Drive_Model_DirInterface|null
+     */
+    public function getParentDir();
 
     /**
      * @return Drive_Model_DirInterface[]
      */
-    public function getSubdirs();
+    public function getSubDirs();
 
     /**
      * @param  int|string $dirId
      * @return Drive_Model_DirInterface|null
      */
-    public function getSubdir($dirId);
+    public function getSubDir($dirId);
 
     public function getFiles();
 }

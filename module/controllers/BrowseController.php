@@ -5,6 +5,7 @@ class Drive_BrowseController extends Drive_Controller_Action
     public function browseAction()
     {
         $path = $this->getScalarParam('path');
+
         if (null === $path) {
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
@@ -17,30 +18,42 @@ class Drive_BrowseController extends Drive_Controller_Action
             $dir = $drive->RootDir;
 
         } else {
+            // retrieve root dir
             $parts = explode('/', trim($path, '/'));
-            $drive_id = array_shift($parts);
+            $segment = array_shift($parts);
 
-            switch ($drive_id) {
+            switch ($segment) {
                 case 'shared':
-                    $dir = new Drive_Model_SharedDir(
+                    $dir = new Drive_Model_PseudoDir_SharedEntries(
                         $this->getSecurityContext()->getUserId(),
-                        $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+                        $this->getDriveHelper()->getTableProvider()
                     );
                     break;
 
                 case 'public':
-                    $dir = new Drive_Model_PublicDir(
-                        $this->getSecurityContext()->getUserId(),
-                        $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+                    $dir = new Drive_Model_PseudoDir_DrivesWithPublicEntries(
+                        $this->getDriveHelper()->getTableProvider()
                     );
                     break;
 
                 default:
-                    $drive = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Drives')->findRow($drive_id);
-                    if (empty($drive)) {
-                        throw new Exception('Drive was not found');
+                    $tableProvider = $this->getDriveHelper()->getTableProvider();
+                    // fetch root directory of given ID
+                    $select = Zefram_Db_Select::factory($tableProvider->getAdapter());
+                    $select->from(
+                        array('dirs' => $tableProvider->getTable('Drive_Model_DbTable_Dirs'))
+                    );
+                    $select->join(
+                        array('drives' => $tableProvider->getTable('Drive_Model_DbTable_Drives')),
+                        'drives.root_dir = dirs.dir_id',
+                        array()
+                    );
+                    $select->where('dir_id = ?', (int) $segment);
+
+                    $dir = $tableProvider->getTable('Drive_Model_DbTable_Dirs')->fetchRow($select);
+                    if (empty($dir)) {
+                        throw new Exception('Dir was not found');
                     }
-                    $dir = $drive->RootDir;
                     break;
             }
         }
@@ -55,11 +68,11 @@ class Drive_BrowseController extends Drive_Controller_Action
             $dirs = array($dir);
             $parent = 0;
             while ($part = array_shift($parts)) {
-                $dir = $dirs[$parent]->findChild($part);
+                $dir = end($dirs)->getSubdir($part);
                 if (empty($dir)) {
                     throw new Exception('Invalid ID path specified');
                 }
-                $dirs[++$parent] = $dir;
+                $dirs[] = $dir;
             }
 
             $dir = array_pop($dirs);

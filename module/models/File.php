@@ -16,10 +16,6 @@ class Drive_Model_File extends Zefram_Db_Table_Row
             $this->owner = $this->created_by;
         }
 
-        if (empty($this->file_key)) {
-            $this->file_key = Zefram_Math_Rand::getString(32, Zefram_Math_Rand::ALNUM);
-        }
-
         $result = parent::_insert();
         // $this->_updateCounters($this->Dir, true, $this->size);
 

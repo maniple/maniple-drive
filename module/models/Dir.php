@@ -1,19 +1,74 @@
 <?php
 
-class Drive_Model_Dir extends Drive_Model_HierarchicalRow
+class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model_DirInterface
 {
     protected $_idColumn = 'dir_id';
+
+    public function getId()
+    {
+        return $this->dir_id;
+    }
+
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function getVisibility()
+    {
+        return $this->visibility;
+    }
+
+    public function getOwner()
+    {
+        return $this->owner;
+    }
+
+    public function isPseudo()
+    {
+        return false;
+    }
+
+    public function getParentDir()
+    {
+        return $this->fetchParent();
+    }
+
+    public function getSubdirs()
+    {
+        return $this->fetchSubDirs();
+    }
+
+    public function getSubdir($dirId)
+    {
+        return $this->getTable()->fetchRow(array(
+            'parent_id = ?' => (int) $this->dir_id,
+            'dir_id <> ?' => (int) $this->dir_id,
+            'dir_id = ?' => (int) $dirId,
+        ));
+    }
+
+    public function getFiles()
+    {
+        return $this->fetchFiles();
+    }
 
     public function isInternal() // {{{
     {
         return (bool) $this->internal_key;
     } // }}}
 
+    /**
+     * @deprecated
+     */
     public function isReadable($user_id) // {{{
     {
         return $this->getTable()->isDirReadable($this->dir_id, $user_id);
     } // }}}
 
+    /**
+     * @deprecated
+     */
     public function isWritable($user_id) // {{{
     {
         return $this->getTable()->isDirWritable($this->dir_id, $user_id);
@@ -232,10 +287,6 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow
 
         if (empty($this->visibility)) {
             $this->visibility = 'inherited';
-        }
-
-        if (empty($this->dir_key)) {
-            $this->dir_key = Zefram_Math_Rand::getString(32, Zefram_Math_Rand::ALNUM);
         }
 
         $result = parent::_insert();
