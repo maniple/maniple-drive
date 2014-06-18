@@ -303,7 +303,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
     {
         /*if ($this->_cleanData['parent_id'] != $this->parent_id) {
             // fetch previous parent dir
-            $dir = $this->_getTable('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
+            $dir = $this->_getTableFromString('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
             if ($dir) {
                 $this->_updateCounters($dir, false, $this->total_file_count, $this->total_file_size);
             }

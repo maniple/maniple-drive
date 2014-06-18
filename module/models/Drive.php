@@ -36,7 +36,7 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
         $dir = $this->RootDir;
 
         if (empty($dir)) {
-            $dirs = $this->_getTable('Drive_Model_DbTable_Dirs');
+            $dirs = $this->_getTableFromString('Drive_Model_DbTable_Dirs');
             $dir = $dirs->createRow();
 
             // nowo tworzony katalog bedacy korzeniem dysku jest prywatny
