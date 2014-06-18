@@ -2,56 +2,8 @@
 
 class Drive_BrowseController extends Drive_Controller_Action
 {
-    public function browseAction()
+    public function indexAction()
     {
-        $files_only = $this->getScalarParam('files-only');
-
-        $filter = $this->getScalarParam('filter');
-        $inverse_filter = false;
-
-        if (0 === strncmp('!', $filter, 1)) {
-            $inverse_filter = true;
-            $filter = substr($filter, 1);
-        }
-
-        $options = array(
-            'filesOnly'     => (bool) $files_only,
-            'filter'        => $filter,
-            'inverseFilter' => $inverse_filter,
-        );
-
-        $currentUser = $this->getSecurityContext()->getUser();
-        $dirBrowser = new Drive_DirBrowser($this->getDriveHelper(), $currentUser ? $currentUser->getId() : null);
-
-        $path = $this->getScalarParam('path');
-
-        if (null === $path) {
-
-            $this->assertAccess($this->getSecurityContext()->isAuthenticated());
-
-            $db = $this->getResource('db');
-            $drive = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Drives')
-                ->fetchRow(array('owner = ?' => $this->getSecurityContext()->getUser()->getId()), 'drive_id');
-            if (empty($drive)) {
-                throw new Exception('Drive was not found');
-            }
-            $dir = $drive->RootDir;
-            if (empty($dir)) {
-                throw new Exception('Dir not found');
-            }
-            $result = $dirBrowser->browseDir($dir, null, $options);
-        } else {
-            $result = $dirBrowser->browse($path, $options);
-        }
-
-        if ($this->_request->isXmlHttpRequest()) {
-            $response = $this->_helper->ajaxResponse();
-            $response->setData($result);
-            $response->sendAndExit();
-        }
-
-        $this->view->dir = $result;
-
         $this->view->uri_templates = array(
             'dir' => array(
                 'read'   => $this->_helper->urlTemplate('drive.browse'),
@@ -78,5 +30,51 @@ class Drive_BrowseController extends Drive_Controller_Action
         $this->view->user_search_url = $this->view->routeUrl(
             (string) $this->getDriveHelper()->getUserSearchRoute()
         );
+    }
+
+    public function browseAction()
+    {
+        $files_only = $this->getScalarParam('files-only');
+
+        $filter = $this->getScalarParam('filter');
+        $inverse_filter = false;
+
+        if (0 === strncmp('!', $filter, 1)) {
+            $inverse_filter = true;
+            $filter = substr($filter, 1);
+        }
+
+        $options = array(
+            'filesOnly'     => (bool) $files_only,
+            'filter'        => $filter,
+            'inverseFilter' => $inverse_filter,
+        );
+
+        $currentUser = $this->getSecurityContext()->getUser();
+        $dirBrowser = new Drive_DirBrowser($this->getDriveHelper(), $currentUser ? $currentUser->getId() : null);
+
+        $path = $this->getScalarParam('path');
+
+        if (null === $path) {
+            $this->assertAccess($this->getSecurityContext()->isAuthenticated());
+
+            $db = $this->getResource('db');
+            $drive = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Drives')
+                ->fetchRow(array('owner = ?' => $this->getSecurityContext()->getUser()->getId()), 'drive_id');
+            if (empty($drive)) {
+                throw new Exception('Drive was not found');
+            }
+            $dir = $drive->RootDir;
+            if (empty($dir)) {
+                throw new Exception('Dir not found');
+            }
+            $result = $dirBrowser->browseDir($dir, null, $options);
+        } else {
+            $result = $dirBrowser->browse($path, $options);
+        }
+
+        $response = $this->_helper->ajaxResponse();
+        $response->setData($result);
+        $response->sendAndExit();
     }
 }

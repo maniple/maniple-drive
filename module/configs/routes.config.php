@@ -29,18 +29,26 @@
             'action'     => 'edit',
         ),
     ),
-    'drive.browse' => array(
-        'route' => '^drive/browse(/(?P<path>.*))?$',
+    'drive.browser' => array(
+        'route' => '^drive/browser(\\#(.*))?$',
         'type'  => 'Zend_Controller_Router_Route_Regex',
+        'defaults' => array(
+            'module'     => 'drive',
+            'controller' => 'browse',
+            'action'     => 'index',
+        ),
+        'map' => array(
+            'path' => 2,
+        ),
+        'reverse' => 'drive/browser#%s',
+    ),
+    'drive.browse' => array(
+        'route' => 'drive/browse',
         'defaults' => array(
             'module'     => 'drive',
             'controller' => 'browse',
             'action'     => 'browse',
         ),
-        'map' => array(
-            'path' => 'path',
-        ),
-        'reverse' => 'drive/browse/%s',
     ),
     'drive.dir' => array(
         'route' => 'drive/dir/:dir_id/:action',

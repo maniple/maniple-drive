@@ -41,7 +41,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
 
     public function getSubdir($dirId)
     {
-        return $this->getTable()->fetchRow(array(
+        return $this->_getTable()->fetchRow(array(
             'parent_id = ?' => (int) $this->dir_id,
             'dir_id <> ?' => (int) $this->dir_id,
             'dir_id = ?' => (int) $dirId,
@@ -63,7 +63,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
      */
     public function isReadable($user_id) // {{{
     {
-        return $this->getTable()->isDirReadable($this->dir_id, $user_id);
+        return $this->_getTable()->isDirReadable($this->dir_id, $user_id);
     } // }}}
 
     /**
@@ -71,13 +71,13 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
      */
     public function isWritable($user_id) // {{{
     {
-        return $this->getTable()->isDirWritable($this->dir_id, $user_id);
+        return $this->_getTable()->isDirWritable($this->dir_id, $user_id);
     } // }}}
 
     public function fetchSubDirs() // {{{
     {
         $dir_id = $this->dir_id;
-        $dirs = $this->getTable()->fetchAll(array(
+        $dirs = $this->_getTable()->fetchAll(array(
             'parent_id = ?' => (int) $dir_id,
             'dir_id <> ?' => (int) $dir_id,
         ), 'name ASC');
@@ -92,7 +92,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
      */
     public function fetchFiles($where = null, $order = null) // {{{
     {
-        return $this->getTable()->fetchFilesByDir($this->dir_id);
+        return $this->_getTable()->fetchFilesByDir($this->dir_id);
     } // }}}
 
     /**
@@ -117,7 +117,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
             'weight' => new Zend_Db_Expr($case),
         );
 
-        $this->_getTable('Drive_Model_DbTable_Files')->update($data, $where);
+        $this->_getTableFromString('Drive_Model_DbTable_Files')->update($data, $where);
     } // }}}
 
     /**
@@ -208,7 +208,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
             }
 
             $db = $this->getAdapter();
-            $file = $this->_getTable('Drive_Model_DbTable_Files')->createRow($data);
+            $file = $this->_getTableFromString('Drive_Model_DbTable_Files')->createRow($data);
             $file->save();
 
             // zaktualizuj zajmowane miejsce na dysku
@@ -230,7 +230,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
     public function fetchShares() // {{{
     {
         $db = $this->getAdapter();
-        $sharesTable = $this->_getTable('Drive_Model_DbTable_DirShares');
+        $sharesTable = $this->_getTableFromString('Drive_Model_DbTable_DirShares');
         $shares = array();
 
         foreach ($sharesTable->fetchAll(array('dir_id = ?' => $this->dir_id)) as $row) {
@@ -249,7 +249,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         $db = $this->getAdapter();
 
         // usun aktualne rekordy uprawnien
-        $sharesTable = $this->_getTable('Drive_Model_DbTable_DirShares');
+        $sharesTable = $this->_getTableFromString('Drive_Model_DbTable_DirShares');
         $sharesTable->delete(array('dir_id = ?' => $this->dir_id));
 
         $count = 0;
@@ -328,7 +328,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         // $this->_updateCounters($this->ParentDir, false, $this->total_file_count, $thit->total_file_size);
 
         // usun udostepnienia
-        $this->_getTable('Drive_Model_DbTable_DirShares')->delete(array(
+        $this->_getTableFromString('Drive_Model_DbTable_DirShares')->delete(array(
             'dir_id = ?' => $this->dir_id,
         ));
 
@@ -340,12 +340,16 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
      */
     public function getContentSummary() // {{{
     {
+        $db = $this->getAdapter();
+
         // liczba podkatalogow, biezacy katalog nie jest liczony
         $dir_count = 0;
         $dir_id = (int) $this->dir_id;
 
         $queue = array($this->dir_id);
-        $select = $this->getTable()->select('dir_id');
+        $select = Zefram_Db_Select::factory($db);
+        $select->from($this->_getTable(), 'dir_id');
+
         $where = array(
             'drive_id = ?' => $this->drive_id,
         );
@@ -361,19 +365,24 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
             $where['parent_id = ?'] = $dir_id;
             $select->reset(Zend_Db_Select::WHERE)->where($where);
 
-            foreach ($select->fetchAll() as $row) {
+            foreach ($select->query()->fetchAll() as $row) {
                 $dir_ids[$row['dir_id']] = true;
                 $queue[] = $row['dir_id'];
                 ++$dir_count;
             }
         }
 
-        $db = $this->getAdapter();
-        $select = $this->_getTable('Drive_Model_DbTable_Files')
-                ->select(array('SUM(size) AS size', 'COUNT(1) AS file_count'))
-                ->where('dir_id IN (?)', array_keys($dir_ids));
+        $select = Zefram_Db_Select::factory($db)
+            ->from(
+                $this->_getTableFromString('Drive_Model_DbTable_Files'),
+                array(
+                    'SUM(size) AS size',
+                    'COUNT(1) AS file_count',
+                )
+            )
+            ->where('dir_id IN (?)', array_keys($dir_ids));
 
-        $row = $select->fetchRow();
+        $row = $select->query()->fetch();
 
         return array(
             'size'      => $row['size'],

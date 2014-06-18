@@ -159,7 +159,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
             // zas wartosc kolumny can_write jest niezerowa, uzytkownik ma
             // dostep rowniez do zapisu
             if ($user_id) {
-                $row = $this->getTable('Drive_Model_DbTable_DirShares')->fetchRow(array(
+                $row = $this->_getTableFromString('Drive_Model_DbTable_DirShares')->fetchRow(array(
                     'dir_id = ?' => $dir_id,
                     'user_id = ?' => $user_id,
                 ));
@@ -196,8 +196,8 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         $user = (int) $user;
 
-        $shares = $this->getTable('Drive_Model_DbTable_DirShares');
-        $drives = $this->getTable('Drive_Model_DbTable_Drives');
+        $shares = $this->_getTableFromString('Drive_Model_DbTable_DirShares');
+        $drives = $this->_getTableFromString('Drive_Model_DbTable_Drives');
 
         $select = $this->select(array('d' => '*'))
             ->setIntegrityCheck(false)
@@ -234,7 +234,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
             $where[] = 'dir_id IN (NULL)';
         }
 
-        $shares = $this->getTable('Drive_Model_DbTable_DirShares')->fetchAll($where, 'dir_id');
+        $shares = $this->_getTableFromString('Drive_Model_DbTable_DirShares')->fetchAll($where, 'dir_id');
         return $shares;
     }
 }

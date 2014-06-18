@@ -79,20 +79,28 @@ function DirBrowser(selector, options) { // {{{
 
     // zainicjuj obsluge zmiany hasha w adresie
     $.History.bind(function (state) {
+        var path;
         state = String(state);
-        if (state.match(/^dir:.+/)) {
-            self.loadDir(state.substr(4), function (dir) {
+        if (state.match(/^\/.+/)) {
+            path = state.substr(1);
+            self.loadDir(path, function (dir) {
+                if (0 && window.history.replaceState) {
+                    window.history.replaceState(
+                        null,
+                        null,
+                        Drive.Util.uri(self._uriTemplates.dir.read, {path: dir.path})
+                    );
+                }
                 self.setDir(dir);
             });
         }
     });
     $.History.start();
 
-    // jezeli hash nie jest poprawnym identyfikatorem katalogu, uzyj
-    // identyfikatora przekazanego do funkcji
-    if (!document.location.hash.match(/^#dir:.+$/) && self._options.dirId) {
-        Drive.Util.gotoHash('dir:' + self._options.dirId);
+    if (self._options.dir) {
+        self.setDir(self._options.dir);
     }
+    return;
 } // }}}
 
 DirBrowser.prototype._initMainView = function (selector) { // {{{
@@ -299,7 +307,7 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     }
 
     if (dir.parents) {
-        for (i = dir.parents.length - 1; i >= 0; --i) {
+        for (i = 0; i < dir.parents.length; ++i) {
             item = dirLink(dir.parents[i]);
             if (breadcrumbs.separator) {
                 item += ' ' + breadcrumbs.separator + ' ';
@@ -441,7 +449,7 @@ DirBrowser.prototype._initWidthChecker = function() { // {{{
 }; // }}}
 
 DirBrowser.prototype._dirUrl = function (dir) { // {{{
-    return '#dir:' + dir.dir_id;
+    return '#/' + String(dir.path).replace(/^\/+/, '');
 }; // }}}
 
 DirBrowser.prototype._eip = function(selector, url, options) { // {{{
@@ -463,10 +471,10 @@ DirBrowser.prototype._eip = function(selector, url, options) { // {{{
     $(selector).eip(url, options);
 }; // }}}
 
-DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
+DirBrowser.prototype.loadDir = function (path, success) { // {{{
     var self = this,
         $ = this.$,
-        url = Drive.Util.uri(this._uriTemplates.dir.read, {dir_id: dirId}),
+        url = Drive.Util.uri(this._uriTemplates.dir.read, {path: ''}),
         dirNameHook;
 
     if (self._view) {
@@ -480,6 +488,7 @@ DirBrowser.prototype.loadDir = function (dirId, success) { // {{{
     App.ajax({
         url: url,
         type: 'get',
+        data: {path: path},
         dataType: 'json',
         complete: function () {
             if (self._view) {
@@ -556,6 +565,10 @@ DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
         submitLabel: str.submit,
         complete: function (dialog, response) {
             var dir = response.data.dir;
+
+            if (!dir.path) {
+                dir.path = self._currentDir.path + '/' + dir.dir_id;
+            }
 
             self.addSubdir(dir);
             self._currentDir.subdirs.push(dir);
@@ -1599,7 +1612,7 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
     view.hooks.header.append(self._renderHeader());
 
     if (dir.parents.length) {
-        view.hooks.updir.append(self._renderUpdir(dir.parents[0]));
+        view.hooks.updir.append(self._renderUpdir(dir.parents[dir.parents.length - 1]));
     }
 
     if (dir.subdirs.length || dir.files.length) {

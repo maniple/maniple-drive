@@ -24,6 +24,7 @@ class Drive_DirBrowser
     {
         $lookup = $this->dirLookup($path);
         $dir = array_pop($lookup);
+
         return $this->browseDir($dir, $lookup, $options);
     } // }}}
 
