@@ -4,9 +4,29 @@ class Drive_BrowseController extends Drive_Controller_Action
 {
     public function browseAction()
     {
+        $files_only = $this->getScalarParam('files-only');
+
+        $filter = $this->getScalarParam('filter');
+        $inverse_filter = false;
+
+        if (0 === strncmp('!', $filter, 1)) {
+            $inverse_filter = true;
+            $filter = substr($filter, 1);
+        }
+
+        $options = array(
+            'filesOnly'     => (bool) $files_only,
+            'filter'        => $filter,
+            'inverseFilter' => $inverse_filter,
+        );
+
+        $currentUser = $this->getSecurityContext()->getUser();
+        $dirBrowser = new Drive_DirBrowser($this->getDriveHelper(), $currentUser ? $currentUser->getId() : null);
+
         $path = $this->getScalarParam('path');
 
         if (null === $path) {
+
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
             $db = $this->getResource('db');
@@ -16,71 +36,47 @@ class Drive_BrowseController extends Drive_Controller_Action
                 throw new Exception('Drive was not found');
             }
             $dir = $drive->RootDir;
-
+            if (empty($dir)) {
+                throw new Exception('Dir not found');
+            }
+            $result = $dirBrowser->browseDir($dir, null, $options);
         } else {
-            // retrieve root dir
-            $parts = explode('/', trim($path, '/'));
-            $segment = array_shift($parts);
-
-            switch ($segment) {
-                case 'shared':
-                    $dir = new Drive_Model_PseudoDir_SharedEntries(
-                        $this->getSecurityContext()->getUserId(),
-                        $this->getDriveHelper()->getTableProvider()
-                    );
-                    break;
-
-                case 'public':
-                    $dir = new Drive_Model_PseudoDir_DrivesWithPublicEntries(
-                        $this->getDriveHelper()->getTableProvider()
-                    );
-                    break;
-
-                default:
-                    $tableProvider = $this->getDriveHelper()->getTableProvider();
-                    // fetch root directory of given ID
-                    $select = Zefram_Db_Select::factory($tableProvider->getAdapter());
-                    $select->from(
-                        array('dirs' => $tableProvider->getTable('Drive_Model_DbTable_Dirs'))
-                    );
-                    $select->join(
-                        array('drives' => $tableProvider->getTable('Drive_Model_DbTable_Drives')),
-                        'drives.root_dir = dirs.dir_id',
-                        array()
-                    );
-                    $select->where('dir_id = ?', (int) $segment);
-
-                    $dir = $tableProvider->getTable('Drive_Model_DbTable_Dirs')->fetchRow($select);
-                    if (empty($dir)) {
-                        throw new Exception('Dir was not found');
-                    }
-                    break;
-            }
+            $result = $dirBrowser->browse($path, $options);
         }
 
-        if (empty($dir)) {
-            throw new Exception('Invalid ID path specified');
+        if ($this->_request->isXmlHttpRequest()) {
+            $response = $this->_helper->ajaxResponse();
+            $response->setData($result);
+            $response->sendAndExit();
         }
 
-        $parents = null;
+        $this->view->dir = $result;
 
-        if (isset($parts)) {
-            $dirs = array($dir);
-            $parent = 0;
-            while ($part = array_shift($parts)) {
-                $dir = end($dirs)->getSubdir($part);
-                if (empty($dir)) {
-                    throw new Exception('Invalid ID path specified');
-                }
-                $dirs[] = $dir;
-            }
+        $this->view->uri_templates = array(
+            'dir' => array(
+                'read'   => $this->_helper->urlTemplate('drive.browse'),
+                'create' => $this->_helper->urlTemplate('drive.dir', array('action' => 'create')),
+                'remove' => $this->_helper->urlTemplate('drive.dir', array('action' => 'remove')),
+                'rename' => $this->_helper->urlTemplate('drive.dir', array('action' => 'rename')),
+                'share'  => $this->_helper->urlTemplate('drive.dir', array('action' => 'share')),
+                'move'   => $this->_helper->urlTemplate('drive.dir', array('action' => 'move')),
+                'chown'  => $this->_helper->urlTemplate('drive.dir', array('action' => 'chown')),
+                'upload' => $this->_helper->urlTemplate('drive.dir', array('action' => 'upload')),
+            ),
+            'file' => array(
+                'read'   => $this->_helper->urlTemplate('drive.file', array('action' => 'read')),
+                'edit'   => $this->_helper->urlTemplate('drive.file', array('action' => 'edit')),
+                'remove' => $this->_helper->urlTemplate('drive.file', array('action' => 'remove')),
+                'rename' => $this->_helper->urlTemplate('drive.file', array('action' => 'rename')),
+                'move'   => $this->_helper->urlTemplate('drive.file', array('action' => 'move')),
+                'chown'  => $this->_helper->urlTemplate('drive.file', array('action' => 'chown')),
+            ),
+        );
 
-            $dir = array_pop($dirs);
-            $parents = $dirs;
-        }
+        $this->view->locale = preg_replace('/\\..+$/', '', $this->getResource('locale'));
 
-        echo '<pre>';
-        print_r($this->getDriveHelper()->browseDir2($dir, $parents));
-        exit;
+        $this->view->user_search_url = $this->view->routeUrl(
+            (string) $this->getDriveHelper()->getUserSearchRoute()
+        );
     }
 }

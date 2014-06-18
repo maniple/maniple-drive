@@ -29,8 +29,8 @@
             'action'     => 'edit',
         ),
     ),
-    'drive.drive.browse' => array(
-        'route' => '^drive/browse(?P<path>/.*)?$',
+    'drive.browse' => array(
+        'route' => '^drive/browse(/(?P<path>.*))?$',
         'type'  => 'Zend_Controller_Router_Route_Regex',
         'defaults' => array(
             'module'     => 'drive',
@@ -38,8 +38,9 @@
             'action'     => 'browse',
         ),
         'map' => array(
-            'path' => 1,
+            'path' => 'path',
         ),
+        'reverse' => 'drive/browse/%s',
     ),
     'drive.dir' => array(
         'route' => 'drive/dir/:dir_id/:action',

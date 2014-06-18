@@ -246,7 +246,7 @@ class Drive_Helper
 
             case $row instanceof Drive_Model_DirInterface:
                 $data = array(
-                    'class' => get_class($row),
+                    // 'class' => get_class($row),
                     'dir_id' => $row->getId(),
                     'name'  => $row->getName(),
                     'owner' => $row->getOwner(),
@@ -610,7 +610,6 @@ class Drive_Helper
         $files = array();
         $subdirs = array();
 
-        if ($dir instanceof Drive_Model_Dir) {
         // w tym miejscu wiadomo ze biezacy uzytkownik ma dostep do katalogu
         // przynajmniej w trybie do odczytu - mozna wylistowac wszystkie pliki
 
@@ -631,14 +630,14 @@ class Drive_Helper
             $order = 'name ASC';
         }
 
-        foreach ($dir->fetchFiles($where) as $row) {
+        foreach ($dir->getFiles($where) as $row) {
             $files[] = $this->getViewableData($row, false);
 
             $user_ids[$row->owner] = true;
             $user_ids[$row->created_by] = true;
             $user_ids[$row->modified_by] = true;
         }
-        }
+
 
         $path = implode('/', $path_segments);
 

@@ -214,7 +214,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
         $where = (array) $where;
         $where['dir_id = ?'] = (int) $dir_id;
 
-        $files = $this->getTable('Drive_Model_DbTable_Files')->fetchAll($where, $order);
+        $files = $this->_getTableFromString('Drive_Model_DbTable_Files')->fetchAll($where, $order);
 
         return $files;
     }

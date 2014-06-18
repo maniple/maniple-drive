@@ -41,7 +41,7 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
      */
     public function getId() // {{{
     {
-        return $this->_drive->root_dir;
+        return (int) $this->_drive->root_dir;
     } // }}}
 
     /**
