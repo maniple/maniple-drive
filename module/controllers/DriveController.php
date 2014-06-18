@@ -20,12 +20,13 @@ class Drive_DriveController extends Drive_Controller_Action
         $db = $this->getResource('db');
 
         $dirs_table = $this->getTable('Drive_Model_DbTable_Dirs');
+        $drives_table = $this->getTable('Drive_Model_DbTable_Drives');
 
-        $drives = $this->getTable('Drive_Model_DbTable_Drives')
-            ->select(array('d' => '*'))
-            ->setIntegrityCheck(false)
-            ->joinLeft(array('dirs' => $dirs_table->getName()), 'd.root_dir = dirs.dir_id', array('name'))
+        $drives = Zefram_Db_Select::factory($db)
+            ->from(array('drives' => $drives_table))
+            ->joinLeft(array('dirs' => $dirs_table), 'dirs.dir_id = drives.root_dir', array('name'))
             ->order('name')
+            ->query()
             ->fetchAll();
 
         $disk_usage = $this->getTable('Drive_Model_DbTable_Drives')->getDiskUsageReport(array_column($drives, 'drive_id'));
@@ -34,7 +35,6 @@ class Drive_DriveController extends Drive_Controller_Action
         foreach ($drives as &$drive) {
             $drive_id = $drive['drive_id'];
             $drive['disk_usage'] = $disk_usage[$drive_id]['disk_usage'];
-
 
             $user_ids[$drive['owner']] = true;
             $user_ids[$drive['created_by']] = true;
