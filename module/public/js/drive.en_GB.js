@@ -688,7 +688,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             self._renderDirContents(dir);
         }; // }}}
 
-        DirBrowser.prototype._dialogForm = function (options)
+        var _dialogForm = function (options)
         {
             var dialog = (new Dialog({
                 width:  options.width || 300,
@@ -749,7 +749,8 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     if (content) {
                         dialog.setContent(content);
                     }
-                }
+                },
+                open: options.open
             }));
             dialog.getContentElement().on('submit', 'form', function () {
                 dialog.getButton('submit').click();
@@ -767,26 +768,24 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 var content = self._renderTemplate('DirBrowser.nameForm', {
                     str: str,
 
-                    label: 'New directory name',
+                    label: 'Directory name',
                     value: values && values.name,
                     errors: errors && errors.name
                 });
 
-                setTimeout(function () {
-                    content.find('input:visible, textarea:visible').first().focus();
-                }, 10);
-
                 return content;
             }
 
-            self._dialogForm({
+            _dialogForm({
                 width:  300,
-                height: 260,
                 title: str.title,
                 submitLabel: 'Create',
                 submitMessage: 'Creating directory, please wait...',
                 url: url,
                 form: buildForm,
+                open: function () {
+                    this.getContentElement().find('input[name="name"]').focus();
+                },
                 success: function (dialog, response) {
                     var dir = response.data.dir;
 
@@ -826,22 +825,31 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 url = Drive.Util.uri(self._uriTemplates.dir.rename, dir),
                 str = Drive.Util.i18n('DirBrowser.opRenameDir');
 
-            ajaxForm({
-                width:       440,
-                height:      120,
-                url:         url,
-                title:       str.title,
-                submitLabel: str.submit,
-                load: function (dialog) {
-                    setTimeout(function() {
-                        dialog.getContentElement().find('input[type="text"]').focus().select();
-                    }, 10);
+            function buildForm(dialog, values, errors) {
+                var content = self._renderTemplate('DirBrowser.nameForm', {
+                    str: str,
+
+                    label: 'New directory name',
+                    value: values ? values.name : dir.name,
+                    errors: errors && errors.name
+                });
+
+                return content;
+            }
+
+            _dialogForm({
+                width:  300,
+                title: str.title,
+                submitLabel: 'Rename',
+                submitMessage: 'Renaming directory, please wait...',
+                url: url,
+                form: buildForm,
+                open: function () {
+                    this.getContentElement().find('input[name="name"]').focus().select();
                 },
-                complete: function (dialog, response) {
+                success: function (dialog, response) {
                     var responseDir = response.data.dir,
                         dirName = responseDir.name;
-
-                    Drive.Util.assert(responseDir.dir_id == dir.dir_id, 'Unexpected directory ID in response');
 
                     // zaktualizuj nazwe katalogu wyswietlona w naglowku oraz w okruchach,
                     // o ile modyfikowany katalog jest katalogiem biezacym
@@ -3473,7 +3481,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                         dialogContent.show();
                         // dialog.adjustHeight();
                     },
-                    beforeClose: function (dialog) {
+                    beforeClose: function () {
                         // przywroc dialogContent na miejsce zanim dialog usunie go
                         // z drzewa, ponadto uczyn go niewidocznym
                         // dialogContent.hide();

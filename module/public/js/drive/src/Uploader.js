@@ -118,7 +118,7 @@ Uploader.prototype._initDialog = function () { // {{{
                 dialogContent.show();
                 // dialog.adjustHeight();
             },
-            beforeClose: function (dialog) {
+            beforeClose: function () {
                 // przywroc dialogContent na miejsce zanim dialog usunie go
                 // z drzewa, ponadto uczyn go niewidocznym
                 // dialogContent.hide();
