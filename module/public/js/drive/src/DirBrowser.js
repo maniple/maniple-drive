@@ -1034,7 +1034,7 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
         self = this,
         url = Drive.Util.uri(self._uriTemplates.file.rename, file);
 
-    selection = function (element, start, end) { // {{{
+    function selection(element, start, end) { // {{{
         if (element instanceof $) {
             element = element.get(0);
         }
@@ -1057,32 +1057,38 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
         }
     } // }}}
 
-    ajaxForm({
-        width:  440,
-        height: 120,
-        url:    url,
-        title:  'Zmiana nazwy pliku',
-        submitLabel: 'Zastosuj',
-        content: function (dialog, response) {
-            var content = $(response.data);
+    function buildForm(dialog, values, errors) {
+        var content = self._renderTemplate('DirBrowser.nameForm', {
+            str: {},
+            
+            label: 'New file name',
+            value: values ? values.name : file.name,
+            errors: errors && errors.name
+        });
 
-            setTimeout(function() {
-                content.find('input[type="text"]').first().each(function() {
-                    var j = $(this),
-                        val = j.val(),
-                        pos = val.lastIndexOf('.');
+        return content;
+    }
 
-                    // zaznacz nazwe pliku bez rozszerzenia
-                    selection(j, 0, pos == -1 ? val.length : pos);
-                });
-            }, 25);
+    _dialogForm({
+        width:  300,
+        title: 'Zmiana nazwy pliku',
+        submitLabel: 'Rename',
+        submitMessage: 'Renaming file, please wait...',
+        url: url,
+        form: buildForm,
+        open: function () {
+            this.getContentElement().find('input[name="name"]').each(function() {
+                var j = $(this),
+                    val = j.val(),
+                    pos = val.lastIndexOf('.');
 
-            return content;
+                // zaznacz nazwe pliku bez rozszerzenia
+                selection(j, 0, pos == -1 ? val.length : pos);
+            });
         },
-        complete: function (dialog, response) {
+        success: function (dialog, response) {
             var responseFile = response.data;
 
-            Drive.Util.assert(responseFile.file_id == file.file_id, 'Unexpected file id in response');
             $.extend(file, responseFile);
 
             if (file.element) {

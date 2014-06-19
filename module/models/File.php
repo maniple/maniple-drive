@@ -30,9 +30,9 @@ class Drive_Model_File extends Zefram_Db_Table_Row
             // fetch previous parent dir
             $dir = $this->_getTableFromString('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['dir_id']);
             if ($dir) {
-                $this->_updateCounters($dir, false, $this->size);
+                // $this->_updateCounters($dir, false, $this->size);
             }
-            $this->_updateCounters($this->Dir, true, $this->size);
+            // $this->_updateCounters($this->Dir, true, $this->size);
         }
 
         return parent::_update();

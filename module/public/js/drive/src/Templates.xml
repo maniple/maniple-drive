@@ -239,7 +239,7 @@ Loading directory contents...
 <form method="post">
     <div class="form-group{{#if errors }} has-error{{/if }}">
         <label class="required" for="drive-dir-form-name">{{ label }}</label>
-        <input type="text" name="name" id="drive-dir-form-name" class="form-control" value="{{ value }}" />
+        <input type="text" name="name" class="form-control" value="{{ value }}" autocomplete="off" id="drive-dir-form-name" />
         {{#if errors }}
         <div class="message-block">
             <ul class="errors">

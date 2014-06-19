@@ -1170,7 +1170,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 self = this,
                 url = Drive.Util.uri(self._uriTemplates.file.rename, file);
 
-            selection = function (element, start, end) { // {{{
+            function selection(element, start, end) { // {{{
                 if (element instanceof $) {
                     element = element.get(0);
                 }
@@ -1193,32 +1193,38 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                 }
             } // }}}
 
-            ajaxForm({
-                width:  440,
-                height: 120,
-                url:    url,
-                title:  'Zmiana nazwy pliku',
-                submitLabel: 'Zastosuj',
-                content: function (dialog, response) {
-                    var content = $(response.data);
+            function buildForm(dialog, values, errors) {
+                var content = self._renderTemplate('DirBrowser.nameForm', {
+                    str: {},
 
-                    setTimeout(function() {
-                        content.find('input[type="text"]').first().each(function() {
-                            var j = $(this),
-                                val = j.val(),
-                                pos = val.lastIndexOf('.');
+                    label: 'New file name',
+                    value: values ? values.name : file.name,
+                    errors: errors && errors.name
+                });
 
-                            // zaznacz nazwe pliku bez rozszerzenia
-                            selection(j, 0, pos == -1 ? val.length : pos);
-                        });
-                    }, 25);
+                return content;
+            }
 
-                    return content;
+            _dialogForm({
+                width:  300,
+                title: 'Zmiana nazwy pliku',
+                submitLabel: 'Rename',
+                submitMessage: 'Renaming file, please wait...',
+                url: url,
+                form: buildForm,
+                open: function () {
+                    this.getContentElement().find('input[name="name"]').each(function() {
+                        var j = $(this),
+                            val = j.val(),
+                            pos = val.lastIndexOf('.');
+
+                        // zaznacz nazwe pliku bez rozszerzenia
+                        selection(j, 0, pos == -1 ? val.length : pos);
+                    });
                 },
-                complete: function (dialog, response) {
+                success: function (dialog, response) {
                     var responseFile = response.data;
 
-                    Drive.Util.assert(responseFile.file_id == file.file_id, 'Unexpected file id in response');
                     $.extend(file, responseFile);
 
                     if (file.element) {
@@ -3159,11 +3165,11 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           if (helper = helpers.label) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.label); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "</label>\n<input type=\"text\" name=\"name\" id=\"drive-dir-form-name\" class=\"form-control\" value=\"";
+            + "</label>\n<input type=\"text\" name=\"name\" class=\"form-control\" value=\"";
           if (helper = helpers.value) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.value); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\" />\n";
+            + "\" autocomplete=\"off\" id=\"drive-dir-form-name\" />\n";
           stack1 = helpers['if'].call(depth0, (depth0 && depth0.errors), {hash:{},inverse:self.noop,fn:self.program(3, program3, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</div>\n</form>";
