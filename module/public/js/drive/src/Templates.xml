@@ -234,6 +234,25 @@ Loading directory contents...
 ]]>
 </template>
 
+<template id="DirBrowser.nameForm">
+<![CDATA[
+<form method="post">
+    <div class="form-group{{#if errors }} has-error{{/if }}">
+        <label class="required" for="drive-dir-form-name">{{ label }}</label>
+        <input type="text" name="name" id="drive-dir-form-name" class="form-control" value="{{ value }}" />
+        {{#if errors }}
+        <div class="message-block">
+            <ul class="errors">
+            {{# errors }}
+                <li>{{ . }}</li>
+            {{/ errors }}
+            </ul>
+        {{/if }}
+    </div>
+</form>
+]]>
+</template>
+
 <template id="DirBrowser.opShareDir">
 <![CDATA[
 <div id="drive-dir-share">

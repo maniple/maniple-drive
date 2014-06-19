@@ -688,12 +688,119 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             self._renderDirContents(dir);
         }; // }}}
 
+        DirBrowser.prototype._dialogForm = function (options)
+        {
+            var dialog = (new Dialog({
+                width:  options.width || 300,
+                height: options.height || 260,
+                title:  options.title,
+                buttons: [
+                    {
+                        id: 'submit',
+                        label: options.submitLabel || 'Submit',
+                        action: function (dialog) {
+                            if (options.submitMessage) {
+                                dialog.setStatus(options.submitMessage);
+                            }
+
+                            App.ajax({
+                                url: options.url,
+                                type: 'post',
+                                data: dialog.getContentElement().find('form').serialize(),
+                                dataType: 'json',
+                                success: function (response) {
+                                    options.success(dialog, response);
+                                },
+                                fail: function (response) {
+                                    var errors = response.data,
+                                        values = {},
+                                        content;
+
+                                    dialog.setStatus(response.message);
+
+                                    $.each(
+                                        dialog.getContentElement().find('form').serializeArray(),
+                                        function (key, value) {
+                                            values[value.name] = value.value;
+                                        }
+                                    );
+
+                                    content = options.form(dialog, values, errors);
+                                    if (content) {
+                                        dialog.setContent(content);
+                                    }
+                                },
+                                error: function (response) {
+                                    dialog.setStatus(response.message);
+                                }
+                            });
+                        },
+                        className: 'btn btn-primary'
+                    },
+                    {
+                        id: 'cancel',
+                        label: options.cancelLabel || 'Cancel',
+                        action: 'close',
+                        className: 'btn'
+                    }
+                ],
+                content: function (dialog) {
+                    var content = options.form(dialog);
+                    if (content) {
+                        dialog.setContent(content);
+                    }
+                }
+            }));
+            dialog.getContentElement().on('submit', 'form', function () {
+                dialog.getButton('submit').click();
+                return false;
+            });
+            dialog.open();
+        }
+
         DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
             var self = this,
                 url = Drive.Util.uri(self._uriTemplates.dir.create, {dir_id: parentDir.dir_id}),
                 str = Drive.Util.i18n('DirBrowser.opCreateDir');
 
-            ajaxForm({
+            function buildForm(dialog, values, errors) {
+                var content = self._renderTemplate('DirBrowser.nameForm', {
+                    str: str,
+
+                    label: 'New directory name',
+                    value: values && values.name,
+                    errors: errors && errors.name
+                });
+
+                setTimeout(function () {
+                    content.find('input:visible, textarea:visible').first().focus();
+                }, 10);
+
+                return content;
+            }
+
+            self._dialogForm({
+                width:  300,
+                height: 260,
+                title: str.title,
+                submitLabel: 'Create',
+                submitMessage: 'Creating directory, please wait...',
+                url: url,
+                form: buildForm,
+                success: function (dialog, response) {
+                    var dir = response.data.dir;
+
+                    if (!dir.path) {
+                        dir.path = self._currentDir.path + '/' + dir.dir_id;
+                    }
+
+                    self.addSubdir(dir);
+                    self._currentDir.subdirs.push(dir);
+                    dialog.close();
+                }
+            });
+
+            /*ajaxForm({
                 width:       440,
                 height:      120,
                 url:         url,
@@ -710,7 +817,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     self._currentDir.subdirs.push(dir);
                     dialog.close();
                 }
-            });
+            });*/
         }; // }}}
 
         DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
@@ -3001,6 +3108,57 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</td>\n</tr>";
+          return buffer;
+          }
+
+        ),
+            "DirBrowser.nameForm": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+          var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
+
+        function program1(depth0,data) {
+
+
+          return " has-error";
+          }
+
+        function program3(depth0,data) {
+
+          var buffer = "", stack1, helper, options;
+          buffer += "\n<div class=\"message-block\">\n<ul class=\"errors\">\n";
+          options={hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}
+          if (helper = helpers.errors) { stack1 = helper.call(depth0, options); }
+          else { helper = (depth0 && depth0.errors); stack1 = typeof helper === functionType ? helper.call(depth0, options) : helper; }
+          if (!helpers.errors) { stack1 = blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}); }
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</ul>\n";
+          return buffer;
+          }
+        function program4(depth0,data) {
+
+          var buffer = "";
+          buffer += "\n<li>"
+            + escapeExpression((typeof depth0 === functionType ? depth0.apply(depth0) : depth0))
+            + "</li>\n";
+          return buffer;
+          }
+
+          buffer += "<form method=\"post\">\n<div class=\"form-group";
+          stack1 = helpers['if'].call(depth0, (depth0 && depth0.errors), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\">\n<label class=\"required\" for=\"drive-dir-form-name\">";
+          if (helper = helpers.label) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.label); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</label>\n<input type=\"text\" name=\"name\" id=\"drive-dir-form-name\" class=\"form-control\" value=\"";
+          if (helper = helpers.value) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.value); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\" />\n";
+          stack1 = helpers['if'].call(depth0, (depth0 && depth0.errors), {hash:{},inverse:self.noop,fn:self.program(3, program3, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</div>\n</form>";
           return buffer;
           }
 

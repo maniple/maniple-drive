@@ -2,7 +2,7 @@
 
 class Drive_DirController_CreateAction extends Zefram_Controller_Action_StandaloneForm
 {
-    protected $_ajaxFormHtml = true;
+    protected $_ajaxFormHtml = false;
 
     protected $_dir;
 

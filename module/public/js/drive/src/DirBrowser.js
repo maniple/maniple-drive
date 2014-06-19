@@ -552,12 +552,119 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
     self._renderDirContents(dir);
 }; // }}}
 
+DirBrowser.prototype._dialogForm = function (options)
+{
+    var dialog = (new Dialog({
+        width:  options.width || 300,
+        height: options.height || 260,
+        title:  options.title,
+        buttons: [
+            {
+                id: 'submit',
+                label: options.submitLabel || 'Submit',
+                action: function (dialog) {
+                    if (options.submitMessage) {
+                        dialog.setStatus(options.submitMessage);
+                    }
+
+                    App.ajax({
+                        url: options.url,
+                        type: 'post',
+                        data: dialog.getContentElement().find('form').serialize(),
+                        dataType: 'json',
+                        success: function (response) {
+                            options.success(dialog, response);
+                        },
+                        fail: function (response) {
+                            var errors = response.data,
+                                values = {},
+                                content;
+
+                            dialog.setStatus(response.message);
+
+                            $.each(
+                                dialog.getContentElement().find('form').serializeArray(),
+                                function (key, value) {
+                                    values[value.name] = value.value;
+                                }
+                            );
+
+                            content = options.form(dialog, values, errors);
+                            if (content) {
+                                dialog.setContent(content);
+                            }
+                        },
+                        error: function (response) {
+                            dialog.setStatus(response.message);
+                        }
+                    });
+                },
+                className: 'btn btn-primary'
+            },
+            {
+                id: 'cancel',
+                label: options.cancelLabel || 'Cancel',
+                action: 'close',
+                className: 'btn'
+            }
+        ],
+        content: function (dialog) {
+            var content = options.form(dialog);
+            if (content) {
+                dialog.setContent(content);
+            }
+        }
+    }));
+    dialog.getContentElement().on('submit', 'form', function () {
+        dialog.getButton('submit').click();
+        return false;
+    });
+    dialog.open();
+}
+
 DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     var self = this,
         url = Drive.Util.uri(self._uriTemplates.dir.create, {dir_id: parentDir.dir_id}),
         str = Drive.Util.i18n('DirBrowser.opCreateDir');
 
-    ajaxForm({
+    function buildForm(dialog, values, errors) {
+        var content = self._renderTemplate('DirBrowser.nameForm', {
+            str: str,
+            
+            label: 'New directory name',
+            value: values && values.name,
+            errors: errors && errors.name
+        });
+
+        setTimeout(function () {
+            content.find('input:visible, textarea:visible').first().focus();
+        }, 10);
+
+        return content;
+    }
+
+    self._dialogForm({
+        width:  300,
+        height: 260,
+        title: str.title,
+        submitLabel: 'Create',
+        submitMessage: 'Creating directory, please wait...',
+        url: url,
+        form: buildForm,
+        success: function (dialog, response) {
+            var dir = response.data.dir;
+
+            if (!dir.path) {
+                dir.path = self._currentDir.path + '/' + dir.dir_id;
+            }
+
+            self.addSubdir(dir);
+            self._currentDir.subdirs.push(dir);
+            dialog.close();
+        }
+    });
+
+    /*ajaxForm({
         width:       440,
         height:      120,
         url:         url,
@@ -574,7 +681,7 @@ DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
             self._currentDir.subdirs.push(dir);
             dialog.close();
         }
-    });
+    });*/
 }; // }}}
 
 DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
