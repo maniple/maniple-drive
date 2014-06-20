@@ -1070,7 +1070,7 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
     }
 
     _dialogForm({
-        width:  300,
+        width:  240,
         title: 'Zmiana nazwy pliku',
         submitLabel: 'Rename',
         submitMessage: 'Renaming file, please wait...',

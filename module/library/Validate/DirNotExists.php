@@ -11,7 +11,7 @@ class Drive_Validate_DirNotExists extends Zend_Validate_Abstract
     const DIR_EXISTS = 'dirExists';
 
     protected $_messageTemplates = array(
-        self::DIR_EXISTS => 'Katalog o podanej nazwie już istnieje',
+        self::DIR_EXISTS => 'A directory with this name already exists',
     );
 
     /**

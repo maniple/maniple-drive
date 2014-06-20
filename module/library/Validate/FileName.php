@@ -10,7 +10,8 @@ class Drive_Validate_FileName extends Zend_Validate_Abstract
     const INVALID_CHARS = 'invalidChars';
 
     protected $_messageTemplates = array(
-        self::INVALID_CHARS => 'Podana nazwa zawiera niedozwolone znaki: \ / : * ? " < > |',
+        // Podana nazwa zawiera niedozwolone znaki:
+        self::INVALID_CHARS => 'Name contains one or more invalid characters: \ / : * ? " < > |',
     );
 
     public function isValid($value)

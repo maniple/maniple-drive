@@ -1206,7 +1206,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             }
 
             _dialogForm({
-                width:  300,
+                width:  240,
                 title: 'Zmiana nazwy pliku',
                 submitLabel: 'Rename',
                 submitMessage: 'Renaming file, please wait...',
