@@ -611,6 +611,17 @@ tbody > tr:hover .col-grab.grabbable {
     font-size: 13px;
 }
 
+@media screen and (max-width: 750px) {
+    #drive-dir-contents .col-owner {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    #drive-dir-contents .col-mtime {
+        display: none;
+    }
+}
 
 /* drive-icon {{{ */
 .drive-icon {
@@ -618,6 +629,7 @@ tbody > tr:hover .col-grab.grabbable {
   height: 22px;
   background: url(../img/drive.png) no-repeat 0 -22px;
   display: inline-block;
+  vertical-align: middle;
   *zoom: 1;
 }
 .drive-icon-folder {

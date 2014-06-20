@@ -7,7 +7,7 @@
  */
 class Drive_FileController_RenameAction extends Zefram_Controller_Action_StandaloneForm
 {
-    protected $_ajaxFormHtml = true;
+    protected $_ajaxFormHtml = false;
 
     protected $_file;
 

@@ -826,4 +826,9 @@ class Drive_Helper
     {
         return $this->_userSearchRoute;
     }
+
+    public function getRepository()
+    {
+        return new Drive_Model_Repository($this->getTableProvider());
+    }
 }

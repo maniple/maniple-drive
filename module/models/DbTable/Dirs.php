@@ -13,7 +13,8 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     const CACHE_TAG = 'DirAccess';
 
-    protected $_name = 'drive_dirs';
+    protected $_name = Drive_Model_TableNames::TABLE_DIRS;
+
     protected $_rowClass = 'Drive_Model_Dir';
     protected $_referenceMap = array(
         'ParentDir' => array(

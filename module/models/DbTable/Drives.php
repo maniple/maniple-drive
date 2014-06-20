@@ -2,8 +2,10 @@
 
 class Drive_Model_DbTable_Drives extends Zefram_Db_Table
 {
-    protected $_name = 'drives';
+    protected $_name = Drive_Model_TableNames::TABLE_DRIVES;
+
     protected $_rowClass = 'Drive_Model_Drive';
+
     protected $_referenceMap = array(
         'RootDir' => array(
             'columns'       => 'root_dir',

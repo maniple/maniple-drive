@@ -98,7 +98,10 @@ class Drive_Form_Drive extends Zefram_Form
 
     public function setDrive(Drive_Model_Drive $drive)
     {
-        $this->setDefaults($drive->toArray(true));
+        $defaults = $drive->toArray();
+        $defaults['name'] = $drive->getName();
+
+        $this->setDefaults($defaults);
 
         // ograniczenie rozmiaru dysku jest prezentowane w formularzu
         // w MiB, zapisywane do bazy w bajtach, stad koniecznosc konwersji
@@ -106,7 +109,7 @@ class Drive_Form_Drive extends Zefram_Form
 
         $this->getElement('name')
              ->getValidator('Drive_Validate_DirNotExists')
-             ->setAllowed($drive->name);
+             ->setAllowed($drive->getName());
 
         $this->_drive = $drive;
     }

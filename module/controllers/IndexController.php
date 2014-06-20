@@ -52,24 +52,57 @@ class Drive_IndexController extends Drive_Controller_Action
 
     public function dashboardAction()
     {
-        $user_id = $this->getSecurityContext()->getUser()->getId();
+        $this->getSecurityContext()->requireAuthentication();
 
-        // list my drives
-        $this->view->drives = 
-            Zefram_Db_Select::factory(
-                $this->getDriveHelper()->getTableProvider()->getAdapter()
-            )
-            ->from(
-                array('drives' => $this->getTable('Drive_Model_DbTable_Drives'))
-            )
-            ->joinLeft(
-                array('dirs' => $this->getTable('Drive_Model_DbTable_Dirs')),
-                'drives.root_dir = dirs.dir_id',
-                'dirs.name'
-            )
-            ->where('drives.owner = ?', $user_id)
-            ->order('dirs.name')
-            ->query()
-            ->fetchAll();
+        $user_id = $this->getSecurityContext()->getUser()->getId();
+        $drive_helper = $this->getDriveHelper();
+
+        $drive = $drive_helper->getRepository()->getDriveByUserId($user_id);
+        $drive_files = array();
+
+        if ($drive) {
+            // attach details about drive contents / usage
+            $drive = new Maniple_Model_ModelWrapper($drive);
+            $drive->addExtra($drive_helper->getRepository()->getDriveSummary($drive->drive_id));
+
+            foreach ($drive_helper->getRepository()->getLastUploadedFiles($drive->drive_id, 5) as $file) {
+                $drive_files[] = new Maniple_Model_ModelWrapper($file);
+            }
+        }
+
+        $user_ids = array();
+
+        $shared_files = array();
+        foreach ($drive_helper->getRepository()->getLastSharedWithUserFiles($user_id, 5) as $file) {
+            $shared_files[] = new Maniple_Model_ModelWrapper($file);
+            $user_ids[$file->created_by] = true;
+        }
+
+        $public_files = array();
+        foreach ($drive_helper->getRepository()->getLastPublishedFiles(null, 5) as $file) {
+            $public_files[] = new Maniple_Model_ModelWrapper($file);
+            $user_ids[$file->created_by] = true;
+        }
+
+        $users = array();
+        foreach ($drive_helper->getUserMapper()->getUsers(array_keys($user_ids)) as $user) {
+            $users[$user->getId()] = $user;
+        }
+
+        foreach ($shared_files as &$file) {
+            $file->creator = isset($users[$file->created_by]) ? $users[$file->created_by] : null;
+        }
+        unset($file);
+
+        foreach ($public_files as &$file) {
+            $file->creator = isset($users[$file->created_by]) ? $users[$file->created_by] : null;
+        }
+        unset($file);
+
+        $this->view->drive = $drive;
+        $this->view->drive_files = $drive_files;
+
+        $this->view->shared_files = $shared_files;
+        $this->view->public_files = $public_files;
     }
 }
