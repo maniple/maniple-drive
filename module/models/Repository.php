@@ -33,7 +33,8 @@ class Drive_Model_Repository
             array('files' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_FILES)),
             array(
                 'type' => 'filter',
-                'num_files' => new Zend_Db_Expr('COUNT(1)')
+                'num_files' => new Zend_Db_Expr('COUNT(1)'),
+                'disk_usage' => new Zend_Db_Expr('SUM(size)'),
             )
         );
         $select->join(
@@ -44,6 +45,7 @@ class Drive_Model_Repository
         $select->where('dirs.drive_id = ?', $drive_id);
         $select->group('filter');
 
+        $disk_usage = 0;
         $num_files = 0;
         $num_by_type = array(
             'image' => 0,
@@ -62,9 +64,12 @@ class Drive_Model_Repository
 
             $num_by_type[$type] += $count;
             $num_files += $count;
+
+            $disk_usage += $row['disk_usage'];
         }
         
         return array(
+            'disk_usage' => $disk_usage,
             'num_dirs'  => $num_dirs,
             'num_files' => $num_files,
             'num_by_type' => $num_by_type,

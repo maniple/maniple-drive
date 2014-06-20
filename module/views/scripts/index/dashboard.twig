@@ -52,7 +52,7 @@
                 {% if drive.quota %}
                     <p>Space limit: <strong>{{ fileSize(drive.quota) }}</strong></p>
                     <p>Disk usage: <strong>{{ fileSize(drive.disk_usage) }}</strong>
-                    ({{ (drive.disk_usage / drive.quota) * 100 | number_format(2) }}%)</p>
+                    ({{ (drive.disk_usage / drive.quota * 100) | number_format(2) }}%)</p>
                 {% else %}
                     <p>Disk usage: <strong>{{ fileSize(drive.disk_usage) }}</strong></p>
                 {% endif %}
