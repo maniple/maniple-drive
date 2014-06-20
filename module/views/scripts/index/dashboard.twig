@@ -41,7 +41,7 @@
             {% endfor %}
             </ul>
         {% else %}
-            <p class="muted">{{ translate('Your drive contains not files') }}</p>
+            <p class="muted">{{ translate('Your drive contains no files') }}</p>
         {% endif %}
             </div>
             <div style="display:table-cell;width:49%;border-left:1px solid #ccc;padding-left:20px;">
@@ -74,11 +74,7 @@
 <div class="panel">
     <div class="panel-heading">
 
-    {% if shared_files %}
         <a class="btn btn-primary btn-small pull-right" style="position:relative;top:-3px;" href="{{ routeUrl('drive.browser', {path: '/shared'}) }}">Browse files</a>
-    {% else %}
-        <span class="btn btn-small disabled pull-right" style="position:relative;top:-3px;">Browse files</span>
-    {% endif %}
 
         <h3 class="panel-title">Shared with me</h3>
     </div>
@@ -105,11 +101,7 @@
 <div class="panel">
     <div class="panel-heading">
 
-    {% if public_files %}
         <a class="btn btn-primary btn-small pull-right" style="position:relative;top:-3px;" href="{{ routeUrl('drive.browser', {path: '/public'}) }}">Browse files</a>
-    {% else %}
-        <span class="btn btn-small disabled pull-right" style="position:relative;top:-3px;">Browse files</span>
-    {% endif %}
 
         <h3 class="panel-title">Public files</h3>
     </div>
