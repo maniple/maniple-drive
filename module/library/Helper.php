@@ -602,6 +602,7 @@ class Drive_Helper
                 }
                 $path = implode('/', array_slice($path_segments, 0, $i + 1));
                 $data = array(
+                    'dir_id'  => $parent->getId(),
                     'path'    => $path,
                     'name'    => $parent->getName(),
                     'perms'   => $this->getDirPermissions($parent),

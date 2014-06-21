@@ -50,7 +50,7 @@ function DirBrowser(selector, options) { // {{{
 
     // kolekcja wszystkich elementow odpowiadajacych katalogom, na ktore
     // mozna upuscic pliki i inne katalogi
-    self._dropTargets = {};
+    self._dropTargets = null;
 
     // etykieta wyswietlana podczas przenoszenia katalogu lub pliku
     // z informacja o docelowej operacji
@@ -285,19 +285,6 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
         return;
     }
 
-    function dirLink(dir) {
-        var attrs = {
-                href: self._dirUrl(dir) //,
-                //'data-dir': dir.dir_id
-            };
-
-        if (dir.perms.write) {
-            attrs['data-drop-dir'] = dir.dir_id;
-        }
-
-        return '<a' + Viewtils.attrs(attrs) + '>' + Viewtils.esc(dir.name) + '</a>';
-    }
-
     if (breadcrumbs.after.size()) {
         // insert links after 'after' element ...
         breadcrumbs.after.nextAll().remove();
@@ -307,21 +294,31 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     }
 
     if (dir.parents) {
-        for (i = 0; i < dir.parents.length; ++i) {
-            item = dirLink(dir.parents[i]);
-            if (breadcrumbs.separator) {
-                item += ' ' + breadcrumbs.separator + ' ';
+        dir.parents.forEach(function (parent) {
+            var item = $('<a/>');
+
+            item.attr('href', self._dirUrl(parent));
+            item.text(String(parent.name));
+
+            if (parent.perms.write) {
+                self._addDropTarget(parent, item);
             }
+
+            if (breadcrumbs.separator) {
+                item.after(' ' + breadcrumbs.separator + ' ');
+            }
+
             if (breadcrumbs.itemTag) {
                 item = $(item).wrap('<' + breadcrumbs.itemTag + '/>');
             }
+
             breadcrumbs.container.append(item);
-        }
+        });
     }
 
     // current element, create SPAN, wrap it in itemTag if required,
     // add proper class
-    item = $('<span>' + Viewtils.esc(dir.name) + '</span>');
+    item = $('<span/>').text(String(dir.name));
     if (breadcrumbs.itemTag) {
         item = item.wrap('<' + breadcrumbs.itemTag + '/>');
     }
@@ -329,10 +326,6 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
         item.addClass(breadcrumbs.currentClass);
     }
     breadcrumbs.container.append(item);
-
-    breadcrumbs.container.find('[data-drop-dir]').each(function() {
-        self._dropTargets[this.getAttribute('data-drop-dir')] = this;
-    });
 }; // }}}
 
 DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
@@ -512,7 +505,7 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
         dirName, url;
 
     self._currentDir = dir;
-    self._dropTargets = {};
+    self._dropTargets = [];
 
     // zainicjuj glowny widok widgetu
     self._initMainView();
@@ -552,7 +545,7 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
     self._renderDirContents(dir);
 }; // }}}
 
-var _dialogForm = function (options)
+var _dialogForm = function (options) // {{{
 {
     var dialog = (new Dialog({
         width:  options.width || 300,
@@ -621,7 +614,7 @@ var _dialogForm = function (options)
         return false;
     });
     dialog.open();
-}
+}; // }}}
 
 DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     var self = this,
@@ -734,12 +727,7 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
 
                 oldElement.replaceWith(newElement);
 
-                // newElement.find('[data-drop-dir]').each(function() {
-                //    self._dropTargets.push(this);
-                // });
-
                 self._removeDropTarget(oldElement);
-                // self._dropTargets.push(view.el);
 
                 oldElement.remove();
                 dir.element = newElement;
@@ -1438,7 +1426,7 @@ DirBrowser.prototype._addDropTarget = function (dir, element) { // {{{
 
     element.attr('data-drop-dir', dir.dir_id);
     element.attr('data-name', dir.name).each(function() {
-        self._dropTargets[dir.dir_id] = this;
+        self._dropTargets.push(this);
     });
 }; // }}}
 
@@ -1449,11 +1437,6 @@ DirBrowser.prototype._removeDropTarget = function (element) { // {{{
 
     // addBack is available since jQuery 1.8
     element.find('[data-drop-dir]').addBack('[data-drop-dir]').each(function() {
-        var key = this.getAttribute('data-drop-dir');
-        if (self._dropTargets[key] === this) {
-            delete self._dropTargets[key];
-        }
-        return;
         var index = $.inArray(this, self._dropTargets);
         if (index != -1) {
             self._dropTargets.splice(index, 1);
@@ -1748,10 +1731,6 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
     }
 
     self._active = null;
-
-    //view.find('[data-drop-dir]').each(function() {
-    //    self._dropTargets.push(this);
-    //});
 }; // }}}
 
 
