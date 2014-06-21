@@ -1,6 +1,6 @@
 <?php
 
-class Drive_DirController_CreateAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_CreateAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = false;
 
@@ -13,7 +13,7 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $dir_context = Drive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
+        $dir_context = ManipleDrive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
         $dir = $this->getDriveHelper()->getDir($dir_context->getDirId());
 
         $this->assertAccess(
@@ -31,8 +31,8 @@ class Drive_DirController_CreateAction extends Zefram_Controller_Action_Standalo
                     'required'   => true,
                     'filters'    => array('StringTrim'),
                     'validators' => array(
-                        new Drive_Validate_FileName,
-                        new Drive_Validate_DirNotExists(array(
+                        new ManipleDrive_Validate_FileName,
+                        new ManipleDrive_Validate_DirNotExists(array(
                             'tableProvider' => $this->getDriveHelper()->getTableProvider(),
                             'parentId' => $dir->dir_id
                         )),

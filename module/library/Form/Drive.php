@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Form_Drive extends Zefram_Form
+class ManipleDrive_Form_Drive extends Zefram_Form
 {
     protected $_drive;
 
@@ -25,13 +25,13 @@ class Drive_Form_Drive extends Zefram_Form
                         'label'       => 'Nazwa',
                         'required'    => true,
                         'validators'  => array(
-                            new Drive_Validate_FileName,
-                            new Drive_Validate_DirNotExists(array(
+                            new ManipleDrive_Validate_FileName,
+                            new ManipleDrive_Validate_DirNotExists(array(
                                 // uzyj domyslnego adaptera
                                 'tableProvider' => $tableProvider,
                                 'parentId' => null,
                                 'messages' => array(
-                                    Drive_Validate_DirNotExists::DIR_EXISTS => 'Dysk o podanej nazwie już istnieje',
+                                    ManipleDrive_Validate_DirNotExists::DIR_EXISTS => 'Dysk o podanej nazwie już istnieje',
                                 ),
                             )),
                         ),
@@ -96,7 +96,7 @@ class Drive_Form_Drive extends Zefram_Form
         return $this->_drive;
     }
 
-    public function setDrive(Drive_Model_Drive $drive)
+    public function setDrive(ManipleDrive_Model_Drive $drive)
     {
         $defaults = $drive->toArray();
         $defaults['name'] = $drive->getName();
@@ -108,7 +108,7 @@ class Drive_Form_Drive extends Zefram_Form
         $this->setDefault('quota', intval($drive->quota / 1048576));
 
         $this->getElement('name')
-             ->getValidator('Drive_Validate_DirNotExists')
+             ->getValidator('ManipleDrive_Validate_DirNotExists')
              ->setAllowed($drive->getName());
 
         $this->_drive = $drive;

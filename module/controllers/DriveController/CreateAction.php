@@ -6,7 +6,7 @@
  * @version 2013-01-25
  * @author xemlock
  */
-class Drive_DriveController_CreateAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DriveController_CreateAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 
@@ -17,7 +17,7 @@ class Drive_DriveController_CreateAction extends Zefram_Controller_Action_Standa
 
         $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
-        $form = new Drive_Form_Drive(array(
+        $form = new ManipleDrive_Form_Drive(array(
             'tableProvider' => $this->getDriveHelper()->getTableProvider(),
             'userMapper' => $this->getDriveHelper()->getUserMapper(),
         ));
@@ -33,7 +33,7 @@ class Drive_DriveController_CreateAction extends Zefram_Controller_Action_Standa
         $db->beginTransaction();
 
         try {
-            $drive = $this->getTable('Drive_Model_DbTable_Drives')->createRow($values);
+            $drive = $this->getTable('ManipleDrive_Model_DbTable_Drives')->createRow($values);
             $drive->setName($values['name']);
             $drive->created_by = $this->getSecurity()->getUserId();
             $drive->save();

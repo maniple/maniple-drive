@@ -1,6 +1,6 @@
 <?php
 
-class Drive_DirController_RemoveAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_RemoveAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 

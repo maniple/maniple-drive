@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model_DirInterface
+class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implements ManipleDrive_Model_DirInterface
 {
     protected $_idColumn = 'dir_id';
 
@@ -117,7 +117,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
             'weight' => new Zend_Db_Expr($case),
         );
 
-        $this->_getTableFromString('Drive_Model_DbTable_Files')->update($data, $where);
+        $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->update($data, $where);
     } // }}}
 
     /**
@@ -208,7 +208,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
             }
 
             $db = $this->getAdapter();
-            $file = $this->_getTableFromString('Drive_Model_DbTable_Files')->createRow($data);
+            $file = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->createRow($data);
             $file->save();
 
             // zaktualizuj zajmowane miejsce na dysku
@@ -230,7 +230,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
     public function fetchShares() // {{{
     {
         $db = $this->getAdapter();
-        $sharesTable = $this->_getTableFromString('Drive_Model_DbTable_DirShares');
+        $sharesTable = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
         $shares = array();
 
         foreach ($sharesTable->fetchAll(array('dir_id = ?' => $this->dir_id)) as $row) {
@@ -249,7 +249,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         $db = $this->getAdapter();
 
         // usun aktualne rekordy uprawnien
-        $sharesTable = $this->_getTableFromString('Drive_Model_DbTable_DirShares');
+        $sharesTable = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
         $sharesTable->delete(array('dir_id = ?' => $this->dir_id));
 
         $count = 0;
@@ -275,7 +275,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
 
     public function save() // {{{
     {
-        $filter = new Drive_Filter_NameNormalize;
+        $filter = new ManipleDrive_Filter_NameNormalize;
         $this->name_normalized = $filter->filter($this->name);
 
         return parent::save();
@@ -311,7 +311,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
     {
         /*if ($this->_cleanData['parent_id'] != $this->parent_id) {
             // fetch previous parent dir
-            $dir = $this->_getTableFromString('Drive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
+            $dir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
             if ($dir) {
                 $this->_updateCounters($dir, false, $this->total_file_count, $this->total_file_size);
             }
@@ -336,7 +336,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         // $this->_updateCounters($this->ParentDir, false, $this->total_file_count, $thit->total_file_size);
 
         // usun udostepnienia
-        $this->_getTableFromString('Drive_Model_DbTable_DirShares')->delete(array(
+        $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->delete(array(
             'dir_id = ?' => $this->dir_id,
         ));
 
@@ -382,7 +382,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
 
         $select = Zefram_Db_Select::factory($db)
             ->from(
-                $this->_getTableFromString('Drive_Model_DbTable_Files'),
+                $this->_getTableFromString('ManipleDrive_Model_DbTable_Files'),
                 array(
                     'SUM(size) AS size',
                     'COUNT(1) AS file_count',
@@ -399,7 +399,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         );
     } // }}}
 
-    protected function _updateCounters(Drive_Model_Dir $dir = null, $inc, $file_count, $file_size) // {{{
+    protected function _updateCounters(ManipleDrive_Model_Dir $dir = null, $inc, $file_count, $file_size) // {{{
     {
         $file_count = abs($file_count);
         $file_size = abs($file_size);

@@ -1,11 +1,11 @@
 <?php
 
-class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
+class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 {
-    const VISIBILITY_PUBLIC    = Drive_DirVisibility::VIS_PUBLIC;
-    const VISIBILITY_PRIVATE   = Drive_DirVisibility::VIS_PRIVATE;
-    const VISIBILITY_INHERITED = Drive_DirVisibility::VIS_INHERITED;
-    const VISIBILITY_USERSONLY = Drive_DirVisibility::VIS_USERSONLY;
+    const VISIBILITY_PUBLIC    = ManipleDrive_DirVisibility::VIS_PUBLIC;
+    const VISIBILITY_PRIVATE   = ManipleDrive_DirVisibility::VIS_PRIVATE;
+    const VISIBILITY_INHERITED = ManipleDrive_DirVisibility::VIS_INHERITED;
+    const VISIBILITY_USERSONLY = ManipleDrive_DirVisibility::VIS_USERSONLY;
 
     const ACCESS_NONE     = 0;
     const ACCESS_READABLE = 1;
@@ -13,18 +13,18 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     const CACHE_TAG = 'DirAccess';
 
-    protected $_name = Drive_Model_TableNames::TABLE_DIRS;
+    protected $_name = ManipleDrive_Model_TableNames::TABLE_DIRS;
 
-    protected $_rowClass = 'Drive_Model_Dir';
+    protected $_rowClass = 'ManipleDrive_Model_Dir';
     protected $_referenceMap = array(
         'ParentDir' => array(
             'columns'       => 'parent_id',
-            'refTableClass' => 'Drive_Model_DbTable_Dirs',
+            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
             'refColumns'    => 'dir_id',
         ),
         'Drive' => array(
             'columns'       => 'drive_id',
-            'refTableClass' => 'Drive_Model_DbTable_Drives',
+            'refTableClass' => 'ManipleDrive_Model_DbTable_Drives',
             'refColumns'    => 'drive_id',
         ),
     );
@@ -60,7 +60,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
         if (!isset(self::$_dirAccessCache[$user_id])) {
             if ($cache = self::_getCache()) {
                 // jezeli ustawiono cache, uzyj cache'owanej tablicy
-                $key = 'Drive_DirAccess_' . $user_id;
+                $key = 'ManipleDrive_DirAccess_' . $user_id;
                 self::$_dirAccessCache[$user_id] = new Data\CachedArray($cache, $key, self::CACHE_TAG);
 
             } else {
@@ -100,13 +100,13 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
     /**
      * Wynik działania tej funkcji jest przechowywany w pamięci podręcznej.
      *
-     * @param int|Drive_Model_Dir
+     * @param int|ManipleDrive_Model_Dir
      * @return int
      */
     // TODO wlasciciel dysku ma dostep do wszystkich katalogow w poddrzewie!
     public function getDirAccess($dir_id, $user_id) // {{{
     {
-        if ($dir_id instanceof Drive_Model_Dir) {
+        if ($dir_id instanceof ManipleDrive_Model_Dir) {
             $dir = $dir_id;
         } else {
             $dir = $this->findRow($dir_id);
@@ -160,7 +160,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
             // zas wartosc kolumny can_write jest niezerowa, uzytkownik ma
             // dostep rowniez do zapisu
             if ($user_id) {
-                $row = $this->_getTableFromString('Drive_Model_DbTable_DirShares')->fetchRow(array(
+                $row = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->fetchRow(array(
                     'dir_id = ?' => $dir_id,
                     'user_id = ?' => $user_id,
                 ));
@@ -197,8 +197,8 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         $user = (int) $user;
 
-        $shares = $this->_getTableFromString('Drive_Model_DbTable_DirShares');
-        $drives = $this->_getTableFromString('Drive_Model_DbTable_Drives');
+        $shares = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
+        $drives = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives');
 
         $select = $this->select(array('d' => '*'))
             ->setIntegrityCheck(false)
@@ -215,7 +215,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
         $where = (array) $where;
         $where['dir_id = ?'] = (int) $dir_id;
 
-        $files = $this->_getTableFromString('Drive_Model_DbTable_Files')->fetchAll($where, $order);
+        $files = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->fetchAll($where, $order);
 
         return $files;
     }
@@ -235,7 +235,7 @@ class Drive_Model_DbTable_Dirs extends Zefram_Db_Table
             $where[] = 'dir_id IN (NULL)';
         }
 
-        $shares = $this->_getTableFromString('Drive_Model_DbTable_DirShares')->fetchAll($where, 'dir_id');
+        $shares = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->fetchAll($where, 'dir_id');
         return $shares;
     }
 }

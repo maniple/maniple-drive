@@ -7,17 +7,17 @@
  *
  * @version 2014-06-02 / 2012-12-09
  */
-class Drive_DirController_RenameAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 
     /**
-     * @var Drive_Model_Dir
+     * @var ManipleDrive_Model_Dir
      */
     protected $_dir;
 
     /**
-     * @var Drive_DirBrowsingContext
+     * @var ManipleDrive_DirBrowsingContext
      */
     protected $_dirContext;
 
@@ -28,7 +28,7 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $dir_context = Drive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
+        $dir_context = ManipleDrive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
         $dir = $this->getDriveHelper()->getDir($dir_context->getDirId());
 
         // za pomoca tej akcji nie mozna zmienic nazwy katalogu,
@@ -52,8 +52,8 @@ class Drive_DirController_RenameAction extends Zefram_Controller_Action_Standalo
                     'required'   => true,
                     'filters'    => array('StringTrim'),
                     'validators' => array(
-                        new Drive_Validate_FileName,
-                        new Drive_Validate_DirNotExists(array(
+                        new ManipleDrive_Validate_FileName,
+                        new ManipleDrive_Validate_DirNotExists(array(
                             'tableProvider' => $this->getDriveHelper()->getTableProvider(),
                             'allowed'  => $dir->name,
                             'parentId' => $dir->parent_id

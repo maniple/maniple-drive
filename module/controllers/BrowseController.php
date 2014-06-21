@@ -1,6 +1,6 @@
 <?php
 
-class Drive_BrowseController extends Drive_Controller_Action
+class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
 {
     public function indexAction()
     {
@@ -51,7 +51,7 @@ class Drive_BrowseController extends Drive_Controller_Action
         );
 
         $currentUser = $this->getSecurityContext()->getUser();
-        $dirBrowser = new Drive_DirBrowser($this->getDriveHelper(), $currentUser ? $currentUser->getId() : null);
+        $dirBrowser = new ManipleDrive_DirBrowser($this->getDriveHelper(), $currentUser ? $currentUser->getId() : null);
 
         $path = $this->getScalarParam('path');
 
@@ -59,7 +59,7 @@ class Drive_BrowseController extends Drive_Controller_Action
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
             $db = $this->getResource('db');
-            $drive = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Drives')
+            $drive = $this->getDriveHelper()->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Drives')
                 ->fetchRow(array('owner = ?' => $this->getSecurityContext()->getUser()->getId()), 'drive_id');
             if (empty($drive)) {
                 throw new Exception('Drive was not found');

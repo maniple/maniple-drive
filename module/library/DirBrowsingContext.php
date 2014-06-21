@@ -4,7 +4,7 @@
  * Objects of this class provide a way to pass directory ID along with its
  * browsing context: dir ID, pseudo-root and its mounting point.
  */
-class Drive_DirBrowsingContext
+class ManipleDrive_DirBrowsingContext
 {
     /**
      * @var string
@@ -24,7 +24,7 @@ class Drive_DirBrowsingContext
     /**
      * Constructor.
      *
-     * @param  string|Drive_DirBrowsingContext $dirId
+     * @param  string|ManipleDrive_DirBrowsingContext $dirId
      * @param  string|null $pseudoRoot
      * @param  string|null $mount
      */
@@ -41,7 +41,7 @@ class Drive_DirBrowsingContext
 
     /**
      * @param  string|null $dirId
-     * @return Drive_DirBrowsingContext
+     * @return ManipleDrive_DirBrowsingContext
      */
     public function setDirId($dirId) // {{{
     {
@@ -63,7 +63,7 @@ class Drive_DirBrowsingContext
 
     /**
      * @param  string|null $pseudoRoot
-     * @return Drive_DirBrowsingContext
+     * @return ManipleDrive_DirBrowsingContext
      */
     public function setPseudoRoot($pseudoRoot = null) // {{{
     {
@@ -82,7 +82,7 @@ class Drive_DirBrowsingContext
 
     /**
      * @param  string|null $mount
-     * @return Drive_DirBrowsingContext
+     * @return ManipleDrive_DirBrowsingContext
      */
     public function setMount($mount = null) // {{{
     {
@@ -100,10 +100,10 @@ class Drive_DirBrowsingContext
     } // }}}
 
     /**
-     * @param  Drive_DirBrowsingContext $context
-     * @return Drive_DirBrowsingContext
+     * @param  ManipleDrive_DirBrowsingContext $context
+     * @return ManipleDrive_DirBrowsingContext
      */
-    public function setFromContext(Drive_DirBrowsingContext $context) // {{{
+    public function setFromContext(ManipleDrive_DirBrowsingContext $context) // {{{
     {
         $this->setDirId($context->getDirId());
         $this->setPseudoRoot($context->setPseudoRoot());
@@ -145,7 +145,7 @@ class Drive_DirBrowsingContext
     /**
      * Create a copy of this object.
      *
-     * @return Drive_DirBrowsingContext
+     * @return ManipleDrive_DirBrowsingContext
      */
     public function copy() // {{{
     {
@@ -155,7 +155,7 @@ class Drive_DirBrowsingContext
     /**
      * Proxy to {@link __construct()}.
      *
-     * @return Drive_DirBrowsingContext
+     * @return ManipleDrive_DirBrowsingContext
      */
     public static function create() // {{{
     {
@@ -178,7 +178,7 @@ class Drive_DirBrowsingContext
 
     /**
      * @param  string $string
-     * @return Drive_DirBrowsingContext
+     * @return ManipleDrive_DirBrowsingContext
      */
     public static function createFromString($string) // {{{
     {

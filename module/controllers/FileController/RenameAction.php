@@ -5,7 +5,7 @@
  *
  * @version 2012-12-13
  */
-class Drive_FileController_RenameAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_FileController_RenameAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = false;
 
@@ -37,7 +37,7 @@ class Drive_FileController_RenameAction extends Zefram_Controller_Action_Standal
                     'required'   => true,
                     'filters'    => array('StringTrim'),
                     'validators' => array(
-                        new Drive_Validate_FileName,
+                        new ManipleDrive_Validate_FileName,
                         // nazwa pliku nie musi byc unikalna w obrebie katalogu
                     ),
                     'value'      => $file->name,

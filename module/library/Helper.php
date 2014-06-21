@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Helper
+class ManipleDrive_Helper
 {
     /**
      * @var Maniple_Security_ContextInterface
@@ -28,11 +28,11 @@ class Drive_Helper
     protected $_userSearchRoute;
 
     /**
-     * @return Drive_Mapper
+     * @return ManipleDrive_Mapper
      */
     public function getMapper()
     {
-        return new Drive_Mapper($this->getTableProvider());
+        return new ManipleDrive_Mapper($this->getTableProvider());
     }
 
     public function fetchDir($dir_id)
@@ -45,7 +45,7 @@ class Drive_Helper
      * ma uprawnienia do jego odczytu.
      *
      * @param int|string $dir_id
-     * @return Drive_Model_Dir
+     * @return ManipleDrive_Model_Dir
      */
     public function getDir($dir_id) // {{{
     {
@@ -63,12 +63,12 @@ class Drive_Helper
      * uprawnienia do jego odczytu.
      *
      * @param int $file_id
-     * @return Drive_Model_File
+     * @return ManipleDrive_Model_File
      */
     public function fetchFile($file_id) // {{{
     {
         $file_id = (int) $file_id;
-        $file = $this->getTableProvider()->getTable('Drive_Model_DbTable_Files')->findRow($file_id);
+        $file = $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Files')->findRow($file_id);
 
         if (empty($file)) {
             throw new Exception('Plik nie został znaleziony', 404);
@@ -90,7 +90,7 @@ class Drive_Helper
 
     protected $_dirPermissions = array();
 
-    public function getDirPermissions(Drive_Model_DirInterface $dir, $property = null) // {{{
+    public function getDirPermissions(ManipleDrive_Model_DirInterface $dir, $property = null) // {{{
     {
         if ($dir->isPseudo()) {
             return array(
@@ -103,7 +103,7 @@ class Drive_Helper
             );
         }
 
-        assert($dir instanceof Drive_Model_Dir);
+        assert($dir instanceof ManipleDrive_Model_Dir);
 
         $dir_id = $dir->dir_id;
 
@@ -163,7 +163,7 @@ class Drive_Helper
             : false;
     } // }}}
 
-    public function getFilePermissions(Drive_Model_File $file, $property = null) // {{{
+    public function getFilePermissions(ManipleDrive_Model_File $file, $property = null) // {{{
     {
         $user = $this->getSecurityContext()->getUser();
         $perms = $this->getDirPermissions($file->Dir);
@@ -194,10 +194,10 @@ class Drive_Helper
     } // }}}
 
     /**
-     * @param  Drive_Model_File $file
+     * @param  ManipleDrive_Model_File $file
      * @return string
      */
-    public function getFileUrl(Drive_Model_File $file, array $options = null) // {{{
+    public function getFileUrl(ManipleDrive_Model_File $file, array $options = null) // {{{
     {
         $dir = $file->Dir;
         $path = array($file->name);
@@ -217,14 +217,14 @@ class Drive_Helper
      * danych katalogu. Dane nie zawierają danych technicznych (np. kluczy
      * obcych) i są gotowe do bezpośredniego przesłania np. poprzez AJAX.
      *
-     * @param Drive_Model_Dir|Drive_Model_File $row
+     * @param ManipleDrive_Model_Dir|ManipleDrive_Model_File $row
      * @param bool $fetchUserData
      * @return array
      */
     public function getViewableData($row, $fetchUserData = true, $type = null) // {{{
     {
         switch (true) {
-            case $row instanceof Drive_Model_Dir:
+            case $row instanceof ManipleDrive_Model_Dir:
                 $data = array(
                     'dir_id' => $row->getId(),
                     'name'  => $row->getName(),
@@ -232,13 +232,13 @@ class Drive_Helper
                     'ctime' => $this->getDate($row->ctime),
                     'mtime' => $this->getDate((int) $row->mtime),
                     'perms' => $this->getDirPermissions($row),
-                    'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
+                    'private' => ManipleDrive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
                     'created_by' => (int) $row->created_by,
                     'modified_by' => (int) $row->modified_by,
                 );
                 break;
 
-            case $row instanceof Drive_Model_File:
+            case $row instanceof ManipleDrive_Model_File:
                 $data = array(
                     'file_id' => (int) $row->file_id,
                     'name'  => $row->name,
@@ -256,7 +256,7 @@ class Drive_Helper
                 );
                 break;
 
-            case $row instanceof Drive_Model_DirInterface:
+            case $row instanceof ManipleDrive_Model_DirInterface:
                 $data = array(
                     // 'class' => get_class($row),
                     'dir_id' => $row->getId(),
@@ -325,15 +325,15 @@ class Drive_Helper
     {
         switch ($name) {
             case 'shared':
-                return new Drive_Model_SharedDir(
+                return new ManipleDrive_Model_SharedDir(
                     $this->getSecurityContext()->getUserId(),
-                    $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+                    $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')
                 );
 
             case 'public':
-                return new Drive_Model_PublicDir(
+                return new ManipleDrive_Model_PublicDir(
                     $this->getSecurityContext()->getUserId(),
-                    $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')
+                    $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')
                 );
         }
 
@@ -347,7 +347,7 @@ class Drive_Helper
      * zastąpione pola owner, created_by i modified_by odpowiadającymi im
      * rekordami uzytkownikow.
      *
-     * @param int|Drive_Model_Dir $dir
+     * @param int|ManipleDrive_Model_Dir $dir
      * @param array $options OPTIONAL
      * @return array
      */
@@ -355,10 +355,10 @@ class Drive_Helper
     {
         $parts = null;
 
-        if ($dir instanceof Drive_Model_Dir) {
-            $context = Drive_DirBrowsingContext::create($dir->dir_id);
+        if ($dir instanceof ManipleDrive_Model_Dir) {
+            $context = ManipleDrive_DirBrowsingContext::create($dir->dir_id);
         } else {
-            $context = Drive_DirBrowsingContext::createFromString($dir);
+            $context = ManipleDrive_DirBrowsingContext::createFromString($dir);
             if ($this->_isPseudoRootDir($context->getDirId())) {
                 $dir = $this->_getPseudoRootDir($context->getDirId());
             } else {
@@ -366,7 +366,7 @@ class Drive_Helper
             }
         }
 
-        $in_pseudo_dir = ($dir instanceof Drive_Model_PublicDir || $dir instanceof Drive_Model_SharedDir);
+        $in_pseudo_dir = ($dir instanceof ManipleDrive_Model_PublicDir || $dir instanceof ManipleDrive_Model_SharedDir);
 
         $user_ids = array(
             $dir->owner       => true,
@@ -393,7 +393,7 @@ class Drive_Helper
                         'dir_id'  => $this->_renderDirId($row->dir_id, $context),
                         'name'    => $row->name,
                         'perms'   => $this->getDirPermissions($row),
-                        'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
+                        'private' => ManipleDrive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == $row->visibility,
                     );
                     // $set->add($row->owner, $row->created_by, $row->modified_by);
                     $user_ids[$row->owner] = true;
@@ -490,7 +490,7 @@ class Drive_Helper
         }
 
         // pobierz wszystkie wspoldzielenia katalogow
-        //$rows = $this->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')->fetchDirShares($shares_dir_ids);
+        //$rows = $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchDirShares($shares_dir_ids);
         $shares = array();
 
         /*
@@ -570,7 +570,7 @@ class Drive_Helper
     } // }}}
 
 
-    public function browseDir2(Drive_Model_DirInterface $dir, array $parents = null, $options = null) // {{{
+    public function browseDir2(ManipleDrive_Model_DirInterface $dir, array $parents = null, $options = null) // {{{
     {
         $user_ids = array();
 
@@ -606,7 +606,7 @@ class Drive_Helper
                     'path'    => $path,
                     'name'    => $parent->getName(),
                     'perms'   => $this->getDirPermissions($parent),
-                    'private' => Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == @$parent->visibility,
+                    'private' => ManipleDrive_Model_DbTable_Dirs::VISIBILITY_PRIVATE == @$parent->visibility,
                 );
 
                 if ($parent->getOwner()) {
@@ -707,7 +707,7 @@ class Drive_Helper
         $result['can_inherit_visibility'] = !$dir->isPseudo() && $dir->parent_id;
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
-        if ($dir instanceof Drive_Model_Dir) {
+        if ($dir instanceof ManipleDrive_Model_Dir) {
             $drive = $dir->Drive;
             if ($drive) {
                 $result['disk_usage'] = $drive->getDiskUsage();
@@ -718,7 +718,7 @@ class Drive_Helper
         return $result;
     } // }}}
 
-    protected function _renderDirId($dir_id, Drive_DirBrowsingContext $context = null)
+    protected function _renderDirId($dir_id, ManipleDrive_DirBrowsingContext $context = null)
     {
         if ($context) {
             return (string) $context->copy()->setDirId($dir_id);
@@ -727,58 +727,58 @@ class Drive_Helper
     }
 
     /**
-     * @param Drive_Model_Dir $dir
+     * @param ManipleDrive_Model_Dir $dir
      * @return bool
      */
-    public function isDirWritable(Drive_Model_Dir $dir) // {{{
+    public function isDirWritable(ManipleDrive_Model_Dir $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::WRITE);
     } // }}}
 
     /**
-     * @param Drive_Model_Dir $dir
+     * @param ManipleDrive_Model_Dir $dir
      * @return bool
      */
-    public function isDirReadable(Drive_Model_DirInterface $dir) // {{{
+    public function isDirReadable(ManipleDrive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::READ);
     } // }}}
 
     /**
-     * @param Drive_Model_Dir $dir
+     * @param ManipleDrive_Model_Dir $dir
      * @return bool
      */
-    public function isDirShareable(Drive_Model_DirInterface $dir) // {{{
+    public function isDirShareable(ManipleDrive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::SHARE);
     } // }}}
 
-    public function isDirRemovable(Drive_Model_DirInterface $dir) // {{{
+    public function isDirRemovable(ManipleDrive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::REMOVE);
     } // }}}
 
-    public function isDirChownable(Drive_Model_DirInterface $dir) // {{{
+    public function isDirChownable(ManipleDrive_Model_DirInterface $dir) // {{{
     {
         return $this->getDirPermissions($dir, self::CHOWN);
     } // }}}
 
-    public function isFileRemovable(Drive_Model_File $file) // {{{
+    public function isFileRemovable(ManipleDrive_Model_File $file) // {{{
     {
         return $this->isDirWritable($file->Dir);
     } // }}}
 
-    public function isFileReadable(Drive_Model_File $file) // {{{
+    public function isFileReadable(ManipleDrive_Model_File $file) // {{{
     {
         return $this->isDirReadable($file->Dir);
     } // }}}
 
-    public function isFileWritable(Drive_Model_File $file) // {{{
+    public function isFileWritable(ManipleDrive_Model_File $file) // {{{
     {
         return $this->isDirWritable($file->Dir);
     } // }}}
 
-    public function isFileChownable(Drive_Model_File $file) // {{{
+    public function isFileChownable(ManipleDrive_Model_File $file) // {{{
     {
         return $this->isDirChownable($file->Dir);
     } // }}}
@@ -842,6 +842,6 @@ class Drive_Helper
 
     public function getRepository()
     {
-        return new Drive_Model_Repository($this->getTableProvider());
+        return new ManipleDrive_Model_Repository($this->getTableProvider());
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-abstract class Drive_Controller_Action extends Maniple_Controller_Action
+abstract class ManipleDrive_Controller_Action extends Maniple_Controller_Action
 {
     public function getTable($table)
     {

@@ -1,6 +1,6 @@
 <?php
 
-abstract class Drive_Model_TableNames
+abstract class ManipleDrive_Model_TableNames
 {
     const TABLE_DRIVES     = 'drives';
     const TABLE_DIRS       = 'drive_dirs';

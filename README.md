@@ -1,9 +1,9 @@
-# maniple-drive - A virtual file-system module for Maniple engine
+# maniple-drive - A file manager module for Maniple engine
 
 ## Module installation
 
 ```sh
 APPLICATION_PATH=...
-ln -s `realpath drive` "$APPLICATION_PATH/modules/drive"
-ln -s `realpath drive/public` "$APPLICATION_PATH/../public/assets/drive"
+ln -s `realpath module` "$APPLICATION_PATH/modules/maniple-drive"
+ln -s `realpath module/public` "$APPLICATION_PATH/../public/assets/drive"
 ```

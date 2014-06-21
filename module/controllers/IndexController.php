@@ -1,12 +1,12 @@
 <?php
 
-class Drive_IndexController extends Drive_Controller_Action
+class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 {
     public function fileAction()
     {
         $path = explode('/', $this->getScalarParam('path'));
 
-        $dirs = $this->getTable('Drive_Model_DbTable_Dirs');
+        $dirs = $this->getTable('ManipleDrive_Model_DbTable_Dirs');
         $name = array_shift($path);
 
         $dir = $dirs->fetchRow(array(
@@ -15,7 +15,7 @@ class Drive_IndexController extends Drive_Controller_Action
         ));
 
         if ($dir) {
-            $file = $this->getTable('Drive_Model_DbTable_Drives')->fetchByPath(
+            $file = $this->getTable('ManipleDrive_Model_DbTable_Drives')->fetchByPath(
                 $dir->Drive, implode('/', $path)
             );
             if ($file) {

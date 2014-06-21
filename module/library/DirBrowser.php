@@ -1,6 +1,6 @@
 <?php
 
-class Drive_DirBrowser
+class ManipleDrive_DirBrowser
 {
     /**
      * @var int
@@ -29,19 +29,19 @@ class Drive_DirBrowser
     } // }}}
 
     /**
-     * @param  Drive_Model_DirInterface $dir
-     * @param  Drive_Model_DirInterface[] $parents
+     * @param  ManipleDrive_Model_DirInterface $dir
+     * @param  ManipleDrive_Model_DirInterface[] $parents
      * @return array
      */
-    public function browseDir(Drive_Model_DirInterface $dir, array $parents = null, array $options = null) // {{{
+    public function browseDir(ManipleDrive_Model_DirInterface $dir, array $parents = null, array $options = null) // {{{
     {
         return $this->_driveHelper->browseDir2($dir, $parents, $options);
     } // }}}
 
     /**
      * @param  string $path
-     * @return Drive_Model_DirInterface[]
-     * @throws Drive_Exception_NotFoundException
+     * @return ManipleDrive_Model_DirInterface[]
+     * @throws ManipleDrive_Exception_NotFoundException
      */
     public function dirLookup($path) // {{{
     {
@@ -52,7 +52,7 @@ class Drive_DirBrowser
         switch ($segment) {
             case 'shared':
                 if ($this->_userId) {
-                    $dir = new Drive_Model_PseudoDir_SharedEntries(
+                    $dir = new ManipleDrive_Model_PseudoDir_SharedEntries(
                         $this->_userId,
                         $this->_driveHelper->getTableProvider()
                     );
@@ -60,7 +60,7 @@ class Drive_DirBrowser
                 break;
 
             case 'public':
-                $dir = new Drive_Model_PseudoDir_DrivesWithPublicEntries(
+                $dir = new ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries(
                     $this->_driveHelper->getTableProvider()
                 );
                 break;
@@ -71,7 +71,7 @@ class Drive_DirBrowser
         }
 
         if (empty($dir)) {
-            throw new Drive_Exception_NotFoundException('Path not found');
+            throw new ManipleDrive_Exception_NotFoundException('Path not found');
         }
 
         // move down the path to requested directory
@@ -81,7 +81,7 @@ class Drive_DirBrowser
         while ($segment = array_shift($segments)) {
             $dir = end($lookup)->getSubDir($segment);
             if (empty($dir)) {
-                throw new Drive_Exception_NotFoundException('Path not found');
+                throw new ManipleDrive_Exception_NotFoundException('Path not found');
             }
             $lookup[] = $dir;
         }

@@ -8,10 +8,10 @@
  * @version 2014-06-17
  * @author xemlock
  */
-class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
+class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Model_PseudoDir
 {
     /**
-     * @var Drive_Model_Drive
+     * @var ManipleDrive_Model_Drive
      */
     protected $_drive;
 
@@ -25,7 +25,7 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
      * @param  string $name
      * @param  Zefram_Db_TableProvider $tableProvider
      */
-    public function __construct(Drive_Model_Drive $drive, Zefram_Db_TableProvider $tableProvider) // {{{
+    public function __construct(ManipleDrive_Model_Drive $drive, Zefram_Db_TableProvider $tableProvider) // {{{
     {
         $this->_drive = $drive;
         $this->_tableProvider = $tableProvider;
@@ -67,12 +67,12 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
     } // }}}
 
     /**
-     * @return Drive_Model_Dir[]
+     * @return ManipleDrive_Model_Dir[]
      */
     public function getSubDirs() // {{{
     {
         $select = $this->_selectSubDirs();
-        $table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
 
         $subdirs = array();
         foreach ($table->fetchAll($select) as $row) {
@@ -83,7 +83,7 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
 
     /**
      * @param  int $dirId
-     * @return Drive_Model_Dir
+     * @return ManipleDrive_Model_Dir
      */
     public function getSubDir($dirId) // {{{
     {
@@ -91,7 +91,7 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
         $select->where('dir_id = ?', (int) $dirId);
         $select->limit(1);
 
-        $table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
         return $table->fetchRow($select);
     } // }}}
 
@@ -105,10 +105,10 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
     {
         $select = Zefram_Db_Select::factory($this->_tableProvider->getAdapter());
         $select->from(array(
-            'dirs' => $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs')
+            'dirs' => $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')
         ));
         $select->where('drive_id = ?', (int) $this->_drive->drive_id);
-        $select->where('visibility = ?', Drive_DirVisibility::VIS_PUBLIC);
+        $select->where('visibility = ?', ManipleDrive_DirVisibility::VIS_PUBLIC);
         $select->order('name_normalized');
         return $select;
     } // }}}

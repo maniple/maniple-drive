@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Model_Repository
+class ManipleDrive_Model_Repository
 {
     protected $_tableProvider;
 
@@ -13,12 +13,12 @@ class Drive_Model_Repository
      * Fetch directory with given ID.
      *
      * @param  int $dir_id
-     * @return Drive_Model_Dir|null
+     * @return ManipleDrive_Model_Dir|null
      */
     public function getDir($dir_id) // {{{
     {
         $dir_id = (int) $dir_id;
-        $dir = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs')->findRow($dir_id);
+        $dir = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')->findRow($dir_id);
 
         return $dir ? $dir : null;
     } // }}}
@@ -27,7 +27,7 @@ class Drive_Model_Repository
      * Fetch root directory with given ID.
      *
      * @param  int $dir_id
-     * @return Drive_Model_Dir|null
+     * @return ManipleDrive_Model_Dir|null
      */
     public function getRootDir($dir_id) // {{{
     {
@@ -35,16 +35,16 @@ class Drive_Model_Repository
 
         $select = $this->_createSelect();
         $select->from(
-            array('dirs' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS))
+            array('dirs' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS))
         );
         $select->join(
-            array('drives' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DRIVES)),
+            array('drives' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DRIVES)),
             'drives.root_dir = dirs.dir_id',
             array()
         );
         $select->where('dir_id = ?', $dir_id);
 
-        $dir = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs')->fetchRow($select);
+        $dir = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow($select);
 
         return $dir ? $dir : null;
     } // }}}
@@ -59,7 +59,7 @@ class Drive_Model_Repository
 
         $select = $this->_createSelect();
         $select->from(
-            $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS),
+            $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS),
             new Zend_Db_Expr('COUNT(1)')
         );
         $select->where('drive_id = ?', $drive_id);
@@ -70,7 +70,7 @@ class Drive_Model_Repository
 
         $select = $this->_createSelect();
         $select->from(
-            array('files' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_FILES)),
+            array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES)),
             array(
                 'type' => 'filter',
                 'num_files' => new Zend_Db_Expr('COUNT(1)'),
@@ -78,7 +78,7 @@ class Drive_Model_Repository
             )
         );
         $select->join(
-            array('dirs' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS)),
+            array('dirs' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS)),
             'dirs.dir_id = files.dir_id',
             array()
         );
@@ -118,7 +118,7 @@ class Drive_Model_Repository
 
     /**
      * @param  int $user_id
-     * @return Drive_Model_Drive|null
+     * @return ManipleDrive_Model_Drive|null
      */
     public function getDriveByUserId($user_id) // {{{
     {
@@ -126,8 +126,8 @@ class Drive_Model_Repository
 
         // create drive and its root dir in one go
 
-        $drives_table = $this->_tableProvider->getTable('Drive_Model_DbTable_Drives');
-        $dirs_table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
+        $drives_table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Drives');
+        $dirs_table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
 
         $select = $this->_createSelect();
         $select->from(
@@ -162,11 +162,11 @@ class Drive_Model_Repository
     {
         $select = $this->_createSelect();
         $select->from(
-            array('files' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_FILES))
+            array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
         );
         if ($drive_id) {
             $select->join(
-                array('dirs' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS)),
+                array('dirs' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS)),
                 'dirs.dir_id = files.dir_id',
                 array()
             );
@@ -175,7 +175,7 @@ class Drive_Model_Repository
         $select->order('ctime DESC');
         $select->limit($limit);
 
-        return $this->_tableProvider->getTable('Drive_Model_DbTable_Files')->fetchAll($select);
+        return $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
     } // }}}
 
     public function getLastPublishedFiles($drive_id = null, $limit = 10) // {{{
@@ -185,13 +185,13 @@ class Drive_Model_Repository
         if ($dir_ids) {
             $select = $this->_createSelect();
             $select->from(
-                array('files' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_FILES))
+                array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
             );
             $select->where('dir_id IN (?)', $dir_ids);
             $select->order('ctime DESC');
             $select->limit($limit);
 
-            return $this->_tableProvider->getTable('Drive_Model_DbTable_Files')->fetchAll($select);
+            return $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
         }
 
         return array();
@@ -204,13 +204,13 @@ class Drive_Model_Repository
         if ($dir_ids) {
             $select = $this->_createSelect();
             $select->from(
-                array('files' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_FILES))
+                array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
             );
             $select->where('dir_id IN (?)', $dir_ids);
             $select->order('ctime DESC');
             $select->limit($limit);
 
-            return $this->_tableProvider->getTable('Drive_Model_DbTable_Files')->fetchAll($select);            
+            return $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);            
         }
 
         return array();
@@ -225,7 +225,7 @@ class Drive_Model_Repository
      */
     public function getPublicDirIds($drive_id = null, $inherited = true) // {{{
     {
-        $dirs_table = $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS);
+        $dirs_table = $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS);
         $dir_ids = array();
 
         $select = $this->_createSelect();
@@ -233,7 +233,7 @@ class Drive_Model_Repository
             array('dirs' => $dirs_table),
             'dir_id'
         );
-        $select->where('visibility = ?', Drive_DirVisibility::VIS_PUBLIC);
+        $select->where('visibility = ?', ManipleDrive_DirVisibility::VIS_PUBLIC);
 
         if ($drive_id !== null) {
             $select->where('drive_id = ?', (int) $drive_id);
@@ -256,7 +256,7 @@ class Drive_Model_Repository
                     array('dirs' => $dirs_table),
                     'dir_id'
                 );
-                $select->where('visibility = ?', Drive_DirVisibility::VIS_INHERITED);
+                $select->where('visibility = ?', ManipleDrive_DirVisibility::VIS_INHERITED);
                 $select->where('parent_id IN (?)', $parent_ids);
 
                 $parent_ids = array_column(
@@ -282,8 +282,8 @@ class Drive_Model_Repository
         $user_id = (int) $user_id;
         $dir_ids = array();
 
-        $dirs_table = $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS);
-        $dir_shares_table = $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIR_SHARES);
+        $dirs_table = $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS);
+        $dir_shares_table = $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIR_SHARES);
 
         $select = $this->_createSelect();
         $select->from(
@@ -299,7 +299,7 @@ class Drive_Model_Repository
             array()
         );
         $select->where(
-            'dir_shares.user_id IS NOT NULL OR dirs.visibility = ?', Drive_DirVisibility::VIS_USERSONLY
+            'dir_shares.user_id IS NOT NULL OR dirs.visibility = ?', ManipleDrive_DirVisibility::VIS_USERSONLY
         );
 
         $dir_ids = array_column(
@@ -319,7 +319,7 @@ class Drive_Model_Repository
                     array('dirs' => $dirs_table),
                     'dir_id'
                 );
-                $select->where('visibility = ?', Drive_DirVisibility::VIS_INHERITED);
+                $select->where('visibility = ?', ManipleDrive_DirVisibility::VIS_INHERITED);
                 $select->where('parent_id IN (?)', $parent_ids);
 
                 $parent_ids = array_column(

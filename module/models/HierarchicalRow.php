@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
+class ManipleDrive_Model_HierarchicalRow extends Zefram_Db_Table_Row
 {
     const SQL_WILDCARD = '*';
 
@@ -23,7 +23,7 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
     } // }}}
 
     /**
-     * @return Zend_Drive_Model_Rowset
+     * @return Zend_Db_Table_Rowset
      */
     public function fetchChildren($where = null, $order = null) // {{{
     {
@@ -69,7 +69,7 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
      * Fetches parent row from database.
      *
      * @throws App_Exception_DataIntegrityViolation  if parent row was not found
-     * @return null|Drive_Model_HierarchicalRow             parent row
+     * @return null|ManipleDrive_Model_HierarchicalRow             parent row
      */
     public function fetchParent() // {{{
     {
@@ -77,13 +77,13 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
 
         if ($parent_id) {
             if ($parent_id == $this->{$this->_idColumn}) {
-                throw new Drive_Model_HierarchicalRow_Exception('Circular record dependency');
+                throw new ManipleDrive_Model_HierarchicalRow_Exception('Circular record dependency');
             }
 
             $parent = $this->getTable()->findRow($parent_id);
 
             if (!$parent) {
-                throw new Drive_Model_HierarchicalRow_Exception("Parent record not found ($parent_id)");
+                throw new ManipleDrive_Model_HierarchicalRow_Exception("Parent record not found ($parent_id)");
             }
 
             return $parent;
@@ -93,7 +93,7 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
     } // }}}
 
     /**
-     * @return Zend_Drive_Model_Rowset
+     * @return Zend_Db_Table_Rowset
      */
     public function fetchParents() // {{{
     {
@@ -107,12 +107,12 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
             while ($queue) {
                 $parent_id = intval(array_shift($queue));
                 if (isset($parents[$parent_id])) {
-                    throw new Drive_Model_HierarchicalRow_Exception('Circular record dependency');
+                    throw new ManipleDrive_Model_HierarchicalRow_Exception('Circular record dependency');
                 }
 
                 $row = $table->findRow($parent_id);
                 if (!$row) {
-                    throw new Drive_Model_HierarchicalRow_Exception("Parent record not found ($parent_id)");
+                    throw new ManipleDrive_Model_HierarchicalRow_Exception("Parent record not found ($parent_id)");
                 }
 
                 // for cycle detection purpose index fetched rows by their id
@@ -159,12 +159,12 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
                 $parent_id = intval(array_shift($queue));
 
                 if (isset($parents[$parent_id])) {
-                    throw new Drive_Model_HierarchicalRow_Exception('Circular record dependency');
+                    throw new ManipleDrive_Model_HierarchicalRow_Exception('Circular record dependency');
                 }
 
                 $row = $db->fetchRow($select->bind($parent_id));
                 if (!$row) {
-                    throw new Drive_Model_HierarchicalRow_Exception("Parent record not found ($parent_id)");
+                    throw new ManipleDrive_Model_HierarchicalRow_Exception("Parent record not found ($parent_id)");
                 }
 
                 $parents[$row[$this->_idColumn]] = $row;
@@ -179,7 +179,7 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
     } // }}}
 
     /**
-     * @param null|int|Drive_Model_HierarchicalRow $parent
+     * @param null|int|ManipleDrive_Model_HierarchicalRow $parent
      */
     public function isValidParent($parent)
     {
@@ -214,7 +214,7 @@ class Drive_Model_HierarchicalRow extends Zefram_Db_Table_Row
     public function save() // {{{
     {
         if (!$this->isValidParent($this->{$this->_parentColumn})) {
-            throw new Drive_Model_HierarchicalRow_Exception('Invalid parent record specified');
+            throw new ManipleDrive_Model_HierarchicalRow_Exception('Invalid parent record specified');
         }
 
         return parent::save();

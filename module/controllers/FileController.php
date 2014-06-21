@@ -1,6 +1,6 @@
 <?php
 
-class Drive_FileController extends Drive_Controller_Action
+class ManipleDrive_FileController extends ManipleDrive_Controller_Action
 {
     public function readAction() // {{{
     {

@@ -1,6 +1,6 @@
 <?php
 
-class Drive_DriveController extends Drive_Controller_Action
+class ManipleDrive_DriveController extends ManipleDrive_Controller_Action
 {
     public function adminAction() // {{{
     {
@@ -19,8 +19,8 @@ class Drive_DriveController extends Drive_Controller_Action
 
         $db = $this->getResource('db');
 
-        $dirs_table = $this->getTable('Drive_Model_DbTable_Dirs');
-        $drives_table = $this->getTable('Drive_Model_DbTable_Drives');
+        $dirs_table = $this->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $drives_table = $this->getTable('ManipleDrive_Model_DbTable_Drives');
 
         $drives = Zefram_Db_Select::factory($db)
             ->from(array('drives' => $drives_table))
@@ -29,7 +29,7 @@ class Drive_DriveController extends Drive_Controller_Action
             ->query()
             ->fetchAll();
 
-        $disk_usage = $this->getTable('Drive_Model_DbTable_Drives')->getDiskUsageReport(array_column($drives, 'drive_id'));
+        $disk_usage = $this->getTable('ManipleDrive_Model_DbTable_Drives')->getDiskUsageReport(array_column($drives, 'drive_id'));
 
         $user_ids = array();
         foreach ($drives as &$drive) {

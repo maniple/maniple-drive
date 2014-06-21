@@ -1,6 +1,6 @@
 <?php
 
-class Drive_DirVisibility
+class ManipleDrive_DirVisibility
 {
     const VIS_PUBLIC    = 'public';
     const VIS_PRIVATE   = 'private';

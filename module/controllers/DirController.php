@@ -3,7 +3,7 @@
 /**
  * @version 2013-05-15 / 2013-01-24 / 2012-12-18
  */
-class Drive_DirController extends Drive_Controller_Action
+class ManipleDrive_DirController extends ManipleDrive_Controller_Action
 {
     /**
      * Ustawienia udostępniania katalogu. Użytkownik musi mieć prawa do
@@ -13,7 +13,7 @@ class Drive_DirController extends Drive_Controller_Action
     {
         $drive_helper = $this->getDriveHelper();
 
-        $dir_context = Drive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
+        $dir_context = ManipleDrive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
         $dir = $drive_helper->getDir($dir_context->getDirId());
 
         $this->assertAccess($drive_helper->isDirShareable($dir));
@@ -21,7 +21,7 @@ class Drive_DirController extends Drive_Controller_Action
         // przeslano dane, zaktualizuj rekord katalogu
         if ($this->_request->isPost()) {
             $visibility = (string) $this->_request->getPost('visibility');
-            if (!Drive_Model_DbTable_Dirs::isValidVisibility($visibility)) {
+            if (!ManipleDrive_Model_DbTable_Dirs::isValidVisibility($visibility)) {
                 throw new Exception('Niepoprawny typ widoczności katalogu');
             }
 
@@ -56,7 +56,7 @@ class Drive_DirController extends Drive_Controller_Action
                 $shares = array();
             }
         } else {
-            $rows = $this->getDriveHelper()->getTableProvider()->getTable('Drive_Model_DbTable_Dirs')->fetchDirShares($dir->dir_id);
+            $rows = $this->getDriveHelper()->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchDirShares($dir->dir_id);
             $shares = array();
 
             $user_ids = array();

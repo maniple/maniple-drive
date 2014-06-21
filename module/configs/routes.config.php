@@ -2,7 +2,7 @@
     'drive.dashboard' => array(
         'route' => 'drive',
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'index',
             'action'     => 'dashboard',
         ),
@@ -13,7 +13,7 @@
             'drive_id' => '\\d+',
         ),
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'drive',
             'action'     => null,
         ),
@@ -24,7 +24,7 @@
             'drive_id' => '\\d+',
         ),
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'drive',
             'action'     => 'edit',
         ),
@@ -33,7 +33,7 @@
         'route' => '^drive/browser(\\#(.*))?$',
         'type'  => 'Zend_Controller_Router_Route_Regex',
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'browse',
             'action'     => 'index',
         ),
@@ -45,7 +45,7 @@
     'drive.browse' => array(
         'route' => 'drive/browse',
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'browse',
             'action'     => 'browse',
         ),
@@ -56,7 +56,7 @@
             'dir_id' => '^(\\d+)|([a-zA-Z]+)|([a-zA-Z]:\\d+(:\\d+)?)$',
         ),
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'dir',
             'action'     => 'index',
             'dir_id'     => null,
@@ -66,7 +66,7 @@
         'route' => '^drive/dir/(?P<dir_id>\\d+)/create/(?P<path>.*)$',
         'type'  => 'Zend_Controller_Router_Route_Regex',
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'dir',
             'action'     => 'create',
         ),
@@ -82,7 +82,7 @@
             'file_id' => '\\d+',
         ),
         'defaults' => array(
-            'module'     => 'drive',
+            'module'     => 'maniple-drive',
             'controller' => 'file',
             'action'     => 'read',
         ),

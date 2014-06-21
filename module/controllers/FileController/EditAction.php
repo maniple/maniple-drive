@@ -1,9 +1,9 @@
 <?php
 
-class Drive_FileController_EditAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_StandaloneForm
 {
     /**
-     * @var Drive_Model_File
+     * @var ManipleDrive_Model_File
      */
     protected $_file;
 

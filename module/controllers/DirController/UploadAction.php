@@ -1,11 +1,11 @@
 <?php
 
-class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalone_Abstract
+class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_Standalone_Abstract
 {
     protected function _getTempName() // {{{
     {
         $prefix = sprintf('%06d.', $this->getSecurityContext()->getUser()->getId());
-        return Drive_FileStorage::requireTempDir('uploads') . uniqid($prefix, true);
+        return ManipleDrive_FileStorage::requireTempDir('uploads') . uniqid($prefix, true);
     } // }}}
 
     /**
@@ -47,7 +47,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
 
     /**
      * @param string $initial
-     * @param Drive_Model_Dir $dir
+     * @param ManipleDrive_Model_Dir $dir
      * @param int $limit OPTIONAL
      */
     /*
@@ -65,7 +65,7 @@ class Drive_DirController_UploadAction extends Zefram_Controller_Action_Standalo
         // wykrywanie powtarzajacej sie nazwy pliku, trzeba dodac przyrostek.
         // Sprawdz nie wiecej niz 16 potencjalnych nazw pliku. Jezeli one
         // sa zajete zglos blad
-        $files = Zefram_Db::getTable('Drive_Model_DbTable_Files', $dir->getAdapter());
+        $files = Zefram_Db::getTable('ManipleDrive_Model_DbTable_Files', $dir->getAdapter());
         $counter = 0;
 
         $parts = array_merge(

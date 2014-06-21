@@ -1,6 +1,6 @@
 <?php
 
-class Drive_View_Helper_Drive extends Zend_View_Helper_Abstract
+class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 {
     public function drive()
     {

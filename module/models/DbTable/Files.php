@@ -1,15 +1,15 @@
 <?php
 
-class Drive_Model_DbTable_Files extends Zefram_Db_Table
+class ManipleDrive_Model_DbTable_Files extends Zefram_Db_Table
 {
-    protected $_name = Drive_Model_TableNames::TABLE_FILES;
+    protected $_name = ManipleDrive_Model_TableNames::TABLE_FILES;
 
-    protected $_rowClass = 'Drive_Model_File';
+    protected $_rowClass = 'ManipleDrive_Model_File';
 
     protected $_referenceMap = array(
         'Dir' => array(
             'columns'       => 'dir_id',
-            'refTableClass' => 'Drive_Model_DbTable_Dirs',
+            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
             'refColumns'    => 'dir_id',
         )
     );

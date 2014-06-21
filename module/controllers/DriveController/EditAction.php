@@ -6,7 +6,7 @@
  * @version 2014-05-14 / 2013-01-25
  * @author xemlock
  */
-class Drive_DriveController_EditAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DriveController_EditAction extends Zefram_Controller_Action_StandaloneForm
 {
     protected $_drive;
 
@@ -20,14 +20,14 @@ class Drive_DriveController_EditAction extends Zefram_Controller_Action_Standalo
         $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
         $drive_id = $this->getScalarParam('drive_id', 0);
-        $drive = $this->getResource('db.table_provider')->getTable('Drive_Model_DbTable_Drives')->findRow($drive_id);
+        $drive = $this->getResource('db.table_provider')->getTable('ManipleDrive_Model_DbTable_Drives')->findRow($drive_id);
 
         if (empty($drive)) {
             throw new Exception('Dysk o podanym identyfikatorze nie został znaleziony.');
         }
 
         $this->_drive = $drive;
-        $this->_form  = new Drive_Form_Drive(array(
+        $this->_form  = new ManipleDrive_Form_Drive(array(
             'userMapper' => $this->getDriveHelper()->getUserMapper(),
             'tableProvider' => $this->getDriveHelper()->getTableProvider(),
             'drive' => $drive,

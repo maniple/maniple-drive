@@ -1,20 +1,20 @@
 <?php
 
-class Drive_Model_DbTable_Drives extends Zefram_Db_Table
+class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
 {
-    protected $_name = Drive_Model_TableNames::TABLE_DRIVES;
+    protected $_name = ManipleDrive_Model_TableNames::TABLE_DRIVES;
 
-    protected $_rowClass = 'Drive_Model_Drive';
+    protected $_rowClass = 'ManipleDrive_Model_Drive';
 
     protected $_referenceMap = array(
         'RootDir' => array(
             'columns'       => 'root_dir',
-            'refTableClass' => 'Drive_Model_DbTable_Dirs',
+            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
             'refColumns'    => 'dir_id',
         ),
         'Dir' => array(
             'columns'       => 'root_dir',
-            'refTableClass' => 'Drive_Model_DbTable_Dirs',
+            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
             'refColumns'    => 'dir_id',
         ),
         'Owner' => array(
@@ -30,13 +30,13 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
     );
 
     /**
-     * @param string|Drive_Model_File $file
+     * @param string|ManipleDrive_Model_File $file
      * @param bool $check
      * @return false|string
      */
     public function getFilePath($file, $check = true) // {{{
     {
-        if ($file instanceof Drive_Model_File) {
+        if ($file instanceof ManipleDrive_Model_File) {
             $md5 = (string) $file->md5sum;
         } else {
             $md5 = (string) $file;
@@ -46,7 +46,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
             return false;
         }
 
-        $path = Drive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2)
+        $path = ManipleDrive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2)
               . '/' . substr($md5, 2);
 
         if ($check && !is_file($path)) {
@@ -64,7 +64,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
     {
         // roznica w stosunku do getFilePath() jest taka, ze utworzony zostaje
         // katalog nazwany pierwszymi dwoma literami sumy MD5
-        $path = Drive_FileStorage::requireStorageDir('drive/' . substr($md5, 0, 2))
+        $path = ManipleDrive_FileStorage::requireStorageDir('drive/' . substr($md5, 0, 2))
               . substr($md5, 2);
 
         return $path;
@@ -84,14 +84,14 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
 
         $select = new Zefram_Db_Select($this->getAdapter());
         $select->from(
-            array('dirs' => $this->_getTableFromString('Drive_Model_DbTable_Dirs')),
+            array('dirs' => $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')),
             array(
                 'drive_id',
                 'disk_usage' => new Zend_Db_Expr('COALESCE(SUM(size), 0)'),
             )
         );
         $select->joinLeft(
-            array('files' => $this->_getTableFromString('Drive_Model_DbTable_Files')),
+            array('files' => $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')),
             'files.dir_id = dirs.dir_id',
             array()
         );
@@ -117,11 +117,11 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
      *
      * @param int $drive_id
      * @param string $path
-     * @return Drive_Model_File
+     * @return ManipleDrive_Model_File
      */
     public function fetchByPath($drive, $path, $block_size = 5)
     {
-        if (!$drive instanceof Drive_Model_Drive) {
+        if (!$drive instanceof ManipleDrive_Model_Drive) {
             if (!($drive = $this->findRow((int) $drive))) {
                 return false;
             }
@@ -133,7 +133,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
         $result = false;
 
         if (count($parts)) {
-            $dirs = $this->getTable('Drive_Model_DbTable_Dirs')->getQuotedName();
+            $dirs = $this->getTable('ManipleDrive_Model_DbTable_Dirs')->getQuotedName();
 
             // lista identyfikatorow napotkanych katalogow
             $id_path = array();
@@ -200,7 +200,7 @@ class Drive_Model_DbTable_Drives extends Zefram_Db_Table
             // identyfikator katalogu, w ktorym znajduje sie ostatni element
             // podanej sciezki (plik lub katalog).
 
-            $result = $this->getTable('Drive_Model_DbTable_Files')
+            $result = $this->getTable('ManipleDrive_Model_DbTable_Files')
                 ->fetchRow("name = $last_part AND dir_id = $d0_parent_id");
         }
 

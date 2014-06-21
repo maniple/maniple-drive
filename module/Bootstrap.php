@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Bootstrap extends Zend_Application_Module_Bootstrap
+class ManipleDrive_Bootstrap extends Zend_Application_Module_Bootstrap
 {
     public function getRoutes()
     {
@@ -11,7 +11,7 @@ class Drive_Bootstrap extends Zend_Application_Module_Bootstrap
     {
         return array(
             'drive.helper' => array(
-                'class' => 'Drive_Helper',
+                'class' => 'ManipleDrive_Helper',
                 'params' => array(
                     'view'            => 'resource:view',
                     'securityContext' => null,

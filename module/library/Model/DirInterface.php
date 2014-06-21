@@ -1,6 +1,6 @@
 <?php
 
-interface Drive_Model_DirInterface
+interface ManipleDrive_Model_DirInterface
 {
     // NOPE! Dir ID is not required
     /**
@@ -52,18 +52,18 @@ interface Drive_Model_DirInterface
     /**
      * Returns parent directory of this directory.
      *
-     * @return Drive_Model_DirInterface|null
+     * @return ManipleDrive_Model_DirInterface|null
      */
     public function getParentDir();
 
     /**
-     * @return Drive_Model_DirInterface[]
+     * @return ManipleDrive_Model_DirInterface[]
      */
     public function getSubDirs();
 
     /**
      * @param  int|string $dirId
-     * @return Drive_Model_DirInterface|null
+     * @return ManipleDrive_Model_DirInterface|null
      */
     public function getSubDir($dirId);
 

@@ -1,6 +1,6 @@
 <?php
 
-class Drive_FileStorage
+class ManipleDrive_FileStorage
 {
     public static function requireStorageDir($name = null) // {{{
     {

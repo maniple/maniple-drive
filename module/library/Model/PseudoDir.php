@@ -1,6 +1,6 @@
 <?php
 
-abstract class Drive_Model_PseudoDir implements Drive_Model_DirInterface
+abstract class ManipleDrive_Model_PseudoDir implements ManipleDrive_Model_DirInterface
 {
     public function isPseudo()
     {

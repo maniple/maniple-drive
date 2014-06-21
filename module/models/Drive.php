@@ -6,7 +6,7 @@
  * @author xemlock
  * @version 2013-01-15
  */
-class Drive_Model_Drive extends Zefram_Db_Table_Row
+class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
 {
     /** 
      * Nazwa dysku zapisywana w katalogu ustawionym jako korzen dysku.
@@ -36,12 +36,12 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
         $dir = $this->RootDir;
 
         if (empty($dir)) {
-            $dirs = $this->_getTableFromString('Drive_Model_DbTable_Dirs');
+            $dirs = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs');
             $dir = $dirs->createRow();
 
             // nowo tworzony katalog bedacy korzeniem dysku jest prywatny
             // - jego wlasciciel jezeli chce moze zmienic to ustawienie
-            $dir->visibility = Drive_Model_DbTable_Dirs::VISIBILITY_PRIVATE;
+            $dir->visibility = ManipleDrive_Model_DbTable_Dirs::VISIBILITY_PRIVATE;
             $dir->created_by = $this->created_by;
         }
 
@@ -116,13 +116,13 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
     } // }}}
 
     /**
-     * Alias funkcji {@link Drive_Model_DbTable_Drives::getFilePath()}.
+     * Alias funkcji {@link ManipleDrive_Model_DbTable_Drives::getFilePath()}.
      * Umieszczenie tej funkcji (nawet jeżeli jest tylko aliasem) wynika
      * z podziału odpowiedzialności. To konkretny dysk wie, czy w jego obrębie
      * znajduje się plik. Przekierowanie do funkcji jest konsekwencją przyjętej
      * implementacji przechowywania plików na dysku.
      *
-     * @param string|Drive_Model_File $file
+     * @param string|ManipleDrive_Model_File $file
      * @param bool $check
      * @return false|string
      */
@@ -163,7 +163,7 @@ class Drive_Model_Drive extends Zefram_Db_Table_Row
     } // }}}
 
     /**
-     * @return Drive_Model_Drive
+     * @return ManipleDrive_Model_Drive
      */
     public function refreshDiskUsage() // {{{
     {

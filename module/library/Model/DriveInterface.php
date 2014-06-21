@@ -1,6 +1,6 @@
 <?php
 
-interface Drive_Model_DriveInterface
+interface ManipleDrive_Model_DriveInterface
 {
     public function getName();
 

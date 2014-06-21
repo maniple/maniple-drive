@@ -8,7 +8,7 @@
  * @version 2014-06-17
  * @author xemlock
  */
-class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
+class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_PseudoDir
 {
     /**
      * @var int
@@ -44,12 +44,12 @@ class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
     } // }}}
 
     /**
-     * @return Drive_Model_Dir[]
+     * @return ManipleDrive_Model_Dir[]
      */
     public function getSubDirs() // {{{
     {
         $select = $this->_createSelect();
-        $table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
 
         $subdirs = array();
         foreach ($table->fetchAll($select) as $row) {
@@ -60,7 +60,7 @@ class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
 
     /**
      * @param  int $dirId
-     * @return Drive_Model_Dir
+     * @return ManipleDrive_Model_Dir
      */
     public function getSubDir($dirId) // {{{
     {
@@ -68,7 +68,7 @@ class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
         $select->where('dirs.dir_id = ?', (int) $dirId);
         $select->limit(1);
 
-        $table = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
         return $table->fetchRow($select);
     } // }}}
 
@@ -81,11 +81,11 @@ class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
 
         $select = Zefram_Db_Select::factory($tableProvider->getAdapter());
         $select->from(array(
-            'dirs' => $tableProvider->getTable('Drive_Model_DbTable_Dirs'),
+            'dirs' => $tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs'),
         ));
         $select->joinLeft(
             array(
-                'dir_shares' => $tableProvider->getTable('Drive_Model_DbTable_DirShares'),
+                'dir_shares' => $tableProvider->getTable('ManipleDrive_Model_DbTable_DirShares'),
             ),
             array(
                 'dir_shares.dir_id = dirs.dir_id',
@@ -96,8 +96,8 @@ class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
         $select->whereParams(
             '(dir_shares.user_id IS NOT NULL) OR (visibility = :usersonly)',
             array(
-                'private' => Drive_DirVisibility::VIS_PRIVATE,
-                'usersonly' => Drive_DirVisibility::VIS_USERSONLY,
+                'private' => ManipleDrive_DirVisibility::VIS_PRIVATE,
+                'usersonly' => ManipleDrive_DirVisibility::VIS_USERSONLY,
             )
         );
         $select->order('name_normalized');

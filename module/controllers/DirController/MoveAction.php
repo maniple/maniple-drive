@@ -6,10 +6,10 @@
  * i przenoszonego katalogu. Parametry wywołania akcji muszą być
  * przekazane metodą POST.
  */
-class Drive_DirController_MoveAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_MoveAction extends Zefram_Controller_Action_StandaloneForm
 {
     /**
-     * @var Drive_Model_Dir
+     * @var ManipleDrive_Model_Dir
      */
     protected $_dir;
 

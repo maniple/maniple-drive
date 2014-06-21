@@ -1,4 +1,4 @@
 <?php
 
-class Drive_Exception_NotFoundException extends RuntimeException
+class ManipleDrive_Exception_NotFoundException extends RuntimeException
 {}

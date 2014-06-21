@@ -5,7 +5,7 @@
  *
  * @version 2012-10-23
  */
-class Drive_Validate_FileName extends Zend_Validate_Abstract
+class ManipleDrive_Validate_FileName extends Zend_Validate_Abstract
 {
     const INVALID_CHARS = 'invalidChars';
 

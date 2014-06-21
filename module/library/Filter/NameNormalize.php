@@ -1,6 +1,6 @@
 <?php
 
-class Drive_Filter_NameNormalize implements Zend_Filter_Interface
+class ManipleDrive_Filter_NameNormalize implements Zend_Filter_Interface
 {
     /**
      * @param  string $name
