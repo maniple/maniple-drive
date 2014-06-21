@@ -63,7 +63,7 @@ class Drive_IndexController extends Drive_Controller_Action
         if ($drive) {
             // attach details about drive contents / usage
             $drive = new Maniple_Model_ModelWrapper($drive);
-            $drive->addExtra($drive_helper->getRepository()->getDriveSummary($drive->drive_id));
+            $drive->addExtras($drive_helper->getRepository()->getDriveSummary($drive->drive_id));
 
             foreach ($drive_helper->getRepository()->getLastUploadedFiles($drive->drive_id, 5) as $file) {
                 $drive_files[] = new Maniple_Model_ModelWrapper($file);
