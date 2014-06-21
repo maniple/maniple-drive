@@ -165,7 +165,19 @@ class Drive_Helper
 
     public function getFilePermissions(Drive_Model_File $file, $property = null) // {{{
     {
-        return $this->getDirPermissions($file->Dir);
+        $user = $this->getSecurityContext()->getUser();
+        $perms = $this->getDirPermissions($file->Dir);
+
+        if ($user) {
+            if ($file->owner == $user->getId()) {
+                $perms[self::READ]   = true;
+                $perms[self::WRITE]  = true;
+                $perms[self::RENAME] = true;
+                $perms[self::SHARE]  = true;
+            }
+        }
+
+        return $perms;
     } // }}}
 
     public function getDate($time) // {{{
