@@ -10,6 +10,46 @@ class Drive_Model_Repository
     }
 
     /**
+     * Fetch directory with given ID.
+     *
+     * @param  int $dir_id
+     * @return Drive_Model_Dir|null
+     */
+    public function getDir($dir_id) // {{{
+    {
+        $dir_id = (int) $dir_id;
+        $dir = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs')->findRow($dir_id);
+
+        return $dir ? $dir : null;
+    } // }}}
+
+    /**
+     * Fetch root directory with given ID.
+     *
+     * @param  int $dir_id
+     * @return Drive_Model_Dir|null
+     */
+    public function getRootDir($dir_id) // {{{
+    {
+        $dir_id = (int) $dir_id;
+
+        $select = $this->_createSelect();
+        $select->from(
+            array('dirs' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DIRS))
+        );
+        $select->join(
+            array('drives' => $this->_tableProvider->tableName(Drive_Model_TableNames::TABLE_DRIVES)),
+            'drives.root_dir = dirs.dir_id',
+            array()
+        );
+        $select->where('dir_id = ?', $dir_id);
+
+        $dir = $this->_tableProvider->getTable('Drive_Model_DbTable_Dirs')->fetchRow($select);
+
+        return $dir ? $dir : null;
+    } // }}}
+
+    /**
      * @param  int $drive_id
      * @return array
      */

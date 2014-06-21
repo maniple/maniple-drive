@@ -4,6 +4,14 @@ class Drive_Model_File extends Zefram_Db_Table_Row
 {
     protected $_tableClass = 'Drive_Model_DbTable_Files';
 
+    public function save() // {{{
+    {
+        $filter = new Drive_Filter_NameNormalize;
+        $this->name_normalized = $filter->filter($this->name);
+
+        return parent::save();
+    } // }}}
+
     protected function _insert() // {{{
     {
         $now = time();

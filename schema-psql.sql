@@ -33,7 +33,7 @@ CREATE TABLE {PREFIX}drives (
     modify_time     TIMESTAMP WITH TIME ZONE,
 
     -- opcjonalny opis dysku
-    description     VARCHAR(255),
+    description     TEXT,
 
     CONSTRAINT {PREFIX}drives_root_dir_idx UNIQUE (root_dir),
 
@@ -97,6 +97,9 @@ CREATE TABLE {PREFIX}drive_dirs (
     visibility      VARCHAR(32) NOT NULL,
 
     name            VARCHAR(255) NOT NULL,
+
+    -- znormalizowana nazwa uzywana do sortowania
+    name_normalized VARCHAR(1023) NOT NULL,
 
     CONSTRAINT {PREFIX}drive_dirs_drive_id_fkey
         FOREIGN KEY (drive_id) REFERENCES {PREFIX}drives (drive_id),
@@ -205,8 +208,11 @@ CREATE TABLE {PREFIX}drive_files (
     -- rozmiar pliku (max 4GB)
     size            INTEGER NOT NULL CHECK (size >= 0),
 
-    -- wirtualna nazwa pliku
+    -- nazwa pliku
     name            VARCHAR(255) NOT NULL,
+
+    -- znormalizowana nazwa pliku uzywana do sortowania
+    name_normalized VARCHAR(1023) NOT NULL,
 
     -- metadane wykorzystywane przez rozne moduly strony
     -- tytul pliku

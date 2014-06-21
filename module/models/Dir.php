@@ -80,7 +80,7 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         $dirs = $this->_getTable()->fetchAll(array(
             'parent_id = ?' => (int) $dir_id,
             'dir_id <> ?' => (int) $dir_id,
-        ), 'name ASC');
+        ), 'name_normalized');
 
         return $dirs;
     } // }}}
@@ -90,9 +90,9 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
      * - orderByWeight
      * - 
      */
-    public function fetchFiles($where = null, $order = null) // {{{
+    public function fetchFiles($where = null) // {{{
     {
-        return $this->_getTable()->fetchFilesByDir($this->dir_id);
+        return $this->_getTable()->fetchFilesByDir($this->dir_id, $where, 'name_normalized');
     } // }}}
 
     /**
@@ -271,6 +271,14 @@ class Drive_Model_Dir extends Drive_Model_HierarchicalRow implements Drive_Model
         }
 
         return $count;
+    } // }}}
+
+    public function save() // {{{
+    {
+        $filter = new Drive_Filter_NameNormalize;
+        $this->name_normalized = $filter->filter($this->name);
+
+        return parent::save();
     } // }}}
 
     public function _insert() // {{{

@@ -100,7 +100,7 @@ class Drive_Model_PseudoDir_SharedEntries extends Drive_Model_PseudoDir
                 'usersonly' => Drive_DirVisibility::VIS_USERSONLY,
             )
         );
-        $select->order('name');
+        $select->order('name_normalized');
 
         return $select;
     } // }}}

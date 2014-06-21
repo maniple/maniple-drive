@@ -66,20 +66,7 @@ class Drive_DirBrowser
                 break;
 
             default:
-                $tableProvider = $this->_driveHelper->getTableProvider();
-                // fetch root directory of given ID
-                $select = Zefram_Db_Select::factory($tableProvider->getAdapter());
-                $select->from(
-                    array('dirs' => $tableProvider->getTable('Drive_Model_DbTable_Dirs'))
-                );
-                $select->join(
-                    array('drives' => $tableProvider->getTable('Drive_Model_DbTable_Drives')),
-                    'drives.root_dir = dirs.dir_id',
-                    array()
-                );
-                $select->where('dir_id = ?', (int) $segment);
-
-                $dir = $tableProvider->getTable('Drive_Model_DbTable_Dirs')->fetchRow($select);
+                $dir = $this->_driveHelper->getRepository()->getDir($segment);
                 break;
         }
 

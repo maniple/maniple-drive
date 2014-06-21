@@ -109,7 +109,7 @@ class Drive_Model_PseudoDir_PublicEntriesInDrive extends Drive_Model_PseudoDir
         ));
         $select->where('drive_id = ?', (int) $this->_drive->drive_id);
         $select->where('visibility = ?', Drive_DirVisibility::VIS_PUBLIC);
-        $select->order('name');
+        $select->order('name_normalized');
         return $select;
     } // }}}
 
