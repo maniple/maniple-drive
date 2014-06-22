@@ -62,11 +62,11 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         if ($drive) {
             // attach details about drive contents / usage
-            $drive = new Maniple_Model_ModelWrapper($drive);
+            $drive = new Zefram_Stdlib_ObjectWrapper($drive);
             $drive->addExtras($drive_helper->getRepository()->getDriveSummary($drive->drive_id));
 
             foreach ($drive_helper->getRepository()->getLastUploadedFiles($drive->drive_id, 5) as $file) {
-                $drive_files[] = new Maniple_Model_ModelWrapper($file);
+                $drive_files[] = new Zefram_Stdlib_ObjectWrapper($file);
             }
         }
 
@@ -74,13 +74,13 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         $shared_files = array();
         foreach ($drive_helper->getRepository()->getLastSharedWithUserFiles($user_id, 5) as $file) {
-            $shared_files[] = new Maniple_Model_ModelWrapper($file);
+            $shared_files[] = new Zefram_Stdlib_ObjectWrapper($file);
             $user_ids[$file->created_by] = true;
         }
 
         $public_files = array();
         foreach ($drive_helper->getRepository()->getLastPublishedFiles(null, 5) as $file) {
-            $public_files[] = new Maniple_Model_ModelWrapper($file);
+            $public_files[] = new Zefram_Stdlib_ObjectWrapper($file);
             $user_ids[$file->created_by] = true;
         }
 
