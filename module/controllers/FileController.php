@@ -4,34 +4,20 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
 {
     public function readAction() // {{{
     {
-        try {
-            $file_id = (string) $this->getScalarParam('file_id');
-            $file = $this->getDriveHelper()->fetchFile($file_id);
+        $file_id = (string) $this->getScalarParam('file_id');
+        $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
 
-            $this->_helper->serveFile($file->getPath(), array(
+        $this->getResource('core.file_helper')->sendFile(
+            $this->_request,
+            $this->_response,
+            $file->getPath(),
+            array(
                 'type' => $file->mimetype,
                 'name' => $file->name,
+                'etag' => $file->md5sum,
                 'cache' => true,
-            ));
-
-        } catch (Exception $e) {
-            switch ($e->getCode()) {
-                case 404:
-                    header('HTTP/1.0 404 Not Found');
-                    header('Status: 404 Not Found');
-                    echo 'File not found';
-                    exit;
-
-                case 403:
-                    header('HTTP/1.0 403 Forbidden');
-                    header('Status: 403 Forbidden');
-                    echo 'You don\'t have permission to access this file';
-
-                default:
-                    echo $e->getMessage();
-                    exit;
-            }
-        }
+            )
+        );
     } // }}}
 
     /**
@@ -116,36 +102,53 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         $ajaxResponse->sendAndExit();
     } // }}}
 
-    public function imageAction()
+    /**
+     * Thumbnail image for given file.
+     *
+     * Action params:
+     * - file_id
+     * - dims
+     *
+     * @version 2014-06-22
+     */
+    public function thumbAction() // {{{
     {
-        $this->disableView();
-        $this->disableLayout();
-
         $file_id = $this->getScalarParam('file_id', 0);
-        $file = $this->getDriveHelper()->fetchFile($file_id);
+        $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
+
+        if (!$this->getDriveHelper()->isFileReadable($file)) {
+            throw new Maniple_Controller_NotAllowedException('You are not allowed to access this file');
+        }
 
         if (!in_array($file->mimetype, array('image/jpeg', 'image/gif', 'image/png'))) {
             throw new Exception('Plik nie jest obrazem');
         }
 
-        $width = (int) $this->getScalarParam('w');
-        $height = (int) $this->getScalarParam('h');
-
-        if (null !== ($dims = $this->getScalarParam('d'))) {
+        if (null !== ($dims = $this->getScalarParam('dims'))) {
             $dims = explode('x', $dims);
             $width = (int) array_shift($dims);
             $height = (int) array_shift($dims);
         }
 
-        $path = $this->_helper->image($file->getPath(), array(
-            'width' => min($width, 1024),
-            'height' => min($height, 1024),
-            'scale' => true,
-            'crop' => true,
-        ));
-// sleep(2);
-        $this->_helper->serveFile($path, array(
-            'cache' => true,
-        ));
-    }
+        $image_path = $this->getResource('core.image_helper')->getImagePath(
+            $file->getPath(),
+            array(
+                'width' => min($width, 1024),
+                'height' => min($height, 1024),
+                'scale' => true,
+                'crop' => true,
+            )
+        );
+
+        $this->getResource('core.file_helper')->sendFile(
+            $this->_request,
+            $this->_response,
+            $image_path,
+            array(
+                'type' => $file->mimetype,
+                'etag' => $file->md5sum,
+                'cache' => true,
+            )
+        );
+    } // }}}
 }

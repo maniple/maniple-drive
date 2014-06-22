@@ -24,6 +24,24 @@ class ManipleDrive_Model_Repository
     } // }}}
 
     /**
+     * @param  int $dir_id
+     * @return ManipleDrive_Model_Dir
+     * @throws Maniple_Model_Exception_EntityNotFoundException
+     */
+    public function getDirOrThrow($dir_id) // {{{
+    {
+        $dir = $this->getDir($dir_id);
+
+        if (empty($dir)) {
+            throw new Maniple_Model_Exception_EntityNotFoundException(sprintf(
+                'Invalid directory ID (%d)', $dir_id
+            ));
+        }
+
+        return $dir;
+    } // }}}
+
+    /**
      * Fetch root directory with given ID.
      *
      * @param  int $dir_id
@@ -330,6 +348,36 @@ class ManipleDrive_Model_Repository
         }
 
         return $dir_ids;
+    } // }}}
+
+    /**
+     * @param  int $file_id
+     * @return ManipleDrive_Model_File|null
+     */
+    public function getFile($file_id) // {{{
+    {
+        $file_id = (int) $file_id;
+        $file = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->findRow($file_id);
+
+        return $file ? $file : null;
+    } // }}}
+
+    /**
+     * @param  int $file_id
+     * @return ManipleDrive_Model_File
+     * @throws Maniple_Model_Exception_EntityNotFoundException
+     */
+    public function getFileOrThrow($file_id) // {{{
+    {
+        $file = $this->getFile($file_id);
+
+        if (empty($file)) {
+            throw new Maniple_Model_Exception_EntityNotFoundException(sprintf(
+                'Invalid file ID (%d)', $dir_id
+            ));
+        }
+
+        return $file;
     } // }}}
 
     protected function _createSelect()

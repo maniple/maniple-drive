@@ -87,6 +87,15 @@
             'action'     => 'read',
         ),
     ),
+    'drive.file.thumb' => array(
+        'route' => 'drive/file/:file_id/thumb/:dims',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'file',
+            'action'     => 'thumb',
+            'dims'       => null,
+        ),
+    ),
 /*
 [drive_dir]
 route = "drive/dir/:id"
