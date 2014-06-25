@@ -1,22 +1,98 @@
+// jshint expr:true, scripturl:true
+
+/**
+ * HTML file uploader.
+ *
+ * @version 2014-06-25
+ * @author xemlock
+ */
 (function ($, window, undefined) {
+
+function extend(target) {
+    var arg, prop, i;
+
+    if (!target) {
+        target = {};
+    }
+
+    for (i = 1; i < arguments.length; ++i) {
+        arg = arguments[i];
+        for (prop in arg) {
+            if (arg.hasOwnProperty(prop)) {
+                target[prop] = arg[prop];
+            }
+        }
+    }
+
+    return target;
+}
+
+// Y.prototype = new X(); is an anti-pattern
+// new X() instantiate an instance of X.prototype and initializes it by invoke
+// X on it. Object.create(X.prototype) just instantiates an instance.
+
+/**
+ * @constructor
+ */
+function EventEmitter() { // {{{
+    this._events = this._events || {};
+}
+
+EventEmitter.prototype = {
+    on: function (type, listener) {
+        var listeners;
+
+        if (typeof listener !== 'function') {
+            throw TypeError('listener must be a function');
+        }
+
+        if (!this._events) {
+            this._events = {};
+        }
+
+        listeners = this._events[type];
+
+        if (!listeners) {
+            listeners = this._events[type] = [];
+        }
+        listeners.push(listener);
+
+        return this;
+    },
+    emit: function (type) {
+        var listeners,
+            listener,
+            args,
+            i;
+
+        if (!this._events) {
+            this._events = {};
+        }
+
+        listeners = this._events[type];
+
+        if (!listeners || !listeners.length) {
+            return false;
+        }
+
+        args = Array.prototype.slice.call(arguments, 1);
+
+        for (i = 0; i < listeners.length; ++i) {
+            listener = listeners[i];
+            if (typeof listener === 'function') {
+                listener.apply(this, args);
+            }
+        }
+
+        return true;
+    }
+}; // }}}
+
 /**
  * @namespace
  * @version 2013-12-20
  */
 var FileUpload = {};
-
-FileUpload.stopEvent = function (event) { // {{{
-    event.cancelBubble = true;
-    event.returnValue = false;
-
-    if (event.stopPropagation) {
-        event.stopPropagation();
-    }
-
-    if (event.preventDefault) {
-        event.preventDefault();
-    }
-}; // }}}
 
 /**
  * @constructor
@@ -44,14 +120,14 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
             clearInterval(interval);
             interval = null;
         }
-    }
+    };
 
     if (typeof url === 'object') {
         options = url;
         url = undefined;
     }
 
-    options = options || {};
+    options = extend({}, options);
 
     this.isAborted = false;
 
@@ -80,13 +156,11 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
 
             _cleanup();
 
-            if (typeof self.onabort === 'function') {
-                self.onabort.call(self);
-            }
+            self.emit('abort');
         }
-    } // }}}
+    }; // }}}
 
-    this.send = function () { // {{{
+    this.run = function () { // {{{
         var frameName;
 
         if (self.isAborted) {
@@ -103,7 +177,7 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
                     // make sure onload() is called at most once
                     this.onload = null;
 
-                    if (!self.isAborted && typeof self.oncomplete === 'function') {
+                    if (!self.isAborted) {
                         var body = this.contentWindow.document.body,
                             response = body.innerHTML.replace(/^\s+|\s+$/g, '');
 
@@ -118,7 +192,7 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
                                 .replace(/&amp;/g, '&');
                         }
 
-                        self.oncomplete.call(self, response);
+                        self.emit('complete', response);
                     }
 
                     // Remove IFRAME and FORM elements. Use a separate thread,
@@ -126,26 +200,25 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
                     // event handlers. Without this, (at least) Firefox 12
                     // throws an 0x80004002 (NS_NOINTERFACE) error.
                     setTimeout(_cleanup, 10);
-                }
+                };
+
                 this.onerror = function () {
                     // make sure onerror() is called at most once
                     this.onerror = null;
 
-                    if (!self.isAborted && typeof self.onerror === 'function') {
-                        self.onerror.call(self);
+                    if (!self.isAborted) {
+                        self.emit('error');
                     }
 
                     setTimeout(_cleanup, 10);
-                }
+                };
             });
 
         // simulate progress event
-        if (typeof self.onprogress === 'function') {
-            interval = setInterval(function () {
-                // progress value is undefined
-                self.onprogress.call(self);
-            }, 500);
-        }
+        interval = setInterval(function () {
+            // progress value is undefined
+            self.emit('progress');
+        }, 500);
 
         // in order to send file in IE file input must be clicked by the user,
         // not triggered by JS. Otherwise 'SCRIPT5 Access is denied' error will
@@ -160,7 +233,7 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
             .attr('action', self.url);
 
         if (this.data) {
-            for (key in this.data) {
+            for (var key in this.data) {
                 if (this.data.hasOwnProperty(key)) {
                     $('<input type="text" />').attr({
                         name: key,
@@ -173,8 +246,11 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
         form.submit();
 
         return true;
-    } // }}}
-}; // }}}
+    }; // }}}
+};
+
+FileUpload.FileInputUpload.prototype = EventEmitter.prototype;
+// }}}
 
 /**
  * @constructor
@@ -191,7 +267,7 @@ FileUpload.FileInputUpload = function (fileInput, url, options) { // {{{
  */
 FileUpload.XHRUpload = function (file, url, options) { // {{{
     var self = this,
-        xhr, complete, abort;
+        xhr;
 
     if (!(window.FileList && window.FormData)) {
         throw 'Your browser does not support HTML5 file upload features';
@@ -202,8 +278,8 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
         url = undefined;
     }
 
-    xhr = new XMLHttpRequest;
-    options = options || {};
+    options = extend({}, options);
+    xhr = new XMLHttpRequest();
 
     this.isAborted = false;
     this.url = url || options.url;
@@ -222,13 +298,11 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
                 // IE 7 throws an error when trying to abort
             }
 
-            if (typeof self.onabort === 'function') {
-                self.onabort.call(self);
-            }
+            self.emit('abort');
         }
-    } // }}}
+    }; // }}}
 
-    this.send = function () { // {{{
+    this.run = function () { // {{{
         var data;
 
         if (self.isAborted) {
@@ -240,11 +314,11 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
             throw 'An empty file cannot be uploaded';
         }
 
-        data = new FormData;
+        data = new FormData();
         data.append(options.name || 'file', file);
 
         if (this.data) {
-            for (key in this.data) {
+            for (var key in this.data) {
                 if (this.data.hasOwnProperty(key)) {
                     data.append(key, String(this.data[key]));
                 }
@@ -260,21 +334,19 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
         // onreadystatechange handler.
         // Source: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.xml/dCV-F7ZuaOg
         xhr.onreadystatechange = function () {
-            if (this.readyState == 4 && !self.isAborted && typeof self.oncomplete === 'function') {
-                self.oncomplete.call(self, this.responseText);
+            if (this.readyState == 4 && !self.isAborted) {
+                self.emit('complete', this.responseText);
             }
         };
 
         xhr.onerror = function () {
-            if (typeof self.onerror === 'function') {
-                self.onerror.call(self);
-            }
-        }
+            self.emit('error');
+        };
 
-        if (typeof self.onprogress === 'function' && xhr.upload) {
+        if (xhr.upload) {
             xhr.upload.addEventListener('progress', function (e) {
                 if (e.lengthComputable) {
-                    self.onprogress.call(self, e.loaded / e.total);
+                    self.emit('progress', e.loaded / e.total);
                 }
             }, false);
         }
@@ -283,12 +355,15 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
         xhr.send(data);
 
         return true;
-    } // }}}
-}; // }}}
+    }; // }}}
+};
+
+FileUpload.XHRUpload.prototype = EventEmitter.prototype;
+// }}}
 
 /**
  * @constructor
- * @param {object} options
+ * @param {object}   options
  * @param {number}   [options.tick=500]
  * @param {string}   [options.name] - przekazane do Transfer, wywolane w kontekscie tej kolejki
  * @param {function} [options.cleanup] - usuniecie zakonczonego transferu z kolejki
@@ -296,12 +371,12 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
  * @param {function} [options.start]
  * @param {function} [options.queueComplete]
  */
-FileUpload.TransferQueue = function (options) { // {{{
+var WorkQueue = function (options) { // {{{
     var defaultOptions = {
         tick: 500
     };
 
-    options = $.extend({}, defaultOptions, options);
+    options = extend({}, defaultOptions, options);
 
     var self = this,
         wait = false,
@@ -313,30 +388,13 @@ FileUpload.TransferQueue = function (options) { // {{{
             startIndex: 0,
             nextIndex: null
         },
-        position = 0,
-        _complete, _abort;
+        position = 0;
 
     // number of already completed transfer items and not aborted
     // pending transfer items
-    this.length = 0;
+    self.length = 0;
 
-    _abort = function (item) {
-        // do not abort already completed or aborted transfer items.
-        // Items with id lower than currentIndex are considered already
-        // completed.
-        if (items.currentIndex <= item.index) {
-            delete items[item.index];
-            self.length = --items.length;
-
-            // when aborting current transfer decrease position by 1,
-            // so that next element receive the same position
-            if (items.currentIndex == item.index) {
-                --position;
-            }
-        }
-    }
-
-    this.cleanup = function () {
+    self.cleanup = function () {
         // remove all completed items from queue
         var i, item,
             removed = 0,
@@ -345,13 +403,13 @@ FileUpload.TransferQueue = function (options) { // {{{
             currentItem = items[currentIndex];
 
         for (i = startIndex; i <= currentIndex; ++i) {
-            var item = items[i];
+            item = items[i];
             if (item && (i < currentIndex || item.isCompleted)) {
                 ++removed;
                 delete items[i];
 
                 if (typeof options.cleanup === 'function') {
-                    options.cleanup.call(self, item.upload);
+                    options.cleanup.call(self, item.runnable);
                 }
             }
         }
@@ -376,11 +434,11 @@ FileUpload.TransferQueue = function (options) { // {{{
         // update length of items collection
         items.length -= removed;
         self.length = items.length;
-    }
+    };
 
-    this.hasNext = function () {
+    self.hasNext = function () {
         return self.__nextIndex() != -1;
-    }
+    };
 
     self.__nextIndex = function () {
         var nextIndex = items.nextIndex;
@@ -401,22 +459,33 @@ FileUpload.TransferQueue = function (options) { // {{{
         }
 
         return nextIndex;
+    };
+
+    function _run(item, callback, args) {
+        if (typeof callback === 'function') {
+            if (!(args instanceof Array)) {
+                args = Array.prototype.slice.call(args);
+            }
+            try {
+                callback.apply(self, [item.runnable].concat(args));
+            } catch (err) {}
+        }
     }
 
-    _complete = function (item, callback, args) {
+    function _complete(item, callback, args) {
         var err;
+
+        if (item.isCompleted) {
+            return;
+        }
 
         // force re-calculation of nextIndex, resume worker
         item.isCompleted = true;
         items.nextIndex = null;
         wait = false;
 
-        // call complete callback
-        if (typeof callback === 'function') {
-            try {
-                callback.apply(self, [item].concat(args));
-            } catch (err) {}
-        }
+        // call complete callback on item first
+        _run(item, callback, args);
 
         // notify if there are no more files to upload
         if (self.__nextIndex() == -1 && typeof options.queueComplete === 'function') {
@@ -429,33 +498,30 @@ FileUpload.TransferQueue = function (options) { // {{{
         }
     }
 
-    function prepareItem (item) {
-        var upload = item.upload;
+    function _abort(item, callback, args) {
+        if (item.isAborted) {
+            return;
+        }
 
-        upload.onabort = (function (onAbort) {
-            return function () {
-                _abort(item);
-                var args = Array.prototype.slice.apply(arguments);
-                _complete(item, onAbort, args);
-            }
-        })(upload.onabort);
+        item.isAborted = true;
 
-        upload.oncomplete = (function (onComplete) {
-            return function () {
-                var args = Array.prototype.slice.apply(arguments);
-                _complete(item, onComplete, args);
-            }
-        })(upload.oncomplete);
+        // do not abort already completed or aborted work units (those with
+        // index < currentIndex)
+        // Items with index lower than currentIndex are considered already
+        // completed.
+        if (items.currentIndex <= item.index) {
+            delete items[item.index];
+            self.length = --items.length;
 
-        upload.onprogress = (function (onProgress) {
-            if (typeof onProgress === 'function') {
-                return function () {
-                    var args = Array.prototype.slice.apply(arguments);
-                    onProgress.apply(self, args);
-                }
+            // when aborting current work unit decrease position by 1,
+            // so that next element receive the same position when it gets
+            // started
+            if (items.currentIndex == item.index) {
+                --position;
             }
-            return null;
-        })(upload.onprogress);
+        }
+
+        _complete(item, callback, args);
     }
 
     self.__worker = function () { // {{{
@@ -474,14 +540,12 @@ FileUpload.TransferQueue = function (options) { // {{{
 
             wait = true;
 
-            prepareItem(item);
-
             if (typeof options.start === 'function') {
-                options.start.call(self, item.upload, ++position);
+                options.start.call(self, item.runnable, ++position);
             }
 
             try {
-                item.upload.send();
+                item.runnable.run();
             } catch (e) {
                 // skip to next item in queue
                 item.isCompleted = true;
@@ -489,50 +553,74 @@ FileUpload.TransferQueue = function (options) { // {{{
                 wait = false;
 
                 if (typeof options.error === 'function') {
-                    options.error.call(self, item.upload, e);
+                    options.error.call(self, item.runnable, e);
                 }
             }
         }
-    } // }}}
+    }; // }}}
 
-    this.enqueue = function (upload) { // {{{
-        var index = -1;
+    self.enqueue = function (runnable) { // {{{
+        var index = -1,
+            item;
 
-        if (upload && typeof upload === 'object') {
+        if (runnable) {
             items.nextIndex = null;
             index = items.freeIndex++;
 
-            items[index] = {
+            // internal runnable state
+            item = {
                 index: index,
-                upload: upload,
-                isCompleted: false
+                runnable: runnable,
+                isCompleted: false,
+                isAborted: false
             };
+
+            runnable.on('error', function () {
+                _complete(item, options.error, arguments);
+            });
+
+            runnable.on('abort', function () {
+                _abort(item, options.abort, arguments);
+            });
+
+            runnable.on('complete', function () {
+                _complete(item, options.complete, arguments);
+            });
+
+            if (typeof options.progress === 'function') {
+                runnable.on('progress', function () {
+                    _run(item, options.progress, arguments);
+                });
+            }
+
+            items[index] = item;
 
             self.length = ++items.length;
 
             if (typeof options.enqueue == 'function') {
-                options.enqueue.call(self, upload, index);
+                options.enqueue.call(self, runnable, index);
             }
         }
-        return index;
-    } // }}}
 
-    this.run = function () { // {{{
+        return index;
+    }; // }}}
+
+    self.run = function () { // {{{
         if (null === tick) {
             wait = false;
             tick = setInterval(self.__worker, 500);
         }
-    } // }}}
+    }; // }}}
 
-    this.stop = function() { // {{{
+    self.stop = function() { // {{{
         if (null === tick) {
             return;
         }
 
-        clearInterval(id);
+        clearInterval(tick);
         tick = null;
-    } // }}}
-} // }}}
+    }; // }}}
+}; // }}}
 
 /**
  * Multiple file uploader for browsers without File API support
@@ -553,26 +641,26 @@ FileUpload.LegacyUploader = function (selector, options) { // {{{
 
     var self = this,
         element = $(selector),
-        queue = new FileUpload.TransferQueue(options);
+        queue = new WorkQueue(options);
 
     this.url = options.url;
     this.disabled = false;
 
     this.isDnDSupported = function () { // {{{
         return false;
-    } // }}}
+    }; // }}}
 
     this.queueSize = function () { // {{{
         return queue.length;
-    } // }}}
+    }; // }}}
 
     this.hasPendingUploads = function () { // {{{
         return queue.hasNext();
-    } // }}}
+    }; // }}}
 
     this.cleanQueue = function () { // {{{
         return queue.cleanup();
-    } // }}}
+    }; // }}}
 
     this.createFileInput = function () { // {{{
         var name = options.name ? options.name : 'file',
@@ -582,7 +670,7 @@ FileUpload.LegacyUploader = function (selector, options) { // {{{
             if (!self.disabled) {
                 var upload = new FileUpload.Transfer.FileInputUpload(this, self.url);
 
-                $.extend(upload, {
+                if(0)$.extend(upload, {
                     onprogress: options.progress,
                     oncomplete: options.complete,
                     onabort:    options.abort,
@@ -608,7 +696,7 @@ FileUpload.LegacyUploader = function (selector, options) { // {{{
         });
 
         return input;
-    } // }}}
+    }; // }}}
 
     function _init() { // {{{
         $('<div class="file-input-wrapper"/>').append(
@@ -619,7 +707,7 @@ FileUpload.LegacyUploader = function (selector, options) { // {{{
     } // }}}
 
     _init();
-} // }}}
+}; // }}}
 
 FileUpload.Uploader = function (selector, options) { // {{{
     if (!(window.FileList && window.FormData)) {
@@ -628,7 +716,7 @@ FileUpload.Uploader = function (selector, options) { // {{{
 
     var self = this,
         element = $(selector),
-        queue = new FileUpload.TransferQueue(options),
+        queue = new WorkQueue(options),
         // Opera (current version is 12.02) still does not support dropping
         // files onto file input. Proposals were made on official Opera forum
         // since Oct 2007, but to no avail.
@@ -640,26 +728,26 @@ FileUpload.Uploader = function (selector, options) { // {{{
 
     this.isDnDSupported = function () { // {{{
         return dnd;
-    } // }}}
+    }; // }}}
 
     this.queueSize = function () { // {{{
         return queue.length;
-    } // }}}
+    }; // }}}
 
     this.hasPendingUploads = function () { // {{{
         return queue.hasNext();
-    } // }}}
+    }; // }}}
 
     this.cleanQueue = function () { // {{{
         return queue.cleanup();
-    } // }}}
+    }; // }}}
 
     this.enqueueFiles = function (files) { // {{{
         if (!self.disabled && files.length) {
             for (var i = 0, n = files.length; i < n; ++i) {
                 var upload = new FileUpload.XHRUpload(files[i], self.url);
 
-                $.extend(upload, {
+                if(0)$.extend(upload, {
                     onprogress: options.progress,
                     oncomplete: options.complete,
                     onabort:    options.abort,
@@ -672,13 +760,26 @@ FileUpload.Uploader = function (selector, options) { // {{{
                 options.enqueueComplete.call(self, files.length);
             }
         }
-    } // }}}
+    }; // }}}
 
     function _init() { // {{{
         var form = $('<form />'),
             input = $('<input type="file" multiple/>').appendTo(form);
 
-        input.bind('change', function(e) {
+        function stopEvent(event) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+
+            if (event.stopPropagation) {
+                event.stopPropagation();
+            }
+
+            if (event.preventDefault) {
+                event.preventDefault();
+            }
+        }
+
+        input.bind('change', function () {
             if (this.files) {
                 self.enqueueFiles(this.files);
             }
@@ -696,7 +797,7 @@ FileUpload.Uploader = function (selector, options) { // {{{
 
                 // cancel event propagation, to prevent browser from opening
                 // dropped files
-                FileUpload.stopEvent(e);
+                stopEvent(e);
 
                 // send an artificial event upwards to notify that a drop
                 // event occured
@@ -722,7 +823,7 @@ FileUpload.Uploader = function (selector, options) { // {{{
                     e.dataTransfer.effectAllowed = 'all';
                 }
 
-                FileUpload.stopEvent(e);
+                stopEvent(e);
             }, false);
         }).append(form));
 
@@ -730,8 +831,9 @@ FileUpload.Uploader = function (selector, options) { // {{{
     } // }}}
 
     _init();
-} // }}}
+}; // }}}
 
-    return window.FileUpload = FileUpload;
+    window.FileUpload = FileUpload;
+    return FileUpload;
 
 }(window.jQuery, window));

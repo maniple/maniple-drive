@@ -253,7 +253,7 @@ html.grabbing * {
   display: none;
   float: right;
   width: 90%;
-  height: .65em;
+  height: .85em;
 }
 #drive-uploader-queue-items .uploading .progress-text,
 #drive-uploader-queue-items .uploading.legacy-upload .progress-bar {
@@ -263,6 +263,19 @@ html.grabbing * {
 #drive-uploader-queue-items .uploading.legacy-upload .progress-text {
   display: block; /* nie inline-block, bo wtedy progress padlby ofiara
                      text-overflow:ellipsis */
+}
+
+#drive-uploader-queue-items .progress-bar {
+  border: 1px solid #aaa;
+}
+#drive-uploader-queue-items .progress-bar .bar {
+  display: block;
+  width: 0; /* szerokosc trzeba podac w elemencie, max 100% */
+  height: 100%;
+  background: #e8e8e8;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 #drive-uploader-queue-items .col-cancel {

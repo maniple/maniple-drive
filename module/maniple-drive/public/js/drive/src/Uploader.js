@@ -446,6 +446,11 @@ Uploader.prototype._initQueueScroll = function () // {{{
         lookup = hooks.items,
         scrollParent;
 
+    if (!$.fn.scrollTo) {
+        window.console && console.warn('jQuery.fn.scrollTo() is not available, upload queue will not auto-scroll');
+        return false;
+    }
+
     while (lookup.length) {
         if (lookup.css('overflow') !== 'visible') {
             scrollParent = lookup;
@@ -500,7 +505,8 @@ Uploader.prototype._scrollQueue = function () { // {{{
         // niewidoczny scrollParent rowniez powoduje wyjatek
         try {
             scrollParent.scrollTo(y, 500);
-        } catch (e) {}
+        } catch (e) {
+        }
     }
 } // }}}
 
