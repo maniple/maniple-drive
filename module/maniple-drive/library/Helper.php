@@ -173,6 +173,7 @@ class ManipleDrive_Helper
                 $perms[self::READ]   = true;
                 $perms[self::WRITE]  = true;
                 $perms[self::RENAME] = true;
+                $perms[self::REMOVE] = true;
                 $perms[self::SHARE]  = true;
             }
         }
