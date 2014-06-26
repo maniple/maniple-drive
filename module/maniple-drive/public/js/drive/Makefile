@@ -20,8 +20,8 @@ src/%.js: $(wildcard src/i18n/*.js)
 src/Templates.js: src/Templates.xml
 	php$(BIN_SUFFIX) build/build-templates $< $@
 
-dist/drive.%.js: $(wildcard src/*.js) src/Templates.js
-	php$(BIN_SUFFIX) build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ $^
+dist/drive.%.js: src/deps.json $(wildcard src/*.js) src/Templates.js
+	php$(BIN_SUFFIX) build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ -d $^
 
 
 .PHONY: install clean dist

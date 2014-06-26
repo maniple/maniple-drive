@@ -1,4 +1,7 @@
-define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], function ($, Dialog, ajaxForm) { var Drive = {
+define(
+["jquery","jquery.magnific-popup","handlebars.runtime","vendor\/maniple\/modal","vendor\/maniple\/modal.ajaxform"],
+function ($, __var0__, Handlebars, Dialog, ajaxForm) {
+var Drive = {
     I18n: (function() {
         var I18n = {
             Uploader: {
@@ -1799,15 +1802,21 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
                     required: ['grab', 'icon', 'name'],
                     wrapper: self.$
                 }),
-                url = Drive.Util.uri(self._uriTemplates.file.read, file),
                 ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1];
 
             // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
             // w nim zawarte rowniez sa czytelne
-            element.attr('data-url', url);
+            // element.attr('data-url', file.url);
 
-            [hooks.icon, hooks.name].forEach(function (elem) {
-                elem.attr('data-goto-url', '');
+            [/*hooks.icon,*/ hooks.name].forEach(function (elem) {
+                if (file.preview_url) {
+                    // enable lightbox on this element
+                    elem.attr('data-open-lightbox', '');
+                    elem.attr('data-download-url', file.url);
+                    elem.attr('href', file.preview_url);
+                } else {
+                    elem.attr('href', file.url); // 'data-goto-url', '');
+                }
             });
 
             // dodaj klase wskazujaca na konkretny typ pliku. W tym celu wyodrebnij
@@ -1865,6 +1874,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             } else {
                 element.addClass('no-items');
             }
+
+            self._lightbox = new Drive.Lightbox(self._element, {
+                delegate: '[data-open-lightbox]'
+            });
 
             self._active = null;
         }; // }}}
@@ -2712,6 +2725,103 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         }(window.jQuery, window));
         return FileUpload;
     })(),
+    Lightbox: (function() {
+        function Lightbox(selector, options) {
+            this._init(selector, options);
+        }
+
+        Lightbox.prototype = {
+            _init: function (selector, options) {
+                var self = this,
+                    el = $(selector).first();
+
+                options = $.extend(true, {}, options);
+
+                var str = {
+                    saveImage: 'Zapisz obraz',
+                    loadingImage: 'Wczytuję obraz...',
+                    imageFailedToLoad: 'Wczytywanie obrazu nie powiodło się.',
+                    next: 'Następny',
+                    prev: 'Poprzedni',
+                    close: 'Zamknij',
+                    counter: '%curr% z %total%'
+                };
+
+                str = {
+                    saveImage: 'Save image',
+                    loadingImage: 'Loading image...',
+                    imageFailedToLoad: 'Failed to load image.',
+                    next: 'Next',
+                    prev: 'Previous',
+                    close: 'Close',
+                    counter: '%curr% of %total%'
+                };
+
+                el.magnificPopup({
+                    delegate: options.delegate || 'a',
+                    type: 'image',
+                    closeBtnInside: false,
+                    closeOnContentClick: true,
+                    callbacks: {
+                        beforeOpen: function () {
+                            var self = this;
+                            [
+                                ['bgOverlay',        'mfp-bg',        'drive-viewer-overlay'],
+                                ['wrap',             'mfp-wrap',      'drive-viewer'],
+                                ['container',        'mfp-container', 'drive-viewer-container'],
+                                ['contentContainer', 'mfp-content',   'drive-viewer-content'],
+                                ['preloader',        'mfp-preloader', 'drive-viewer-preloader']
+                            ].forEach(function (map) {
+                                self[map[0]].removeClass(map[1]).addClass(map[2]);
+                            });
+                        }
+                    },
+                    disableOn: function () {
+                        // contrary to this function's name lightbox will be disabled
+                        // when false is returned
+                        return self.disabled ? false : true;
+                    },
+                    tClose: str.close,
+                    tLoading: str.loadingImage,
+                    gallery: {
+                        enabled: true,
+                        tPrev: str.prev,
+                        tNext: str.next,
+                        tCounter: str.counter
+                    },
+                    image: {
+                        verticalFit: false,
+                        verticalGap: 0,
+                        tError: str.imageFailedToLoad,
+                        titleSrc: function (item) {
+                            var title = '<div class="actions"><a class="btn btn-primary" href="#!" onclick="(event||window.event).stopPropagation();document.location.href=\'' + Viewtils.esc(item.el.attr('data-download-url')) + '\'" >' + str.saveImage + '</a></div>' + '<h4 class="title">' + Viewtils.esc(item.el.attr('title')) + '</h4>',
+                            caption = item.el.attr('data-caption');
+                            if (caption && (caption = Viewtils.esc(caption)).length) {
+                                title += '<div class="caption">' + caption + '</div>';
+                            }
+                            return title;
+                        },
+                        markup: '<div class="drive-viewer-figure">' +
+                                    '<div class="mfp-img"></div>' +
+                                    '<div class="drive-viewer-bottom-bar">' +
+                                        '<div class="drive-viewer-bottom-bar-inner">' +
+                                            '<div class="drive-viewer-metadata mfp-title"></div>' +
+                                            '<div class="drive-viewer-counter mfp-counter"></div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>'
+                    }
+                });
+            },
+            disable: function disable(flag) {
+                if (typeof flag === 'undefined') {
+                    flag = true;
+                }
+                this.disabled = !!flag;
+            }
+        };
+        return Lightbox;
+    })(),
     StickToBottom: (function() {
         /**
          * Makes the selected element sticked to the bottom of the browser's window in
@@ -3094,17 +3204,14 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           var buffer = "", stack1;
           buffer += "\n<img src=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" alt=\"\" data-hook=\"icon\" style=\"width:48px;height:48px;\" />\n";
+            + "\" alt=\"\" style=\"width:48px;height:48px;\" />\n";
           return buffer;
           }
 
         function program3(depth0,data) {
 
-          var buffer = "", stack1;
-          buffer += "\n<span class=\"drive-icon drive-icon-"
-            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.filter)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" data-hook=\"icon\"></span>\n";
-          return buffer;
+
+          return "\n<span class=\"drive-icon\"></span>\n";
           }
 
         function program5(depth0,data) {
@@ -3203,12 +3310,14 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           return buffer;
           }
 
-          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n";
+          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n<span data-hook=\"icon\" title=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\">            \n";
           stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url), {hash:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
-          buffer += "\n</td>\n<td class=\"col-name\">\n<span title=\""
+          buffer += "\n</span>\n</td>\n<td class=\"col-name\">\n<a href=\"#!\" data-hook=\"name\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" data-hook=\"name\">"
+            + "\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</span>\n</td>\n<td class=\"col-owner\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))

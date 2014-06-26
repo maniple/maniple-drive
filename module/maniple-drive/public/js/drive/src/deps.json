@@ -1,0 +1,7 @@
+{
+    "jquery": "$",
+    "jquery.magnific-popup": null,
+    "handlebars.runtime": "Handlebars",
+    "vendor/maniple/modal": "Dialog",
+    "vendor/maniple/modal.ajaxform": "ajaxForm"
+}

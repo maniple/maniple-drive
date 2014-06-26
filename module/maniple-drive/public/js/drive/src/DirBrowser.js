@@ -1663,15 +1663,21 @@ DirBrowser.prototype._renderFile = function (file, replace) { // {{{
             required: ['grab', 'icon', 'name'],
             wrapper: self.$
         }),
-        url = Drive.Util.uri(self._uriTemplates.file.read, file),
         ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1];
 
     // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
     // w nim zawarte rowniez sa czytelne
-    element.attr('data-url', url);
+    // element.attr('data-url', file.url);
 
-    [hooks.icon, hooks.name].forEach(function (elem) {
-        elem.attr('data-goto-url', '');
+    [/*hooks.icon,*/ hooks.name].forEach(function (elem) {
+        if (file.preview_url) {
+            // enable lightbox on this element
+            elem.attr('data-open-lightbox', '');
+            elem.attr('data-download-url', file.url);
+            elem.attr('href', file.preview_url);
+        } else {
+            elem.attr('href', file.url); // 'data-goto-url', '');
+        }
     });
 
     // dodaj klase wskazujaca na konkretny typ pliku. W tym celu wyodrebnij
@@ -1729,6 +1735,10 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
     } else {
         element.addClass('no-items');
     }
+
+    self._lightbox = new Drive.Lightbox(self._element, {
+        delegate: '[data-open-lightbox]'
+    });
 
     self._active = null;
 }; // }}}

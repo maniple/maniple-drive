@@ -196,14 +196,16 @@ Loading directory contents...
     <tr>
         <td class="col-grab" data-hook="grab"></td>
         <td class="col-icon">
-            {{#if file.thumb_url }}
-            <img src="{{ file.thumb_url }}" alt="" data-hook="icon" style="width:48px;height:48px;" />
-            {{ else }}
-            <span class="drive-icon drive-icon-{{ file.filter }}" data-hook="icon"></span>
-            {{/if }}
+            <span data-hook="icon" title="{{ file.name }}">
+                {{#if file.thumb_url }}
+                <img src="{{ file.thumb_url }}" alt="" style="width:48px;height:48px;" />
+                {{ else }}
+                <span class="drive-icon"></span>
+                {{/if }}
+            </span>
         </td>
         <td class="col-name">
-            <span title="{{ file.name }}" data-hook="name">{{ file.name }}</span>
+            <a href="#!" data-hook="name" title="{{ file.name }}">{{ file.name }}</span>
         </td>
         <td class="col-owner">{{ file.owner.name }}</td>
         <td class="col-size">{{ fileSize file.size }}</td>

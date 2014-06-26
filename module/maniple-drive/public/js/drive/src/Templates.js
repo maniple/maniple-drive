@@ -273,17 +273,14 @@ function program1(depth0,data) {
   var buffer = "", stack1;
   buffer += "\n<img src=\""
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-    + "\" alt=\"\" data-hook=\"icon\" style=\"width:48px;height:48px;\" />\n";
+    + "\" alt=\"\" style=\"width:48px;height:48px;\" />\n";
   return buffer;
   }
 
 function program3(depth0,data) {
   
-  var buffer = "", stack1;
-  buffer += "\n<span class=\"drive-icon drive-icon-"
-    + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.filter)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-    + "\" data-hook=\"icon\"></span>\n";
-  return buffer;
+  
+  return "\n<span class=\"drive-icon\"></span>\n";
   }
 
 function program5(depth0,data) {
@@ -382,12 +379,14 @@ function program14(depth0,data) {
   return buffer;
   }
 
-  buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n";
+  buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n<span data-hook=\"icon\" title=\""
+    + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+    + "\">            \n";
   stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url), {hash:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),data:data});
   if(stack1 || stack1 === 0) { buffer += stack1; }
-  buffer += "\n</td>\n<td class=\"col-name\">\n<span title=\""
+  buffer += "\n</span>\n</td>\n<td class=\"col-name\">\n<a href=\"#!\" data-hook=\"name\" title=\""
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-    + "\" data-hook=\"name\">"
+    + "\">"
     + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
     + "</span>\n</td>\n<td class=\"col-owner\">"
     + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))

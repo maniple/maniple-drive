@@ -22,7 +22,7 @@ var I18n = {
         dropHereOpera:          'Click to add files. <small>Use Firefox or Chrome browser to add files using drag and drop</small>',
         dropHereLegacy:         'Click to add file. <small>Use Firefox or Chrome browser to add more than one file at once and to add files using drag and dro</small>',
         responseError:          'Unexpected response from server',
-        cancelUploadConfirm:    'Leaving this page will abort any pending file uploads. Are you sure you want to leave this page?',
+        cancelUploadConfirm:    'Leaving this page will abort any pending file uploads. Are you sure you want to leave this page?'
     },
     DirBrowser: {
         noItems:                'Directory is empty',
@@ -33,7 +33,7 @@ var I18n = {
         diskUsage: {
             used:               'Disk usage:',
             available:          'Available space:',
-            unlimited:          'Unlimited',
+            unlimited:          'Unlimited'
         },
         grab: {
             tooltip:            'Drag and drop to move to a different directory',

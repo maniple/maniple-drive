@@ -256,6 +256,7 @@ class ManipleDrive_Helper
                 );
                 if (in_array($row->mimetype, array('image/jpeg', 'image/png', 'image/gif'))) {
                     $data['thumb_url'] = $this->getView()->url('drive.file.thumb', array('file_id' => $row->file_id, 'dims' => '100x100'));
+                    $data['preview_url'] = $this->getView()->url('drive.file.thumb', array('file_id' => $row->file_id));
                 }
                 break;
 

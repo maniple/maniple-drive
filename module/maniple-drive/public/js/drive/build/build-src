@@ -36,6 +36,7 @@ if (count($argv) < 3) {
 
 $NAME = $argv[1];
 $SIZE = 4;
+$DEPS = null;
 
 if (!preg_match('/^[_a-z][_a-z0-9]*$/i', $NAME)) {
     fprintf(STDERR, "%s: %s: Invalid library container name\n", $SELF, $NAME);
@@ -58,6 +59,16 @@ for ($i = 2, $n = count($argv); $i < $n; ++$i) {
             $SIZE = option_arg($SELF, $argv, $i);
             if (!ctype_digit($SIZE)) {
                 fprintf(STDERR, "%s: %s: Invalid indent size\n", $SELF, $SIZE);
+                exit(1);
+            }
+            ++$i;
+            break;
+
+        case '-d':
+        case '--deps':
+            $DEPS = option_arg($SELF, $argv, $i);
+            if (!is_file($DEPS)) {
+                fprintf(STDERR, "%s: %s: Dependencies file not found\n", $SELF, $DEPS);
                 exit(1);
             }
             ++$i;
@@ -91,7 +102,22 @@ ob_start();
 
 $JS_IDENT_RX = '/^[_a-z][_a-z0-9]*$/i';
 
-echo "define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], function ($, Dialog, ajaxForm) { var $NAME = {\n";
+$deps = array();
+if ($DEPS) {
+    $var = 0;
+    $deps = (array) json_decode(file_get_contents($DEPS), false);
+
+    foreach ($deps as $key => $value) {
+        if (empty($value)) {
+            $deps[$key] = '__var' . ($var++) . '__';
+        }
+    }
+}
+echo "define(\n",
+    "", json_encode(array_keys($deps)), ",\n",
+    "function (", implode(', ', $deps), ") {\n",
+    "var $NAME = {\n";
+
 for ($i = 0, $n = count($INPUTS); $i < $n; ++$i) {
     $input = $INPUTS[$i];
     $property = null;

@@ -541,8 +541,11 @@ html.grabbing * {
 #drive-dir-contents td.col-name {
     cursor: pointer;
 }
-#drive-dir-contents td.col-name > span {
+
+#drive-dir-contents td.col-name a {
     display: block;
+    color: inherit;
+    text-decoration: none;
 }
 
 #drive-dir-contents td.col-owner,
