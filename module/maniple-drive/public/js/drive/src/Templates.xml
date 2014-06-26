@@ -195,7 +195,13 @@ Loading directory contents...
 <![CDATA[
     <tr>
         <td class="col-grab" data-hook="grab"></td>
-        <td class="col-icon"><span class="drive-icon drive-icon-{{ file.filter }}" data-hook="icon"></span></td>
+        <td class="col-icon">
+            {{#if file.thumb_url }}
+            <img src="{{ file.thumb_url }}" alt="" data-hook="icon" style="width:48px;height:48px;" />
+            {{ else }}
+            <span class="drive-icon drive-icon-{{ file.filter }}" data-hook="icon"></span>
+            {{/if }}
+        </td>
         <td class="col-name">
             <span title="{{ file.name }}" data-hook="name">{{ file.name }}</span>
         </td>

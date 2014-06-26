@@ -3092,25 +3092,43 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
         function program1(depth0,data) {
 
           var buffer = "", stack1;
+          buffer += "\n<img src=\""
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" alt=\"\" data-hook=\"icon\" style=\"width:48px;height:48px;\" />\n";
+          return buffer;
+          }
+
+        function program3(depth0,data) {
+
+          var buffer = "", stack1;
+          buffer += "\n<span class=\"drive-icon drive-icon-"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.filter)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\" data-hook=\"icon\"></span>\n";
+          return buffer;
+          }
+
+        function program5(depth0,data) {
+
+          var buffer = "", stack1;
           buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" class=\"dropdown-toggle\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(6, program6, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(8, program8, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(6, program6, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(10, program10, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(8, program8, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(12, program12, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(10, program10, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(14, program14, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</ul>\n</div>\n";
           return buffer;
           }
-        function program2(depth0,data) {
+        function program6(depth0,data) {
 
           var buffer = "", stack1, helper;
           buffer += "\n<li><a href=\"#!\" data-op=\"";
@@ -3125,7 +3143,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           return buffer;
           }
 
-        function program4(depth0,data) {
+        function program8(depth0,data) {
 
           var buffer = "", stack1, helper;
           buffer += "\n<li><a href=\"#!\" data-op=\"";
@@ -3140,7 +3158,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           return buffer;
           }
 
-        function program6(depth0,data) {
+        function program10(depth0,data) {
 
           var buffer = "", stack1, helper;
           buffer += "\n<li><a href=\"#!\" data-op=\"";
@@ -3155,7 +3173,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           return buffer;
           }
 
-        function program8(depth0,data) {
+        function program12(depth0,data) {
 
           var buffer = "", stack1, helper;
           buffer += "\n<li><a href=\"#!\" data-op=\"";
@@ -3170,7 +3188,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           return buffer;
           }
 
-        function program10(depth0,data) {
+        function program14(depth0,data) {
 
           var buffer = "", stack1, helper;
           buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
@@ -3185,9 +3203,10 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
           return buffer;
           }
 
-          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-"
-            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.filter)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" data-hook=\"icon\"></span></td>\n<td class=\"col-name\">\n<span title=\""
+          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n";
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url), {hash:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</td>\n<td class=\"col-name\">\n<span title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "\" data-hook=\"name\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
@@ -3200,7 +3219,7 @@ define(['jquery', 'vendor/maniple/modal', 'vendor/maniple/modal.ajaxform'], func
             + "</div>\n<div class=\"date-only\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n</td>\n<td class=\"col-ops\">\n";
-          stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+          stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(5, program5, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</td>\n</tr>";
           return buffer;
