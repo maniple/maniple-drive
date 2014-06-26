@@ -130,7 +130,7 @@ defaults.d          =
         'route' => '^!(?<path>([^/]+)(.*))$',
         'type'  => 'Zend_Controller_Router_Route_Regex',
         'defaults' => array(
-            'module' => 'drive',
+            'module' => 'maniple-drive',
             'controller' => 'index',
             'action'     => 'file',
         ),
