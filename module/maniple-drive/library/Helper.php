@@ -504,14 +504,6 @@ class ManipleDrive_Helper
         return $result;
     } // }}}
 
-    protected function _renderDirId($dir_id, ManipleDrive_DirBrowsingContext $context = null)
-    {
-        if ($context) {
-            return (string) $context->copy()->setDirId($dir_id);
-        }
-        return (string) $dir_id;
-    }
-
     /**
      * @param ManipleDrive_Model_Dir $dir
      * @return bool

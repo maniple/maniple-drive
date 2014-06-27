@@ -66,7 +66,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             $drive->addExtras($drive_helper->getRepository()->getDriveSummary($drive->drive_id));
 
             foreach ($drive_helper->getRepository()->getLastUploadedFiles($drive->drive_id, 5) as $file) {
-                $drive_files[] = new Zefram_Stdlib_ObjectWrapper($file);
+                $drive_files[] = $drive_helper->getViewableData($file, false);
             }
         }
 
@@ -74,13 +74,13 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         $shared_files = array();
         foreach ($drive_helper->getRepository()->getLastSharedWithUserFiles($user_id, 5) as $file) {
-            $shared_files[] = new Zefram_Stdlib_ObjectWrapper($file);
+            $shared_files[] = $drive_helper->getViewableData($file, false);
             $user_ids[$file->created_by] = true;
         }
 
         $public_files = array();
         foreach ($drive_helper->getRepository()->getLastPublishedFiles(null, 5) as $file) {
-            $public_files[] = new Zefram_Stdlib_ObjectWrapper($file);
+            $public_files[] = $drive_helper->getViewableData($file, false);
             $user_ids[$file->created_by] = true;
         }
 
@@ -90,12 +90,12 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         }
 
         foreach ($shared_files as &$file) {
-            $file->creator = isset($users[$file->created_by]) ? $users[$file->created_by] : null;
+            $file['creator'] = isset($users[$file['created_by']]) ? $users[$file['created_by']] : null;
         }
         unset($file);
 
         foreach ($public_files as &$file) {
-            $file->creator = isset($users[$file->created_by]) ? $users[$file->created_by] : null;
+            $file['creator'] = isset($users[$file['created_by']]) ? $users[$file['created_by']] : null;
         }
         unset($file);
 

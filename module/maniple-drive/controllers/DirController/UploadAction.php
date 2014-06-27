@@ -217,7 +217,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         // nie helper, bo to moze byc otwarte w IFRAME, a wtedy ssacy niemozebnie
         // IE bedzie chcial otworzyc to jako plik
         header('Content-Type: text/html; charset=utf-8');
-        echo Zend_Json::encode($result);
+        echo Zefram_Json::encode($result);
         exit;
     }
 }

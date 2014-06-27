@@ -125,10 +125,16 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
             return $cache[$dir_id];
         }
 
-        // wlasciciel ma zawsze dostep do odczytu i zapisu
-        // Uwaga: katalog moze nie miec wlasciciela, jezeli jest katalogiem
-        // systemowym.
-        if ($dir->owner && $dir->owner == $user_id) {
+        // wlasciciel dysku ma zawsze dostep do wszystkich plikow w jego
+        // obrebie
+        $drive = $dir->Drive;
+        if ($drive->owner && $drive->owner == $user_id) {
+            $access = self::ACCESS_READABLE | self::ACCESS_WRITABLE;
+
+        } elseif ($dir->owner && $dir->owner == $user_id) {
+            // wlasciciel ma zawsze dostep do odczytu i zapisu
+            // Uwaga: katalog moze nie miec wlasciciela, jezeli jest katalogiem
+            // systemowym.
             $access = self::ACCESS_READABLE | self::ACCESS_WRITABLE;
         } else {
             $access = self::ACCESS_NONE;

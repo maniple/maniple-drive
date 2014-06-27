@@ -4,7 +4,9 @@
  * version: 2013-01-18
  * author: xemlock
  */
-
+html {
+    margin-right: 0 !important; /* mfp creates unnecessary margin */
+}
 html.grabbing * {
     cursor: -webkit-grabbing !important;
     cursor: -moz-grabbing !important;
@@ -546,6 +548,11 @@ html.grabbing * {
     display: block;
     color: inherit;
     text-decoration: none;
+
+    max-width: 400px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 #drive-dir-contents td.col-owner,

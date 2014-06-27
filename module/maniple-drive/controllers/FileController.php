@@ -14,8 +14,8 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
             array(
                 'type' => $file->mimetype,
                 'name' => $file->name,
-                'etag' => $file->md5sum,
                 'cache' => true,
+                'etag' => $file->md5sum,
             )
         );
     } // }}}
@@ -146,7 +146,6 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
             $image_path,
             array(
                 'type' => $file->mimetype,
-                'etag' => $file->md5sum,
                 'cache' => true,
             )
         );
