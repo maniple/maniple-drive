@@ -1,155 +1,273 @@
--- Dyski internetowe dla uzytkownikow
+-- maniple-drive database schema for MySQL
+-- Version: 2014-06-27
+
+-- sed 's/{PREFIX}/prefix/g' schema-mysql.sql | mysql
 
 SET NAMES utf8;
 
 -- Dyski
-CREATE TABLE drives (
-  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT
--- identyfikator katalogu - korzenia dysku, unikalny, NULL dopuszczalny
--- ze wzgledu na cykliczna zaleznosc dysk-katalog
-, root_dir INT
--- ilosc miejsca zajmowanego _na dysku_ przez pliki i katalogi znajdujace
--- sie w obrebie tego dysku (konieczne jest znanie rozmiaru bloku, w NTFS
--- domyslnie jest to 4096 B). Jezeli fizyczny rozmiar bloku dysku nie jest
--- znany do obliczen trzeba uzyc 1, wtedy liczone bedzie zuzycie na
--- podstawie rozmiarow plikow, a nie miejsca zajmowanego na dysku (przy
--- okazji, USAGE jest zarezerwowanym slowem w MySQL 5.1, PostgreSQL i DB2)
-, disk_usage BIGINT UNSIGNED NOT NULL DEFAULT 0  -- wykorzystanie miejsca na dysku
-, quota BIGINT UNSIGNED NOT NULL DEFAULT 0       -- ograniczenie
-, owner INT NOT NULL
-, created_by INT NOT NULL
-, create_time DATETIME NOT NULL
-, modified_by INT
-, modify_time DATETIME
-, description VARCHAR(255)                       -- opcjonalny opis dysku
+CREATE TABLE {PREFIX}drives (
 
-, UNIQUE INDEX idx_drives_root_dir (root_dir)
-, INDEX idx_drives_owner (owner)
-, CONSTRAINT fk_drives_owner FOREIGN KEY (owner) REFERENCES users (id)
-, INDEX idx_drives_created_by (created_by)
-, CONSTRAINT fk_drives_created_by FOREIGN KEY (created_by) REFERENCES users (id)
-, INDEX idx_drives_modified_by (modified_by)
-, CONSTRAINT fk_drives_modified_by FOREIGN KEY (modified_by) REFERENCES users (id)
-) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_polish_ci;
+    drive_id        INTEGER PRIMARY KEY AUTO_INCREMENT,
+
+    -- identyfikator katalogu - korzenia dysku, unikatowy, NULL dopuszczalny
+    -- ze wzgledu na cykliczna zaleznosc dysk-katalog
+    root_dir        INTEGER,
+
+    -- ilosc miejsca zajmowanego _na dysku_ przez pliki i katalogi znajdujace
+    -- sie w obrebie tego dysku (konieczne jest znanie rozmiaru bloku, w NTFS
+    -- domyslnie jest to 4096 B). Jezeli fizyczny rozmiar bloku dysku nie jest
+    -- znany do obliczen trzeba uzyc 1, wtedy liczone bedzie zuzycie na
+    -- podstawie rozmiarow plikow, a nie miejsca zajmowanego na dysku (przy
+    -- okazji, USAGE jest zarezerwowanym slowem w MySQL 5.1, PostgreSQL i DB2)
+
+    -- ograniczenie zuzycia miejsca na dysku
+    quota           BIGINT UNSIGNED NOT NULL DEFAULT 0,
+
+    owner           INTEGER,
+
+    created_by      INTEGER NOT NULL,
+
+    create_time     DATETIME NOT NULL,
+
+    modified_by     INTEGER,
+
+    modify_time     DATETIME,
+
+    -- opcjonalny opis dysku
+    description     TEXT,
+
+    UNIQUE INDEX {PREFIX}drives_root_dir_idx (root_dir),
+
+    -- uzytkownicy moga miec co najwyzej jeden dysk
+    UNIQUE INDEX {PREFIX}drives_owner_idx (owner),
+
+    CONSTRAINT {PREFIX}drives_owner_fkey
+        FOREIGN KEY (owner) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drives_created_by_idx (created_by),
+
+    CONSTRAINT {PREFIX}drives_created_by_fkey
+        FOREIGN KEY (created_by) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drives_modified_by_idx (modified_by),
+
+    CONSTRAINT {PREFIX}drives_modified_by_fkey
+        FOREIGN KEY (modified_by) REFERENCES {PREFIX}users (user_id)
+
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
 
 -- Katalogi w obrebie dyskow internetowych, opisuja uprawnienia
 -- do katalogow i plikow
-CREATE TABLE drive_dirs (
-  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT
+CREATE TABLE {PREFIX}drive_dirs (
 
--- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog,
--- redundancja ulatwiajaca aktualizacje zuzycia miejsca na dysku
-, drive_id INT NOT NULL
+    dir_id          INTEGER PRIMARY KEY AUTO_INCREMENT,
 
--- identyfikator nadrzednego katalogu
-, parent_id INT
+    -- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog
+    drive_id        INTEGER NOT NULL,
 
--- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
-, dir_count INT UNSIGNED NOT NULL DEFAULT 0
-, file_count INT UNSIGNED NOT NULL DEFAULT 0
+    -- identyfikator nadrzednego katalogu
+    parent_id       INTEGER,
 
-, owner INT NOT NULL
-, ctime INT UNSIGNED NOT NULL   -- czas utworzenia katalogu
-, mtime INT UNSIGNED NOT NULL   -- czas ostatniej zmiany (nazwa, uprawnienia)
-, created_by INT  -- id uzytkownika, ktory wgral plik
-, modified_by INT -- id uzytkownika, ktory zmodyfikowal dane
+    -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
+    -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
+    internal_key    VARCHAR(64),
 
--- ustawienia dostepu do plikow w katalogu
--- private   - widoczne tylko dla wlasciciela i uzytkownikow wymienionych
---             w tabeli drive_dir_shares
--- usersonly - dostepne dla zalogowanych uzytkownikow
--- public    - dostepne dla wszystkich (internet)
--- inherited - dziedziczony dostep do plikow z katalogu nadrzednego,
---             jezeli nie podano jawnie katalog w korzeniu dysku jest prywatny
-, visibility ENUM ('private', 'usersonly', 'public', 'inherited') NOT NULL DEFAULT 'inherited'
+    -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
+    dir_count       INTEGER UNSIGNED NOT NULL DEFAULT 0,
 
-, name VARCHAR(255) NOT NULL
+    file_count      INTEGER UNSIGNED NOT NULL DEFAULT 0,
 
-, INDEX idx_drive_dirs_drive_id (drive_id)
-, CONSTRAINT fk_drive_dirs_drive_id
-    FOREIGN KEY (drive_id) REFERENCES drives (id)
-, INDEX idx_drive_dirs_owner (owner)
-, CONSTRAINT fk_drive_dirs_owner
-    FOREIGN KEY (owner) REFERENCES users (id)
-, INDEX idx_drive_dirs_created_by (created_by)
-, CONSTRAINT fk_drive_dirs_created_by
-    FOREIGN KEY (created_by) REFERENCES users (id)
-, INDEX idx_drive_dirs_modified_by (modified_by)
-, CONSTRAINT fk_drive_dirs_modified_by
-    FOREIGN KEY (modified_by) REFERENCES users (id)
--- indeks pilnujacy, zeby katalogi mialy unikalne nazwy jezeli naleza
--- do tego samego katalogu nadrzednego, przy okazji wspomagajacy klucz
--- obcy oraz wyszukiwanie katalogu po nazwie
-, UNIQUE INDEX idx_drive_dirs_parent_id_name (parent_id, name)
-, CONSTRAINT fk_drive_dirs_parent_id
-    FOREIGN KEY (parent_id) REFERENCES drive_dirs (id)
-) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_polish_ci;
+    owner           INTEGER,
 
-ALTER TABLE drives ADD CONSTRAINT fk_drives_root_dir
-    FOREIGN KEY (root_dir) REFERENCES drive_dirs (id);
+    -- czas utworzenia katalogu
+    ctime           INTEGER NOT NULL,
 
--- uprawnienia do katalogu
-CREATE TABLE drive_dir_shares (
-  dir_id INT NOT NULL
-, user_id INT NOT NULL
--- czy uzytkownik moze modyfikowac zawartosc katalogu (edytowac i usuwac pliki)
-, can_write BOOLEAN NOT NULL DEFAULT FALSE
-, PRIMARY KEY (dir_id, user_id)
-, CONSTRAINT fk_drive_dir_shares_dir_id
-    FOREIGN KEY (dir_id) REFERENCES drive_dirs (id)
-, CONSTRAINT fk_drive_dir_shares_user_id
-    FOREIGN KEY (user_id) REFERENCES users (id)
-, INDEX idx_drive_dir_shares_dir_id_user_id (dir_id, user_id)
+    -- czas ostatniej zmiany (nazwa, uprawnienia)
+    mtime           INTEGER NOT NULL,
+
+    -- id uzytkownika, ktory wgral plik
+    created_by      INTEGER,
+
+    -- id uzytkownika, ktory zmodyfikowal dane
+    modified_by     INTEGER,
+
+    -- ustawienia dostepu do plikow w katalogu
+    -- private    - widoczne tylko dla wlasciciela i uzytkownikow wymienionych
+    --              w tabeli drive_dir_shares
+    -- usersonly  - dostepne dla zalogowanych uzytkownikow
+    -- public     - dostepne dla wszystkich (internet)
+    -- inherited  - dziedziczony dostep do plikow z katalogu nadrzednego, o ile
+    --              nie podano jawnie katalog w korzeniu dysku jest prywatny
+    visibility      VARCHAR(32) NOT NULL,
+
+    name            VARCHAR(255) NOT NULL,
+
+    -- znormalizowana nazwa uzywana do sortowania
+    name_normalized VARCHAR(1023) NOT NULL,
+
+    INDEX {PREFIX}drive_dirs_drive_id_idx (drive_id),
+
+    CONSTRAINT {PREFIX}drive_dirs_drive_id_fkey
+        FOREIGN KEY (drive_id) REFERENCES {PREFIX}drives (drive_id),
+
+    INDEX {PREFIX}drive_dirs_owner_idx (owner),
+
+    CONSTRAINT {PREFIX}drive_dirs_owner_fkey
+        FOREIGN KEY (owner) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drive_dirs_created_by_idx (created_by),
+
+    CONSTRAINT {PREFIX}drive_dirs_created_by_fkey
+        FOREIGN KEY (created_by) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drive_dirs_modified_by_idx (modified_by),
+
+    CONSTRAINT {PREFIX}drive_dirs_modified_by_fkey
+        FOREIGN KEY (modified_by) REFERENCES {PREFIX}users (user_id),
+
+    -- indeks pilnujacy, zeby katalogi mialy unikatowe nazwy jezeli naleza
+    -- do tego samego katalogu nadrzednego, przy okazji wspomagajacy klucz
+    -- obcy oraz wyszukiwanie katalogu po nazwie
+    UNIQUE INDEX {PREFIX}drive_dirs_parent_id_name_idx (parent_id, name),
+
+    -- ten indeks wynika bezposrednio z unikatowosci dir_id, ale jest potrzebny
+    -- do zapewnienia, ze wszystkie katalogi w poddrzewie naleza do tego samego
+    -- dysku,
+    -- drive_id jest w pierwszej kolumnie, zeby latwo wylawiac katalogi
+    -- znajdujace sie w obrebie tego samego dysku
+    UNIQUE INDEX {PREFIX}drive_dirs_drive_id_dir_id_idx (drive_id, dir_id),
+
+    CONSTRAINT {PREFIX}drive_dirs_drive_id_parent_id_fkey
+        FOREIGN KEY (drive_id, parent_id)
+        REFERENCES {PREFIX}drive_dirs (drive_id, dir_id),
+
+    -- indeks zapewniajacy unikatowosc internal_key
+    UNIQUE INDEX {PREFIX}drive_dirs_internal_key_idx (internal_key)
+
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+ALTER TABLE {PREFIX}drives ADD CONSTRAINT {PREFIX}drives_root_dir_fkey
+    FOREIGN KEY (root_dir) REFERENCES {PREFIX}drive_dirs (dir_id);
+
+
+-- uprawnienia dostepu do katalogu
+CREATE TABLE {PREFIX}drive_dir_shares (
+
+    dir_id          INTEGER NOT NULL,
+
+    user_id         INTEGER NOT NULL,
+
+    -- czy uzytkownik moze modyfikowac zawartosc katalogu
+    -- (edytowac i usuwac pliki)
+    can_write       BIT(1) NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (dir_id, user_id),
+
+    CONSTRAINT {PREFIX}drive_dir_shares_dir_id_fkey
+        FOREIGN KEY (dir_id) REFERENCES {PREFIX}drive_dirs (dir_id),
+
+    CONSTRAINT {PREFIX}drive_dir_shares_user_id_fkey
+        FOREIGN KEY (user_id) REFERENCES {PREFIX}users (user_id)
+
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
 -- dodatkowy indeks do szybkiego sprawdzania, czy dany uzytkownik ma
 -- dostep do udostepnionych katalogow
-, INDEX idx_drive_dir_shares_user_id (user_id)
-) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_polish_ci;
+CREATE INDEX {PREFIX}drive_dir_shares_user_id_idx
+    ON {PREFIX}drive_dir_shares (user_id);
+
 
 -- pliki umieszczone w katalogach
-CREATE TABLE drive_files (
-  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT
-, dir_id INT NOT NULL -- id katalogu wirtualnego, w ktorym umieszczony jest plik
-, owner INT NOT NULL  -- uzytkownik, ktory wgral plik
-, ctime INT UNSIGNED NOT NULL   -- data utworzenia pliku na dysku
-, mtime INT UNSIGNED NOT NULL   -- data ostatniej modyfikacji metadanych
-, created_by INT NOT NULL       -- id uzytkownika, ktory wgral plik
-, modified_by INT               -- id uzytkownika, ktory zmodyfikowal dane
-, md5sum CHAR(32) NOT NULL      -- suma kontrolna identyfikujaca plik na dysku
-, mimetype VARCHAR(64) NOT NULL -- typ MIME pliku
+CREATE TABLE {PREFIX}drive_files (
 
--- filtrowanie po kategorii pliku, NOT NULL zeby bylo latwo filtrowac po tej
--- kolumnie, bez potrzeby sprawdzania IS (NOT) NULL:
--- (filter <> 'image' OR filter IS NULL) vs (filter <> 'image')
-, filter ENUM ('', 'image', 'video', 'pdf') NOT NULL DEFAULT ''
+    file_id         INTEGER PRIMARY KEY AUTO_INCREMENT,
 
-, size INT UNSIGNED NOT NULL    -- rozmiar pliku (max 4GB)
-, name VARCHAR(255) NOT NULL    -- wirtualna nazwa pliku
--- metadane wykorzystywane przez rozne moduly strony
-, title VARCHAR(255)            -- tytul pliku
-, author VARCHAR(255)           -- autor pliku (opcjonalny)
-, weight INT NOT NULL DEFAULT 0 -- waga pliku (sortowanie)
--- Uwaga odnosnie do maksymalnego rozmiaru VARCHAR(65535) z dokumentacji:
--- http://dev.mysql.com/doc/refman/5.0/en/column-count-limit.html
---   Every table (regardless of storage engine) has a maximum row size of
---   65,535 bytes. Storage engines may place additional constraints on this
---   limit, reducing the effective maximum row size.
-, description VARCHAR(65535) -- opis pliku (opcjonalny)
--- /metadane
-, INDEX idx_drive_files_owner (owner)
-, CONSTRAINT fk_drive_files_owner
-    FOREIGN KEY (owner) REFERENCES users (id)
-, INDEX idx_drive_files_created_by (created_by)
-, CONSTRAINT fk_drive_files_created_by
-    FOREIGN KEY (created_by) REFERENCES users (id)
-, INDEX idx_drive_files_modified_by (modified_by)
-, CONSTRAINT fk_drive_files_modified_by
-    FOREIGN KEY (modified_by) REFERENCES users (id)
-, INDEX idx_drive_files_dir_id (dir_id)
-, CONSTRAINT fk_drive_files_dir_id
-    FOREIGN KEY (dir_id) REFERENCES drive_dirs (id)
--- unikalnosc nazwy pliku w obrebie jednego katalogu nie jest wymagana
+    -- id katalogu, w ktorym umieszczony jest plik
+    dir_id          INTEGER NOT NULL,
+
+    -- wlasciciel pliku
+    owner           INTEGER,
+
+    -- data utworzenia pliku na dysku
+    ctime           INTEGER NOT NULL,
+
+    -- data ostatniej modyfikacji metadanych (sam plik jest niemutowalny)
+    mtime           INTEGER NOT NULL,
+
+    -- id uzytkownika, ktory wgral plik
+    created_by      INTEGER NOT NULL,
+
+    -- id uzytkownika, ktory zmodyfikowal dane
+    modified_by     INTEGER,
+
+    -- suma kontrolna identyfikujaca plik na dysku
+    md5sum          CHAR(32) NOT NULL,
+
+    -- typ MIME pliku
+    mimetype        VARCHAR(64) NOT NULL,
+
+    -- filtrowanie po kategorii pliku, NOT NULL zeby bylo latwo filtrowac po tej
+    -- kolumnie, bez potrzeby sprawdzania IS (NOT) NULL:
+    -- (filter <> 'image' OR filter IS NULL) vs (filter <> 'image')
+    filter          VARCHAR(16) NOT NULL DEFAULT '',
+
+    -- rozmiar pliku (max 4GB)
+    size            INTEGER UNSIGNED NOT NULL,
+
+    -- nazwa pliku
+    name            VARCHAR(255) NOT NULL,
+
+    -- znormalizowana nazwa pliku uzywana do sortowania
+    name_normalized VARCHAR(1023) NOT NULL,
+
+    -- metadane wykorzystywane przez rozne moduly strony
+    -- tytul pliku
+    title           VARCHAR(255),
+
+    -- autor pliku (opcjonalny)
+    author          VARCHAR(255),
+
+    -- waga pliku (sortowanie)
+    weight          INTEGER NOT NULL DEFAULT 0,
+
+    -- opis pliku (opcjonalny)
+    -- Uwaga odnosnie do maksymalnego rozmiaru VARCHAR(65535) z dokumentacji:
+    -- http://dev.mysql.com/doc/refman/5.0/en/column-count-limit.html
+    --   Every table (regardless of storage engine) has a maximum row size of
+    --   65,535 bytes. Storage engines may place additional constraints on this
+    --   limit, reducing the effective maximum row size.
+    description     VARCHAR(65535),
+
+    INDEX {PREFIX}drive_files_owner_idx (owner),
+
+    CONSTRAINT {PREFIX}drive_files_owner_fkey
+        FOREIGN KEY (owner) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drive_files_created_by_idx (created_by),
+
+    CONSTRAINT {PREFIX}drive_files_created_by_fkey
+        FOREIGN KEY (created_by) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drive_files_modified_by_idx (modified_by),
+
+    CONSTRAINT {PREFIX}drive_files_modified_by_fkey
+        FOREIGN KEY (modified_by) REFERENCES {PREFIX}users (user_id),
+
+    INDEX {PREFIX}drive_files_dir_id_idx (dir_id),
+
+    CONSTRAINT {PREFIX}drive_files_dir_id_fkey
+        FOREIGN KEY (dir_id) REFERENCES {PREFIX}drive_dirs (dir_id)
+
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+-- unikatowosc nazwy pliku w obrebie jednego katalogu nie jest wymagana
 -- (dla katalogow jest ze wzgledu na wyszukiwanie pliku po sciezce)
-, INDEX idx_drive_files_dir_id_name (dir_id, name)
-, INDEX idx_drive_files_filter (filter)
-) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_polish_ci;
+
+CREATE INDEX {PREFIX}drive_files_dir_id_name_idx
+    ON {PREFIX}drive_files (dir_id, name);
+
+CREATE INDEX {PREFIX}drive_files_filter_idx 
+    ON {PREFIX}drive_files (filter);
 

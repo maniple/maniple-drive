@@ -1,4 +1,4 @@
--- maniple-drive database schema
+-- maniple-drive database schema for PostgreSQL
 -- Version: 2014-06-06
 
 -- sed 's/{PREFIX}/prefix/g' schema-psql.sql | psql
@@ -20,7 +20,8 @@ CREATE TABLE {PREFIX}drives (
     -- okazji, USAGE jest zarezerwowanym slowem w MySQL 5.1, PostgreSQL i DB2)
 
     -- ograniczenie zuzycia miejsca na dysku
-    quota           BIGINT NOT NULL DEFAULT 0 CHECK (quota >= 0),
+    quota           BIGINT NOT NULL DEFAULT 0,
+                    CHECK (quota >= 0),
 
     owner           INTEGER,
 
@@ -69,9 +70,11 @@ CREATE TABLE {PREFIX}drive_dirs (
     internal_key    VARCHAR(64),
 
     -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
-    dir_count       INTEGER NOT NULL DEFAULT 0 CHECK (dir_count >= 0),
+    dir_count       INTEGER NOT NULL DEFAULT 0,
+                    CHECK (dir_count >= 0),
 
-    file_count      INTEGER NOT NULL DEFAULT 0 CHECK (file_count >= 0),
+    file_count      INTEGER NOT NULL DEFAULT 0,
+                    CHECK (file_count >= 0),
 
     owner           INTEGER,
 
@@ -150,7 +153,8 @@ CREATE TABLE {PREFIX}drive_dir_shares (
 
     -- czy uzytkownik moze modyfikowac zawartosc katalogu
     -- (edytowac i usuwac pliki)
-    can_write       INTEGER NOT NULL DEFAULT 0 CHECK (can_write IN (0, 1)),
+    can_write       INTEGER NOT NULL DEFAULT 0,
+                    CHECK (can_write IN (0, 1)),
 
     PRIMARY KEY (dir_id, user_id),
 
@@ -161,9 +165,6 @@ CREATE TABLE {PREFIX}drive_dir_shares (
         FOREIGN KEY (user_id) REFERENCES {PREFIX}users (user_id)
 
 );
-
-CREATE INDEX {PREFIX}drive_dir_shares_dir_id_user_id_idx
-    ON {PREFIX}drive_dir_shares (dir_id, user_id);
 
 -- dodatkowy indeks do szybkiego sprawdzania, czy dany uzytkownik ma
 -- dostep do udostepnionych katalogow
@@ -176,7 +177,7 @@ CREATE TABLE {PREFIX}drive_files (
 
     file_id         SERIAL PRIMARY KEY,
 
-    -- id katalogu wirtualnego, w ktorym umieszczony jest plik
+    -- id katalogu, w ktorym umieszczony jest plik
     dir_id          INTEGER NOT NULL,
 
     -- wlasciciel pliku
@@ -205,8 +206,9 @@ CREATE TABLE {PREFIX}drive_files (
     -- (filter <> 'image' OR filter IS NULL) vs (filter <> 'image')
     filter          VARCHAR(16) NOT NULL DEFAULT '',
 
-    -- rozmiar pliku (max 4GB)
-    size            INTEGER NOT NULL CHECK (size >= 0),
+    -- rozmiar pliku (max 2GB)
+    size            INTEGER NOT NULL,
+                    CHECK (size >= 0),
 
     -- nazwa pliku
     name            VARCHAR(255) NOT NULL,
@@ -249,3 +251,4 @@ CREATE INDEX {PREFIX}drive_files_dir_id_name_idx
 
 CREATE INDEX {PREFIX}drive_files_filter_idx 
     ON {PREFIX}drive_files (filter);
+
