@@ -1,0 +1,27 @@
+<?= $this->headLink()->appendStylesheet($this->baseUrl('/assets/drive/css/drive.css')) ?>
+<div id="breadcrumbs"></div>
+<style>
+#breadcrumbs .separator:before {
+    content: '/';
+}
+</style>
+<div id="drive-dir-browser"></div>
+<script type="text/javascript" src="<?= $this->baseUrl('/js/viewtils.js') ?>"></script>
+<script type="text/javascript" src="<?= $this->baseUrl('/assets/drive/js/vendor/jquery.history-1.5.0a.min.js') ?>"></script>
+<script type="text/javascript" src="<?= $this->baseUrl('/assets/drive/js/vendor/jquery.eip-0.2.0.min.js') ?>"></script>
+<script type="text/javascript" src="<?= $this->baseUrl('/assets/drive/js/vendor/jquery.grab.min.js') ?>"></script>
+
+<script type="text/javascript">
+$(function() {
+    require(['<?= $this->baseUrl('/assets/drive/js/drive.' . $this->locale . '.js') ?>'], function (Drive) {
+        new Drive.DirBrowser('#drive-dir-browser', <?= Zefram_Json::encode(array(
+            'uriTemplates'   => $this->uri_templates,
+            'breadcrumbs'    => $this->dir_browser_breadcrumbs ? $this->dir_browser_breadcrumbs : '#breadcrumbs',
+            'disableAuxmenu' => $this->dir_browser_disable_auxmenu,
+            'disableUpdir'   => $this->dir_browser_disable_updir,
+            'userSearchUrl'  => $this->user_search_url,
+            'dir'            => $this->dir
+        )) ?>);
+    });
+});
+</script>

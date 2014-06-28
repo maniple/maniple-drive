@@ -70,20 +70,21 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         $this->assertAccess($drive_helper->isFileChownable($file));
 
         $db = $file->getAdapter();
-        $users = Zefram_Db::getTable('Model_Core_Users', $db);
-        $owner = $users->findRow((string) $this->_request->getPost('owner'));
+
+        $owner_id = (int) $this->_request->getPost('owner');
+        $owner = $this->getDriveHelper()->getUserMapper()->getUser($owner_id);
 
         if (!$owner) {
-            throw new App_Exception_InvalidArgument('Niepoprawny identyfikator użytkownika');
+            throw new InvalidArgumentException('Niepoprawny identyfikator użytkownika');
         }
 
-        $user = App::get('user')->getRow();
+        $user = $this->getSecurityContext()->getUser();
 
         $db->beginTransaction();
 
         try {
             $file->owner = $owner->id;
-            $file->modified_by = $user->id;
+            $file->modified_by = $user->getId();
             $file->save();
             $db->commit();
 
@@ -94,7 +95,7 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
 
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData(array(
-            'file_id' => $file->id,
+            'file_id' => $file->file_id,
             'owner' => $drive_helper->projectUserData($owner),
             'mtime' => $drive_helper->getDate($file->mtime),
             'modified_by' => $drive_helper->projectUserData($user),

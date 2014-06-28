@@ -1721,7 +1721,7 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
 
     view.hooks.header.append(self._renderHeader());
 
-    if (dir.parents.length) {
+    if (dir.parents.length && !self._options.disableUpdir) {
         view.hooks.updir.append(self._renderUpdir(dir.parents[dir.parents.length - 1]));
     }
 

@@ -7,9 +7,14 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
         return $this;
     }
 
-    public function browseUrl($path)
+    public function browseUrl($path, $route = null)
     {
         $path = '/' . trim($path, '/');
-        return $this->view->url('drive.browser', array('path' => $path), false, false);
+        if (null === $route) {
+            $url = $this->view->url('drive.browser', array('path' => $path), false, false);
+        } else {
+            $url = preg_replace('/#.*$/', '', $this->view->url($route)) . '#' . $path;
+        }
+        return $url;
     }
 }

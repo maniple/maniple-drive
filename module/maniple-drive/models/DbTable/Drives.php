@@ -19,12 +19,12 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
         ),
         'Owner' => array(
             'columns'       => 'owner',
-            'refTableClass' => 'Model_Core_Users',
+            'refTableClass' => 'ManipleCore_Model_DbTable_Users',
             'refColumns'    => 'user_id',
         ),
         'Creator' => array(
             'columns'       => 'created_by',
-            'refTableClass' => 'Model_Core_Users',
+            'refTableClass' => 'ManipleCore_Model_DbTable_Users',
             'refColumns'    => 'user_id',
         ),
     );
@@ -87,13 +87,14 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
             array('dirs' => $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')),
             array(
                 'drive_id',
-                'disk_usage' => new Zend_Db_Expr('COALESCE(SUM(size), 0)'),
             )
         );
         $select->joinLeft(
             array('files' => $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')),
             'files.dir_id = dirs.dir_id',
-            array()
+            array(
+                'disk_usage' => new Zend_Db_Expr('COALESCE(SUM(size), 0)'),
+            )
         );
         $select->group('drive_id');
 

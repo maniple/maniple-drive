@@ -18,9 +18,9 @@ class ManipleDrive_Helper
     protected $_tableProvider;
 
     /**
-     * @var Core_UserMapperInterface
+     * @var ManipleCore_Model_UserRepositoryInterface
      */
-    protected $_userMapper;
+    protected $_userRepository;
 
     /**
      * @var string
@@ -109,7 +109,7 @@ class ManipleDrive_Helper
 
         if (empty($this->_dirPermissions[$dir_id])) {
             $user = $this->getSecurityContext()->getUser();
-            $user_id = $this->getSecurityContext()->getUserId();
+            $user_id = $user->getId();
 
             // Dodatkowe reguly:
             // - tylko wlasciciel i administrator moga zmienic ustawienia
@@ -596,15 +596,25 @@ class ManipleDrive_Helper
         return $this->_securityContext;
     }
 
-    public function setUserMapper(Core_UserMapperInterface $userMapper = null)
+    public function setUserRepository(ManipleCore_Model_UserRepositoryInterface $userRepository = null)
     {
-        $this->_userMapper = $userMapper;
+        $this->_userRepository = $userRepository;
         return $this;
+    }
+
+    public function getUserRepository()
+    {
+        return $this->_userRepository;
+    }
+
+    public function setUserMapper(ManipleCore_Model_UserRepositoryInterface $userRepository = null)
+    {
+        return $this->setUserRepository($userRepository);
     }
 
     public function getUserMapper()
     {
-        return $this->_userMapper;
+        return $this->getUserRepository();
     }
 
     public function setUserSearchRoute($userSearchRoute = null)

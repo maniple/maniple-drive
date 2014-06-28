@@ -192,26 +192,22 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
      * użytkownikowi, znajdujące się na dyskach nienależących do tego
      * użytkownika.
      *
-     * @param int|Model_Core_User $user
+     * @param int $user_id
      * @return Zefram_Db_Table_Select
      */
-    public function selectSharedDirs($user)
+    public function selectSharedDirs($user_id)
     {
-        if ($user instanceof Model_Core_User) {
-            $user = $user->user_id;
-        }
-
-        $user = (int) $user;
+        $user_id = (int) $user_id;
 
         $shares = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
         $drives = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives');
 
-        $select = $this->select(array('d' => '*'))
-            ->setIntegrityCheck(false)
+        $select = $this->getAdapter()->select()
+            ->from(array('d' => $this->getName()))
             ->join(array('s' => $shares), 's.dir_id = d.dir_id', 'can_write')
-            ->where('s.user_id = ?', $user)
-            ->where('d.owner <> ?', $user)
-            ->where('d.drive_id <> ?', $user);
+            ->where('s.user_id = ?', $user_id)
+            ->where('d.owner <> ?', $user_id)
+            ->where('d.drive_id <> ?', $user_id);
 
         return $select;
     }
