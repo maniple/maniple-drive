@@ -414,12 +414,11 @@ class ManipleDrive_Helper
 
         // filtruj pliki
         $where = array();
+        $filter = null;
+        $inverseFilter = null;
         if (isset($options['filter'])) {
-            if (isset($options['inverseFilter']) && $options['inverseFilter']) {
-                $where['filter <> ?'] = $options['filter'];
-            } else {
-                $where['filter = ?'] = $options['filter'];
-            }
+            $filter = $options['filter'];
+            $inverseFilter = isset($options['inverseFilter']) && $options['inverseFilter'];
         }
 
         // posortuj pliki
@@ -429,7 +428,14 @@ class ManipleDrive_Helper
             $order = 'name ASC';
         }
 
-        foreach ($dir->getFiles($where) as $row) {
+        foreach ($dir->getFiles() as $row) {
+            if ($filter) {
+                if (($inverseFilter && $row->filter == $filter) ||
+                    (!$inverseFilter && $row->filter != $filter)
+                ) {
+                    continue;
+                }
+            }
             $files[] = $this->getViewableData($row, false);
 
             $user_ids[$row->owner] = true;
