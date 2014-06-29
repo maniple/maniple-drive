@@ -62,7 +62,7 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
      */
     public function chownAction() // {{{
     {
-        $drive_helper = $this->_helper->drive;
+        $drive_helper = $this->getDriveHelper();
 
         $file_id = (string) $this->_request->getPost('file_id');
         $file = $drive_helper->fetchFile($file_id);
@@ -72,7 +72,7 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         $db = $file->getAdapter();
 
         $owner_id = (int) $this->_request->getPost('owner');
-        $owner = $this->getDriveHelper()->getUserMapper()->getUser($owner_id);
+        $owner = $drive_helper->getUserMapper()->getUser($owner_id);
 
         if (!$owner) {
             throw new InvalidArgumentException('Niepoprawny identyfikator użytkownika');
