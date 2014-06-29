@@ -52,7 +52,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
     public function dashboardAction()
     {
-        $this->getSecurityContext()->requireAuthentication();
+        $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
         $user_id = $this->getSecurityContext()->getUser()->getId();
         $drive_helper = $this->getDriveHelper();

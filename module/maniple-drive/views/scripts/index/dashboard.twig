@@ -21,19 +21,19 @@
 {% if drive %}
 <div class="panel">
     <div class="panel-heading">
-        <a class="btn btn-primary btn-small pull-right" style="position:relative;top:-3px;" href="{{ drive().browseUrl(drive.root_dir) }}">Browse files</a>
-        <h3 class="panel-title">My drive</h3>
+        <a class="btn btn-primary btn-small pull-right" style="position:relative;top:-3px;" href="{{ drive().browseUrl(drive.root_dir) }}">{{ translate('Browse files') }}</a>
+        <h3 class="panel-title">{{ translate('My drive') }}</h3>
     </div>
     <div class="panel-body">
         <div style="display:table;table-layout:fixed;width:100%;">
             <div style="width:50%;display:table-cell;padding-right:20px;">
-                <h4>Last uploaded files</h4>
+                <h4>{{ translate('Last uploaded files') }}</h4>
         {% if drive_files %}
             <ul class="file-list">
             {% for file in drive_files %}
             <li>
                 <i class="drive-icon drive-icon{{ file.filter }}"></i>
-                {{ routeLink(file.name, 'drive.file', {action: 'read', file_id: file.file_id}) }}
+                <a href="{{ url('drive.file', {action: 'read', file_id: file.file_id}) }}">{{ file.name }}</a>
                 <small>
                     {{ fileSize(file.size) }}
                 </small>
@@ -45,7 +45,7 @@
         {% endif %}
             </div>
             <div style="display:table-cell;width:49%;border-left:1px solid #ccc;padding-left:20px;">
-                <h4>Content summary</h4>
+                <h4>{{ translate('Content summary') }}</h4>
                 <table border=0 style="width:100%">
                 <tr><td>
                             

@@ -1,9 +1,9 @@
-<h1>{{ translate('Drive management') }}</h1>
+<h1><?= $this->escape($this->translate('Drive management')) ?></h1>
 <div id="subh1">
-<a href="#!" class="oplink" id="drive-add" data-url="{{ url_create }}">New drive</a>
+<a href="#!" class="oplink" id="drive-add" data-url="<?= $this->url_create ?>"><?= $this->escape($this->translate('New drive')) ?></a>
 </div>
 
-<div id="drive-list" data-url="{{ url_list }}">
+<div id="drive-list" data-url="<?= $this->url_list ?>">
 Wczytywanie danych...
 </div>
 

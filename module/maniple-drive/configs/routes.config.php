@@ -7,6 +7,14 @@
             'action'     => 'dashboard',
         ),
     ),
+    'drive.drives' => array(
+        'route' => 'drive/drives',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'drive',
+            'action'     => 'admin',
+        ),
+    ),
     'drive.drive' => array(
         'route' => 'drive/:drive_id/:action',
         'reqs' => array(

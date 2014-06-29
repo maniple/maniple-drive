@@ -52,8 +52,8 @@ class ManipleDrive_Form_Drive extends Zefram_Form
                             'required' => true,
                             'validators' => array(
                                 array(
-                                    new Core_Validate_UserId(array(
-                                        'userMapper' => $userMapper,
+                                    new ManipleCore_Validate_UserId(array(
+                                        'userRepository' => $userMapper,
                                     )),
                                     true,
                                 ),
