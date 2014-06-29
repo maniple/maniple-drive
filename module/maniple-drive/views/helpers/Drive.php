@@ -11,7 +11,8 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
     {
         $path = '/' . trim($path, '/');
         if (null === $route) {
-            $url = $this->view->url('drive.browser', array('path' => $path), false, false);
+            $url = $this->view->urlTemplate('drive.browser');
+            $url = str_replace(':path', $path, $url);
         } else {
             $url = preg_replace('/#.*$/', '', $this->view->url($route)) . '#' . $path;
         }

@@ -199,15 +199,21 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
     {
         $user_id = (int) $user_id;
 
-        $shares = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
-        $drives = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives');
-
-        $select = $this->getAdapter()->select()
-            ->from(array('d' => $this->getName()))
-            ->join(array('s' => $shares), 's.dir_id = d.dir_id', 'can_write')
-            ->where('s.user_id = ?', $user_id)
-            ->where('d.owner <> ?', $user_id)
-            ->where('d.drive_id <> ?', $user_id);
+        $select = Zefram_Db_Select::factory($this->getAdapter())
+            ->from(
+                array(
+                    'Dirs' => ManipleDrive_Model_TableNames::TABLE_DIRS,
+                )
+            )
+            ->join(
+                array(
+                    'DirShares' => ManipleDrive_Model_TableNames::TABLE_DIR_SHARES,
+                ),
+                'DirShares.dir_id = Dirs.dir_id',
+                'can_write'
+            )
+            ->where('DirShares.user_id = ?', $user_id)
+            ->where('Dirs.owner <> ?', $user_id);
 
         return $select;
     }
