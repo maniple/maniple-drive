@@ -1860,7 +1860,7 @@ var Drive = {
 
             view.hooks.header.append(self._renderHeader());
 
-            if (dir.parents.length) {
+            if (dir.parents.length && !self._options.disableUpdir) {
                 view.hooks.updir.append(self._renderUpdir(dir.parents[dir.parents.length - 1]));
             }
 
@@ -2978,7 +2978,7 @@ var Drive = {
 
 
 
-          return "<div data-hook=\"disk-usage\"></div>\n<h1 id=\"drive-dir-name\" data-hook=\"dir-name\"></h1>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>";
+          return "<div id=\"drive-dirbrowser\">\n<div data-hook=\"disk-usage\"></div>\n<div id=\"drive-dirbrowser-title-outer\">\n<h1 id=\"drive-dirbrowser-title\" data-hook=\"dir-name\"></h1>\n</div>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>\n</div>";
           }
 
         ),
@@ -3312,7 +3312,7 @@ var Drive = {
 
           buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n<span data-hook=\"icon\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\">            \n";
+            + "\">\n";
           stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url), {hash:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</span>\n</td>\n<td class=\"col-name\">\n<a href=\"#!\" data-hook=\"name\" title=\""

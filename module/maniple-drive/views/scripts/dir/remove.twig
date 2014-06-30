@@ -1,8 +1,4 @@
-<style>
-body {
-  font-size: .9em;
-}
-</style>
+<div style="font-size:.9em;">
 
 <p>Are you sure you want to remove directory <strong>{{ name }}</strong>?
 All files and subdirectories contained within this directory will be
@@ -51,3 +47,5 @@ This directory contains no files or subfolders.
 {{ form().openTag(form) | raw }}
 {{ form.renderElements() | raw }}
 {{ form().closeTag() | raw }}
+
+</div>

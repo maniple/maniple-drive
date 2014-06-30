@@ -59,14 +59,18 @@ Loading directory contents...
 
 <template id="DirBrowser.main">
 <![CDATA[
-<div data-hook="disk-usage"></div>
-<h1 id="drive-dir-name" data-hook="dir-name"></h1>
-<div id="opnav">
- <div id="drive-loading" data-hook="message-area"></div>
- <div id="drive-dir-menu" data-hook="aux-menu"></div>
+<div id="drive-dirbrowser">
+    <div data-hook="disk-usage"></div>
+    <div id="drive-dirbrowser-title-outer">
+        <h1 id="drive-dirbrowser-title" data-hook="dir-name"></h1>
+    </div>
+    <div id="opnav">
+        <div id="drive-loading" data-hook="message-area"></div>
+        <div id="drive-dir-menu" data-hook="aux-menu"></div>
+    </div>
+    <div data-hook="dir-contents"></div>
+    <div data-hook="uploader"></div>
 </div>
-<div data-hook="dir-contents"></div>
-<div data-hook="uploader"></div>
 ]]>
 </template>
 

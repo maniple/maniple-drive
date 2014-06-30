@@ -482,21 +482,26 @@ html.grabbing * {
 }
 /* }}} */
 
-#drive-dir-name {
+#drive-dirbrowser-title-outer {
+    margin: 0 0 36px;
+    min-height: 27px;
+}
+
+#drive-dirbrowser-title {
     font-size: 24px;
     margin: 10px 0 10px 40px;
     position: relative;
     display: inline-block;
 }
 
-#drive-dir-name.renamable:hover {
+#drive-dirbrowser-title.renamable:hover {
     border: 1px solid #ddd;
     border-bottom-width: 0;
     background-color: #ddd;
     margin: 9px 0 10px 39px;
     cursor: text;
 }
-#drive-dir-name:before {
+#drive-dirbrowser-title:before {
     content: '';
     display: block;
     position: absolute;
@@ -505,11 +510,13 @@ html.grabbing * {
     width: 32px;
     height: 32px;
 }
-#drive-dir-name.loading {
+#drive-dirbrowser-title.loading {
 }
-#drive-dir-name.loading:before {
+#drive-dirbrowser-title.loading:before {
     background-image: url(../img/drive-loading.gif);
 }
+
+
 
 #drive-dir-contents .mtime > .date-only {
     display: none;
