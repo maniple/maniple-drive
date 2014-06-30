@@ -134,7 +134,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
         $result = false;
 
         if (count($parts)) {
-            $dirs = $this->getTable('ManipleDrive_Model_DbTable_Dirs')->getQuotedName();
+            $dirs = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->getQuotedName();
 
             // lista identyfikatorow napotkanych katalogow
             $id_path = array();
@@ -201,7 +201,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
             // identyfikator katalogu, w ktorym znajduje sie ostatni element
             // podanej sciezki (plik lub katalog).
 
-            $result = $this->getTable('ManipleDrive_Model_DbTable_Files')
+            $result = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')
                 ->fetchRow("name = $last_part AND dir_id = $d0_parent_id");
         }
 
