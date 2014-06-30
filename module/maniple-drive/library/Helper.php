@@ -109,7 +109,7 @@ class ManipleDrive_Helper
 
         if (empty($this->_dirPermissions[$dir_id])) {
             $user = $this->getSecurityContext()->getUser();
-            $user_id = $user->getId();
+            $user_id = $user ? $user->getId() : null;
 
             // Dodatkowe reguly:
             // - tylko wlasciciel i administrator moga zmienic ustawienia
