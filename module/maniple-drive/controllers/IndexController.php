@@ -20,11 +20,14 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             );
             if ($file) {
                 if ($this->getDriveHelper()->isFileReadable($file)) {
-                    $this->_helper->serveFile(
+                    $this->getResource('core.file_helper')->sendFile(
+                        $this->_request,
+                        $this->_response,
                         $file->getPath(),
                         array(
                             'type' => $file->mimetype,
-                            'name' => $file->name,
+                            'etag' => $file->md5sum,
+                            'cache' => true,
                         )
                     );
                 } else {

@@ -110,7 +110,7 @@ class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_
         $select = Zefram_Db_Select::factory($dbAdapter);
         $select->from(
             array('drives' => $drivesTable),
-            $drivesTable->getColsForSelect('ManipleDrive__')
+            $drivesTable->getColsForSelect('Drive__')
         );
         $select->join(
             array('dirs' => $dirsTable),
