@@ -70,7 +70,8 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
     protected function _insert() // {{{
     {
         $this->create_time = date('Y-m-d H:i:s');
-        $this->root_dir    = null;
+        $this->root_dir    = null;  // at this point RootDir does not exist,
+                                    // as parent drive ID is not yet known
 
         return parent::_insert();
     } // }}}
@@ -81,7 +82,7 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
 
         // podepnij katalog jako korzen dysku
         $this->getTable()->update(array('root_dir' => $dir->dir_id), array('drive_id = ?' => $this->drive_id));
-        $this->root_dir = $dir->dir_id;
+        $this->RootDir = $dir;
 
         return parent::_postInsert();
     } // }}}
