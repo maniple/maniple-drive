@@ -27,6 +27,19 @@ class ManipleDrive_Helper
      */
     protected $_userSearchRoute;
 
+    protected $_eventManager;
+
+    public function setEventManager(Zend_EventManager_EventManager $eventManager)
+    {
+        $this->_eventManager = $eventManager;
+        return $this;
+    }
+
+    public function getEventManager()
+    {
+        return $this->_eventManager;
+    }
+
     /**
      * @return ManipleDrive_Mapper
      */

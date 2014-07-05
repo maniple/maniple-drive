@@ -65,16 +65,15 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- identyfikator nadrzednego katalogu
     parent_id       INTEGER,
 
-    -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
-    -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
-    internal_name   VARCHAR(64),
-
     -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
     dir_count       INTEGER NOT NULL DEFAULT 0,
                     CHECK (dir_count >= 0),
 
     file_count      INTEGER NOT NULL DEFAULT 0,
                     CHECK (file_count >= 0),
+
+    byte_count      BIGINT NOT NULL DEFAULT 0,
+                    CHECK (byte_count >= 0),
 
     owner           INTEGER,
 
@@ -98,6 +97,10 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- inherited  - dziedziczony dostep do plikow z katalogu nadrzednego, o ile
     --              nie podano jawnie katalog w korzeniu dysku jest prywatny
     visibility      VARCHAR(32) NOT NULL,
+
+    -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
+    -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
+    internal_name   VARCHAR(64),
 
     name            VARCHAR(255) NOT NULL,
 

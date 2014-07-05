@@ -25,7 +25,8 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
         }
 
         $result = parent::_insert();
-        // $this->_updateCounters($this->Dir, true, $this->size);
+
+        $this->Dir->_updateCounters($this->Dir, 0, 1, $this->size);
 
         return $result;
     } // }}}
@@ -38,9 +39,9 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
             // fetch previous parent dir
             $dir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($this->_cleanData['dir_id']);
             if ($dir) {
-                // $this->_updateCounters($dir, false, $this->size);
+                ManipleDrive_Model_Dir::_updateCounters($dir, 0, -1, -$this->size);
             }
-            // $this->_updateCounters($this->Dir, true, $this->size);
+            ManipleDrive_Model_Dir::_updateCounters($this->Dir, 0, 1, $this->size);
         }
 
         return parent::_update();
@@ -70,64 +71,18 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
 
     // pliki sa zostawiane na dysku, czyszczenie usunietych plikow
     // odbywa sie przez odpowiedni skrypt crona
-    public function delete() // {{{
+    public function delete($_updateCounters = true) // {{{
     {
-        // these variables will be used later
-        $size = (int) $this->size;
         $drive = $this->Dir->Drive;
 
-        // $this->_updateCounters($this->Dir, false, $size);
+        if ($_updateCounters) {
+            ManipleDrive_Model_Dir::_updateCounters($this->Dir, 0, -1, -$this->size);
+        }
 
         // TODO co z usuwaniem pliku z dysku?
         $result = parent::delete();
         $drive->refreshDiskUsage();
 
         return $result;
-    } // }}}
-
-    protected function _updateCounters(ManipleDrive_Model_Dir $dir = null, $inc, $size) // {{{
-    {
-        $size = abs($size);
-        $is_direct_parent = true;
-
-        while ($dir) {
-            if ($is_direct_parent) {
-                $is_direct_parent = false;
-
-                if ($inc) {
-                    $dir->file_count = new Zend_Db_Expr(
-                        'file_count + 1'
-                    );
-                } else {
-                    $dir->file_count = new Zend_Db_Expr(
-                        'CASE WHEN file_count > 0 THEN file_count - 1 ELSE 0 END'
-                    );
-                }
-            }
-
-            if ($inc) {
-                $dir->total_file_count = new Zend_Db_Expr(
-                    'total_file_count + 1'
-                );
-            } else {
-                $dir->total_file_count = new Zend_Db_Expr(
-                    'CASE WHEN total_file_count > 0 THEN total_file_count - 1 ELSE 0 END'
-                );
-            }
-
-            if ($inc) {
-                $dir->total_file_size = new Zend_Db_Expr(sprintf(
-                    'total_file_size + %d', $size
-                ));
-            } else {
-                $dir->total_file_size = new Zend_Db_Expr(sprintf(
-                    'CASE WHEN total_file_size >= %d THEN total_file_size - %d ELSE 0 END',
-                    $size, $size
-                ));
-            }
-
-            $dir->save();
-            $dir = $dir->ParentDir;
-        }
     } // }}}
 }

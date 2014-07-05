@@ -70,14 +70,12 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- identyfikator nadrzednego katalogu
     parent_id       INTEGER,
 
-    -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
-    -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
-    internal_name   VARCHAR(64),
-
     -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
     dir_count       INTEGER UNSIGNED NOT NULL DEFAULT 0,
 
     file_count      INTEGER UNSIGNED NOT NULL DEFAULT 0,
+
+    byte_count      BIGINT UNSIGNED NOT NULL DEFAULT 0,
 
     owner           INTEGER,
 
@@ -101,6 +99,10 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- inherited  - dziedziczony dostep do plikow z katalogu nadrzednego, o ile
     --              nie podano jawnie katalog w korzeniu dysku jest prywatny
     visibility      VARCHAR(32) NOT NULL,
+
+    -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
+    -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
+    internal_name   VARCHAR(64),
 
     name            VARCHAR(255) NOT NULL,
 
@@ -159,9 +161,11 @@ CREATE TABLE {PREFIX}drive_dir_shares (
 
     user_id         INTEGER NOT NULL,
 
+    -- Avoid BIT type due to problems with client libraries such as PDO.
+    -- Spare yourself a lot of trouble if you use TINYINT(1) instead.
     -- czy uzytkownik moze modyfikowac zawartosc katalogu
     -- (edytowac i usuwac pliki)
-    can_write       BIT(1) NOT NULL DEFAULT 0,
+    can_write       TINYINT(1) NOT NULL DEFAULT 0,
 
     PRIMARY KEY (dir_id, user_id),
 

@@ -143,12 +143,14 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         }
 
         // wykonaj skan antywirusem
+        if (0) {
         $output = Zefram_Os::exec('clamscan', escapeshellarg($tempname));
         if (false !== stripos($output, 'SCAN SUMMARY') && 
             false === stripos($output, 'Infected files: 0'))
         {
             unlink($tempname);
             throw new Exception('W pliku został wykryty wirus.');
+        }
         }
 
         //$info['name'] = $this->_uniqueName($info['name'], $dir, 16);

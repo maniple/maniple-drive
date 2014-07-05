@@ -135,6 +135,8 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             throw new InvalidArgumentException('Plik nie został znaleziony');
         }
 
+        $eventManager = Zend_Controller_Front::getInstance()->getParam('bootstrap')->getResource('drive.helper')->getEventManager();
+
         try {
             $drive = $this->Drive;
             $size = (int) filesize($path);
@@ -209,12 +211,15 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
 
             $db = $this->getAdapter();
             $file = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->createRow($data);
+
+            if ($eventManager) {
+                $eventManager->trigger('drive.fileBeforeSave', null, array('file' => (object) $file->toArray()));
+            }
+
             $file->save();
 
             // zaktualizuj zajmowane miejsce na dysku
             $drive->refreshDiskUsage();
-
-            return $file;
 
         } catch (Exception $e) {
             if ($path) {
@@ -222,6 +227,12 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             }
             throw $e;
         }
+
+        if ($eventManager) {
+            $eventManager->trigger('drive.fileSaved', null, array('file' => (object) $file->toArray()));
+        }
+
+        return $file;
     } // }}}
 
     /**
@@ -299,7 +310,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
 
         $result = parent::_insert();
 
-        // $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
+        self::_updateCounters($this->ParentDir, 1, 0, 0);
 
         return $result;
     } // }}}
@@ -309,31 +320,35 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      */
     public function _update() // {{{
     {
-        /*if ($this->_cleanData['parent_id'] != $this->parent_id) {
+        if ($this->_cleanData['parent_id'] != $this->parent_id) {
             // fetch previous parent dir
             $dir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
             if ($dir) {
-                $this->_updateCounters($dir, false, $this->total_file_count, $this->total_file_size);
+                self::_updateCounters($dir, -1, -$this->file_count, -$this->byte_count);
             }
-            $this->_updateCounters($this->ParentDir, true, $this->total_file_count, $this->total_file_size);
-        }*/
+            self::_updateCounters($this->ParentDir, 1, $this->file_count, $this->byte_count);
+        }
 
         $this->mtime = time();
         return parent::_update();
     } // }}}
 
-    public function delete() // {{{
+    public function delete($_updateCounters = true) // {{{
     {
+        // usun pliki i katalogi w poddrzewie, ale nie aktualizuj licznikow
+        // - liczniki zostana zaktualizowane przez korzen usuwanego poddrzewa
         foreach ($this->fetchFiles() as $file) {
-            $file->delete();
+            $file->delete(false);
         }
 
         foreach ($this->fetchSubDirs() as $dir) {
-            $dir->delete();
+            $dir->delete(false);
         }
 
-        // zmniejsz licznik podkatalogow w katalogu nadrzednym
-        // $this->_updateCounters($this->ParentDir, false, $this->total_file_count, $thit->total_file_size);
+        if ($_updateCounters) {
+            $this->_refresh();
+            self::_updateCounters($this->ParentDir, -1, -$this->file_count, -$this->byte_count);
+        }
 
         // usun udostepnienia
         $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->delete(array(
@@ -399,53 +414,49 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         );
     } // }}}
 
-    protected function _updateCounters(ManipleDrive_Model_Dir $dir = null, $inc, $file_count, $file_size) // {{{
+    /**
+     * Update dir, file and byte counters of given directory and all its
+     * parents with given values.
+     *
+     * @param  ManipleDrive_Model_Dir $dir
+     * @param  int $dir_count
+     * @param  int $file_count
+     * @param  int $byte_count
+     * @internal
+     */
+    public static function _updateCounters(ManipleDrive_Model_Dir $dir = null, $dir_count = 0, $file_count = 0, $byte_count = 0) // {{{
     {
-        $file_count = abs($file_count);
-        $file_size = abs($file_size);
-
-        $is_direct_parent = true;
-
         while ($dir) {
-            if ($is_direct_parent) {
-                $is_direct_parent = false;
-
-                if ($inc) {
-                    $dir->dir_count = new Zend_Db_Expr('dir_count + 1');
-                } else {
-                    $dir->dir_count = new Zend_Db_Expr(
-                        'CASE WHEN dir_count > 0 THEN dir_count - 1 ELSE 0 END'
-                    );
-                }
-            }
-
-            if ($inc) {
-                $dir->total_dir_count = new Zend_Db_Expr('total_dir_count + 1');
-            } else {
-                $dir->total_dir_count = new Zend_Db_Expr(
-                    'CASE WHEN total_dir_count > 0 THEN total_dir_count - 1 ELSE 0 END'
-                );
-            }
-
-            if ($inc) {
-                $dir->total_file_count = new Zend_Db_Expr(sprintf(
-                    'total_file_count + %d', $file_count
+            if ($dir_count > 0) {
+                $dir->dir_count = new Zend_Db_Expr(sprintf(
+                    'dir_count + %d', $dir_count
                 ));
-            } else {
-                $dir->total_file_count = new Zend_Db_Expr(sprintf(
-                    'CASE WHEN total_file_count >= %d THEN total_file_count - %d ELSE 0 END',
-                    $file_count, $file_count
+            } elseif ($dir_count < 0) {
+                $dir->dir_count = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN dir_count >= %d THEN dir_count - %d ELSE 0 END',
+                    -$dir_count, -$dir_count
                 ));
             }
 
-            if ($inc) {
-                $dir->total_file_size = new Zend_Db_Expr(sprintf(
-                    'total_file_size + %d', $file_size
+            if ($file_count > 0) {
+                $dir->file_count = new Zend_Db_Expr(sprintf(
+                    'file_count + %d', $file_count
                 ));
-            } else {
-                $dir->total_file_size = new Zend_Db_Expr(sprintf(
-                    'CASE WHEN total_file_size >= %d THEN total_file_size - %d ELSE 0 END',
-                    $file_size, $file_size
+            } elseif ($file_count < 0) {
+                $dir->file_count = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN file_count >= %d THEN file_count - %d ELSE 0 END',
+                    -$file_count, -$file_count
+                ));
+            }
+
+            if ($byte_count > 0) {
+                $dir->byte_count = new Zend_Db_Expr(sprintf(
+                    'byte_count + %.0f', $byte_count
+                ));
+            } elseif ($byte_count < 0) {
+                $dir->byte_count = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN byte_count >= %.0f THEN byte_count - %.0f ELSE 0 END',
+                    -$byte_count, -$byte_count
                 ));
             }
 
