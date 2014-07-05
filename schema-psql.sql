@@ -25,7 +25,7 @@ CREATE TABLE {PREFIX}drives (
 
     owner           INTEGER,
 
-    created_by      INTEGER NOT NULL,
+    created_by      INTEGER,
 
     create_time     TIMESTAMP WITH TIME ZONE NOT NULL,
 
