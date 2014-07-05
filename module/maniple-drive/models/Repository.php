@@ -380,8 +380,24 @@ class ManipleDrive_Model_Repository
         return $file;
     } // }}}
 
-    protected function _createSelect()
+    /**
+     * @param  string $internal_name
+     * @return ManipleDrive_Model_Dir|null
+     */
+    public function getDirByInternalName($internal_name) // {{{
+    {
+        $internal_name = (string) $internal_name;
+        $dir = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow(array(
+            'internal_name = ?' => $internal_name,
+        ));
+        if ($dir) {
+            return $dir;
+        }
+        return null;
+    } // }}}
+
+    protected function _createSelect() // {{{
     {
         return Zefram_Db_Select::factory($this->_tableProvider->getAdapter());
-    }
+    } // }}}
 }

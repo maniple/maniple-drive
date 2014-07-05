@@ -359,7 +359,7 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.share) {
+    if (dir.perms.share && !self._options.disableSharing) {
         ops.push({
             op: 'shareDir',
             title: Drive.Util.i18n('DirBrowser.opShareDir.opname')
@@ -770,11 +770,19 @@ DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
     });
 }; // }}}
 
-DirBrowser.prototype.opShareDir = function(dir) { // {{{
+DirBrowser.prototype.opShareDir = function (dir) { // {{{
     var $ = this.$,
         self = this,
-        str = Drive.Util.i18n('DirBrowser.opShareDir'),
-        url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
+        str,
+        url;
+
+    if (self._options.disableSharing) {
+        window.console && window.console.warn('Sharing is disabled');
+        return;
+    }
+
+    str = Drive.Util.i18n('DirBrowser.opShareDir');
+    url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
 
     (new Dialog({
         width:  600,
@@ -1315,7 +1323,7 @@ DirBrowser.prototype._subdirOps = function (dir) { // {{{
         }
     };
 
-    if (dir.perms.share) {
+    if (dir.perms.share && !self._options.disableSharing) {
         ops.share = {
             op: 'share',
             title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
@@ -1742,5 +1750,4 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
 
     self._active = null;
 }; // }}}
-
 

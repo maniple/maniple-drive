@@ -72,7 +72,7 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
     -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
-    internal_key    VARCHAR(64),
+    internal_name   VARCHAR(64),
 
     -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
     dir_count       INTEGER UNSIGNED NOT NULL DEFAULT 0,
@@ -143,8 +143,8 @@ CREATE TABLE {PREFIX}drive_dirs (
         FOREIGN KEY (drive_id, parent_id)
         REFERENCES {PREFIX}drive_dirs (drive_id, dir_id),
 
-    -- indeks zapewniajacy unikatowosc internal_key
-    UNIQUE INDEX {PREFIX}drive_dirs_internal_key_idx (internal_key)
+    -- indeks zapewniajacy unikatowosc internal_name
+    UNIQUE INDEX {PREFIX}drive_dirs_internal_name_idx (internal_name)
 
 ) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 

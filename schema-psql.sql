@@ -67,7 +67,7 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
     -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
-    internal_key    VARCHAR(64),
+    internal_name   VARCHAR(64),
 
     -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
     dir_count       INTEGER NOT NULL DEFAULT 0,
@@ -134,9 +134,9 @@ CREATE TABLE {PREFIX}drive_dirs (
         FOREIGN KEY (drive_id, parent_id)
         REFERENCES {PREFIX}drive_dirs (drive_id, dir_id),
 
-    -- indeks zapewniajacy unikatowosc internal_key
-    CONSTRAINT {PREFIX}drive_dirs_internal_key_idx
-        UNIQUE (internal_key)
+    -- indeks zapewniajacy unikatowosc internal_name
+    CONSTRAINT {PREFIX}drive_dirs_internal_name_idx
+        UNIQUE (internal_name)
 
 );
 
