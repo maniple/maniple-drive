@@ -344,13 +344,13 @@ class ManipleDrive_Helper
         switch ($name) {
             case 'shared':
                 return new ManipleDrive_Model_SharedDir(
-                    $this->getSecurityContext()->getUserId(),
+                    $this->getSecurityContext()->getUser()->getId(),
                     $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')
                 );
 
             case 'public':
                 return new ManipleDrive_Model_PublicDir(
-                    $this->getSecurityContext()->getUserId(),
+                    $this->getSecurityContext()->getUser()->getId(),
                     $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')
                 );
         }

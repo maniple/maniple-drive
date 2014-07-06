@@ -35,7 +35,7 @@ class ManipleDrive_DriveController_CreateAction extends Zefram_Controller_Action
         try {
             $drive = $this->getTable('ManipleDrive_Model_DbTable_Drives')->createRow($values);
             $drive->setName($values['name']);
-            $drive->created_by = $this->getSecurity()->getUserId();
+            $drive->created_by = $this->getSecurity()->getUser()->getId();
             $drive->save();
             $db->commit();
 

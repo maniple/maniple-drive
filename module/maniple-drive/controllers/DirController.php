@@ -34,7 +34,7 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
                 $num = $dir->saveShares($shares);
 
                 $dir->visibility = $visibility;
-                $dir->modified_by = $this->getSecurity()->getUserId();
+                $dir->modified_by = $this->getSecurity()->getUser()->getId();
                 $dir->save();
 
                 $db->commit();
@@ -114,7 +114,7 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
         $db->beginTransaction();
         try {
             $dir->owner = $user->id;
-            $dir->modified_by = $this->getSecurity()->getUserId();
+            $dir->modified_by = $this->getSecurity()->getUser()->getId();
             $dir->save();
             $db->commit();
 

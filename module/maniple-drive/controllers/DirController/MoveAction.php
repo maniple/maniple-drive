@@ -45,7 +45,7 @@ class ManipleDrive_DirController_MoveAction extends Zefram_Controller_Action_Sta
         $db->beginTransaction();
         try {
             $this->_dir->parent_id = $parent_dir->dir_id;
-            $this->_dir->modified_by = $this->getSecurityContext()->getUserId();
+            $this->_dir->modified_by = $this->getSecurityContext()->getUser()->getId();
             $this->_dir->save();
             $db->commit();
 

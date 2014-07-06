@@ -44,7 +44,7 @@ class ManipleDrive_DriveController_EditAction extends Zefram_Controller_Action_S
         try {
             $drive = $this->_drive;
             $drive->setFromArray($values);
-            $drive->modified_by = $this->getSecurity()->getUserId();
+            $drive->modified_by = $this->getSecurity()->getUser()->getId();
             $drive->save();
             $db->commit();
 
