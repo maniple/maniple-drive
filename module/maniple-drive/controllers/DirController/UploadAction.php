@@ -193,8 +193,6 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
     public function run()
     {
-        $translator = $this->getResource('translate');
-
         try {
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
@@ -204,7 +202,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
             // TODO uprawnienia zapisu do dysku
             if (!$this->getDriveHelper()->isDirWritable($dir)) {
-                throw new App_Exception_Forbidden('Brak uprawnień do zapisu do tego katalogu');
+                throw new Exception('Brak uprawnień do zapisu do tego katalogu');
             }
 
             $fileinfo = $this->_handlePostUpload();
@@ -212,7 +210,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
         } catch (Exception $e) {
             $result = array(
-                'error' => $translator->translate($e->getMessage()),
+                'error' => $this->view->translate($e->getMessage()),
             );
         }
 

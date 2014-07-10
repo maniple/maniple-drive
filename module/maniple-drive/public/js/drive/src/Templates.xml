@@ -406,8 +406,10 @@ Loading directory contents...
   <dd>{{ file.mimetype }}</dd>
   <dt>{{ str.md5sum }}</dt>
   <dd>{{ file.md5sum }}</dd>
-  <dt>{{ str.url }}</dt>
-  <dd><code>{{ file.url }}</code></dd>
+    {{#if file.url }}
+        <dt>{{ str.url }}</dt>
+        <dd><code>{{ file.url }}</code></dd>
+    {{/if }}
  </dl>
 </div>
 ]]>

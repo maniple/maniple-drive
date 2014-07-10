@@ -9,12 +9,12 @@
             {% endif %}
             <dl class="meta">
                 <dt>Właściciel:</dt>
-                <dd>{{ fn(drive.owner) }}</dd>
+                <dd>{{ fullName(drive.owner) }}</dd>
                 <dt>Utworzony:</dt>
                 <dd class="timelog">
                     <span class="tm">{{ drive.create_time | date("j M Y, H:i") }}</span>
                     <span class="sep">przez</span>
-                    <span class="user">{{ fn(drive.created_by) }}</span>
+                    <span class="user">{{ fullName(drive.created_by) }}</span>
                 </dd>
                 <dt>Zajęte miejsce:</dt>
                 <dd>{{ fileSize(drive.disk_usage) }}

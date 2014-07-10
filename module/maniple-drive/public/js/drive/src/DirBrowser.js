@@ -97,7 +97,7 @@ function DirBrowser(selector, options) { // {{{
     });
     $.History.start();
 
-    if (self._options.dir) {
+    if (self._options.dir && document.location.hash.substr(0, 2) != '#/') {
         self.setDir(self._options.dir);
     }
     return;
@@ -381,7 +381,7 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
         };
     }
 
-    ops.push({
+    if(0)ops.push({
         op: 'dirDetails',
         title: Drive.Util.i18n('DirBrowser.opDirDetails.opname')
     });
@@ -478,7 +478,7 @@ DirBrowser.prototype.loadDir = function (path, success) { // {{{
             .attr('title', 'Ładowanie zawartości katalogu...');
     }
 
-    App.ajax({
+    Maniple.ajax({
         url: url,
         type: 'get',
         data: {path: path},
@@ -560,7 +560,7 @@ var _dialogForm = function (options) // {{{
                         dialog.setStatus(options.submitMessage);
                     }
 
-                    App.ajax({
+                    Maniple.ajax({
                         url: options.url,
                         type: 'post',
                         data: dialog.getContentElement().find('form').serialize(),
@@ -615,6 +615,17 @@ var _dialogForm = function (options) // {{{
     });
     dialog.open();
 }; // }}}
+
+/**
+ * This method is a part of public API.
+ */
+DirBrowser.prototype.createDir = function () {
+    return this.opCreateDir(this._currentDir);
+};
+
+DirBrowser.prototype.showUploader = function () {
+    this._uploader.showDropZone();
+};
 
 DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     var self = this,
@@ -750,7 +761,7 @@ DirBrowser.prototype.opMoveDir = function(dir, parentDirId) { // {{{
         dir.element.addClass('moving');
     }
 
-    App.ajax({
+    Maniple.ajax({
         url: url,
         type: 'post',
         data: {parent_id: parentDirId},
@@ -793,13 +804,12 @@ DirBrowser.prototype.opShareDir = function (dir) { // {{{
                 label: 'Save',
                 action: function (dialog) {
                     dialog.setStatus(str.messageSending);
-                    App.ajax({
+                    Maniple.ajax({
                         url: url,
                         type: 'post',
                         data: dialog.getContentElement().find('form').serialize(),
                         dataType: 'json',
                         success: function (response) {
-                            // App.flash(str.messageSuccess, 'success');
                             $.extend(dir, response.data);
                             dialog.close();
                         },
@@ -846,7 +856,7 @@ DirBrowser.prototype.opShareDir = function (dir) { // {{{
             });
 
             content.find('#drive-dir-share-acl-users').addClass('loading');
-            App.ajax({
+            Maniple.ajax({
                 url: url,
                 type: 'get',
                 success: function (response) {
@@ -1124,7 +1134,7 @@ DirBrowser.prototype.opMoveFile = function(file, dirId) { // {{{
         file.element.addClass('moving');
     }
 
-    App.ajax({
+    Maniple.ajax({
         url: url,
         type: 'post',
         data: {dir_id: dirId},
@@ -1176,7 +1186,6 @@ DirBrowser.prototype.opEditFile = function(file) { // {{{
         complete: function (dialog, response) {
             response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
-                // App.flash(str.messageSuccess);
                 dialog.close();
             }
         }
@@ -1186,6 +1195,10 @@ DirBrowser.prototype.opEditFile = function(file) { // {{{
 DirBrowser.prototype.opFileDetails = function(file) { // {{{
     var self = this,
         str = Drive.Util.i18n('DirBrowser.opFileDetails');
+
+    if (self._options.disableSharing) {
+        file.url = null;
+    }
 
     var content = self._renderTemplate('DirBrowser.opFileDetails', {
             file: file,
@@ -1280,40 +1293,11 @@ DirBrowser.prototype._closeOpdd = function() { // {{{
     // this.$.fn.opdd.close();
 }; // }}}
 
-DirBrowser.prototype._dirEntryOpdd = function(entry, items) { return; // {{{
-    var opdd = App.View.opdd(items);
-
-    opdd.bind('opdd-open', function() {
-        if (self._active) {
-            self._active.removeClass('active');
-            self._active = null;
-        }
-
-        if (entry.element) {
-            entry.element.addClass('active');
-            self._active = entry.element;
-        }
-
-        return false;
-    });
-
-    opdd.bind('opdd-close', function() {
-        if (entry.element) {
-            entry.element.removeClass('active');
-        }
-        self._active = null;
-
-        return false;
-    });
-
-    return opdd;
-}; // }}}
-
 DirBrowser.prototype._subdirOps = function (dir) { // {{{
     var self = this,
         ops = {};
 
-    ops.details = {
+    if(0)ops.details = {
         op: 'details',
         title: Drive.Util.i18n('DirBrowser.opDirDetails.opname'),
         handler: function () {
@@ -1671,7 +1655,8 @@ DirBrowser.prototype._renderFile = function (file, replace) { // {{{
             required: ['grab', 'icon', 'name'],
             wrapper: self.$
         }),
-        ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1];
+        ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1],
+        url = Drive.Util.uri(self._uriTemplates.file.read, file);
 
     // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
     // w nim zawarte rowniez sa czytelne
@@ -1681,10 +1666,10 @@ DirBrowser.prototype._renderFile = function (file, replace) { // {{{
         if (file.preview_url) {
             // enable lightbox on this element
             elem.attr('data-open-lightbox', '');
-            elem.attr('data-download-url', file.url);
+            elem.attr('data-download-url', url);
             elem.attr('href', file.preview_url);
         } else {
-            elem.attr('href', file.url); // 'data-goto-url', '');
+            elem.attr('href', url); // 'data-goto-url', '');
         }
     });
 

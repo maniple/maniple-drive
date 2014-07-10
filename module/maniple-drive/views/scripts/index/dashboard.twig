@@ -87,7 +87,7 @@
             {{ routeLink(file.name, 'drive.file', {action: 'read', file_id: file.file_id}) }}
             <small>
                 {{ fileSize(file.size) }}
-                {{ fn(file.creator) }}
+                {{ fullName(file.creator) }}
             </small>
             </li>
         {% endfor %}
@@ -114,7 +114,7 @@
             {{ routeLink(file.name, 'drive.file', {action: 'read', file_id: file.file_id}) }}
             <small>
                 {{ fileSize(file.size) }}
-                {{ fn(file.creator) }}
+                {{ fullName(file.creator) }}
             </small>
             </li>
         {% endfor %}

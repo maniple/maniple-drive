@@ -9,12 +9,12 @@
             <?php endif; ?>
             <dl class="meta">
                 <dt>Właściciel:</dt>
-                <dd><?= $this->fn($drive['owner']) ?></dd>
+                <dd><?= $this->fullName($drive['owner']) ?></dd>
                 <dt>Utworzony:</dt>
                 <dd class="timelog">
                     <span class="tm"><?= date('j M Y, H:i', strtotime($drive['create_time'])) ?></span>
                     <span class="sep">przez</span>
-                    <span class="user"><?= $this->fn($drive['created_by']) ?></span>
+                    <span class="user"><?= $this->fullName($drive['created_by']) ?></span>
                 </dd>
                 <dt>Zajęte miejsce:</dt>
                 <dd><?= $this->fileSize($drive['disk_usage']) ?>

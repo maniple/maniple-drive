@@ -27,6 +27,9 @@ class ManipleDrive_Helper
      */
     protected $_userSearchRoute;
 
+    /**
+     * @var Zend_EventManager_EventManager
+     */
     protected $_eventManager;
 
     public function setEventManager(Zend_EventManager_EventManager $eventManager)
@@ -196,15 +199,7 @@ class ManipleDrive_Helper
 
     public function getDate($time) // {{{
     {
-        $view = $this->getView();
-        $time = (int) $time;
-
-        return array(
-            'ts'    => $time,
-            'date'  => $view->dateFormat($time, 'short'),
-            'short' => $view->dateFormat($time, 'short', 'short'),
-            'long'  => $view->dateFormat($time, 'long', 'medium'),
-        );
+        return (float) $time;
     } // }}}
 
     /**
@@ -315,8 +310,8 @@ class ManipleDrive_Helper
 
         if (count($data)) {
             return array(
-                'user_id' => (int) $data['user_id'],
-                'name' => $this->getView()->fn($data, array('escape' => false)),
+                'user_id' => (int) @$data['user_id'],
+                'name' => $this->getView()->fullName($data, array('escape' => false)),
             );
         }
 

@@ -1,6 +1,6 @@
 define(
-["jquery","jquery.magnific-popup","handlebars.runtime","vendor\/maniple\/modal","vendor\/maniple\/modal.ajaxform"],
-function ($, __var0__, Handlebars, Dialog, ajaxForm) {
+["jquery","jquery.magnific-popup","handlebars.runtime","maniple\/core","maniple\/modal","maniple\/modal.ajaxform"],
+function ($, __var0__, Handlebars, Maniple, Dialog, ajaxForm) {
 var Drive = {
     I18n: (function() {
         var I18n = {
@@ -236,7 +236,7 @@ var Drive = {
             });
             $.History.start();
 
-            if (self._options.dir) {
+            if (self._options.dir && document.location.hash.substr(0, 2) != '#/') {
                 self.setDir(self._options.dir);
             }
             return;
@@ -498,7 +498,7 @@ var Drive = {
                 };
             }
 
-            if (dir.perms.share) {
+            if (dir.perms.share && !self._options.disableSharing) {
                 ops.push({
                     op: 'shareDir',
                     title: Drive.Util.i18n('DirBrowser.opShareDir.opname')
@@ -520,7 +520,7 @@ var Drive = {
                 };
             }
 
-            ops.push({
+            if(0)ops.push({
                 op: 'dirDetails',
                 title: Drive.Util.i18n('DirBrowser.opDirDetails.opname')
             });
@@ -617,7 +617,7 @@ var Drive = {
                     .attr('title', 'Ładowanie zawartości katalogu...');
             }
 
-            App.ajax({
+            Maniple.ajax({
                 url: url,
                 type: 'get',
                 data: {path: path},
@@ -699,7 +699,7 @@ var Drive = {
                                 dialog.setStatus(options.submitMessage);
                             }
 
-                            App.ajax({
+                            Maniple.ajax({
                                 url: options.url,
                                 type: 'post',
                                 data: dialog.getContentElement().find('form').serialize(),
@@ -754,6 +754,17 @@ var Drive = {
             });
             dialog.open();
         }; // }}}
+
+        /**
+         * This method is a part of public API.
+         */
+        DirBrowser.prototype.createDir = function () {
+            return this.opCreateDir(this._currentDir);
+        };
+
+        DirBrowser.prototype.showUploader = function () {
+            this._uploader.showDropZone();
+        };
 
         DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
             var self = this,
@@ -889,7 +900,7 @@ var Drive = {
                 dir.element.addClass('moving');
             }
 
-            App.ajax({
+            Maniple.ajax({
                 url: url,
                 type: 'post',
                 data: {parent_id: parentDirId},
@@ -909,11 +920,19 @@ var Drive = {
             });
         }; // }}}
 
-        DirBrowser.prototype.opShareDir = function(dir) { // {{{
+        DirBrowser.prototype.opShareDir = function (dir) { // {{{
             var $ = this.$,
                 self = this,
-                str = Drive.Util.i18n('DirBrowser.opShareDir'),
-                url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
+                str,
+                url;
+
+            if (self._options.disableSharing) {
+                window.console && window.console.warn('Sharing is disabled');
+                return;
+            }
+
+            str = Drive.Util.i18n('DirBrowser.opShareDir');
+            url = Drive.Util.uri(this._uriTemplates.dir.share, dir);
 
             (new Dialog({
                 width:  600,
@@ -924,13 +943,12 @@ var Drive = {
                         label: 'Save',
                         action: function (dialog) {
                             dialog.setStatus(str.messageSending);
-                            App.ajax({
+                            Maniple.ajax({
                                 url: url,
                                 type: 'post',
                                 data: dialog.getContentElement().find('form').serialize(),
                                 dataType: 'json',
                                 success: function (response) {
-                                    // App.flash(str.messageSuccess, 'success');
                                     $.extend(dir, response.data);
                                     dialog.close();
                                 },
@@ -977,7 +995,7 @@ var Drive = {
                     });
 
                     content.find('#drive-dir-share-acl-users').addClass('loading');
-                    App.ajax({
+                    Maniple.ajax({
                         url: url,
                         type: 'get',
                         success: function (response) {
@@ -1255,7 +1273,7 @@ var Drive = {
                 file.element.addClass('moving');
             }
 
-            App.ajax({
+            Maniple.ajax({
                 url: url,
                 type: 'post',
                 data: {dir_id: dirId},
@@ -1307,7 +1325,6 @@ var Drive = {
                 complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
-                        // App.flash(str.messageSuccess);
                         dialog.close();
                     }
                 }
@@ -1317,6 +1334,10 @@ var Drive = {
         DirBrowser.prototype.opFileDetails = function(file) { // {{{
             var self = this,
                 str = Drive.Util.i18n('DirBrowser.opFileDetails');
+
+            if (self._options.disableSharing) {
+                file.url = null;
+            }
 
             var content = self._renderTemplate('DirBrowser.opFileDetails', {
                     file: file,
@@ -1411,40 +1432,11 @@ var Drive = {
             // this.$.fn.opdd.close();
         }; // }}}
 
-        DirBrowser.prototype._dirEntryOpdd = function(entry, items) { return; // {{{
-            var opdd = App.View.opdd(items);
-
-            opdd.bind('opdd-open', function() {
-                if (self._active) {
-                    self._active.removeClass('active');
-                    self._active = null;
-                }
-
-                if (entry.element) {
-                    entry.element.addClass('active');
-                    self._active = entry.element;
-                }
-
-                return false;
-            });
-
-            opdd.bind('opdd-close', function() {
-                if (entry.element) {
-                    entry.element.removeClass('active');
-                }
-                self._active = null;
-
-                return false;
-            });
-
-            return opdd;
-        }; // }}}
-
         DirBrowser.prototype._subdirOps = function (dir) { // {{{
             var self = this,
                 ops = {};
 
-            ops.details = {
+            if(0)ops.details = {
                 op: 'details',
                 title: Drive.Util.i18n('DirBrowser.opDirDetails.opname'),
                 handler: function () {
@@ -1454,7 +1446,7 @@ var Drive = {
                 }
             };
 
-            if (dir.perms.share) {
+            if (dir.perms.share && !self._options.disableSharing) {
                 ops.share = {
                     op: 'share',
                     title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
@@ -1802,7 +1794,8 @@ var Drive = {
                     required: ['grab', 'icon', 'name'],
                     wrapper: self.$
                 }),
-                ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1];
+                ext = file.name.match(/(?=.)([-_a-z0-9]+)$/i)[1],
+                url = Drive.Util.uri(self._uriTemplates.file.read, file);
 
             // skoro biezacy katalog jest czytelny, oznacza to, ze wszystkie pliki
             // w nim zawarte rowniez sa czytelne
@@ -1812,10 +1805,10 @@ var Drive = {
                 if (file.preview_url) {
                     // enable lightbox on this element
                     elem.attr('data-open-lightbox', '');
-                    elem.attr('data-download-url', file.url);
+                    elem.attr('data-download-url', url);
                     elem.attr('href', file.preview_url);
                 } else {
-                    elem.attr('href', file.url); // 'data-goto-url', '');
+                    elem.attr('href', url); // 'data-goto-url', '');
                 }
             });
 
@@ -3520,8 +3513,18 @@ var Drive = {
             "DirBrowser.opFileDetails": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+          var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing, self=this;
 
+        function program1(depth0,data) {
+
+          var buffer = "", stack1;
+          buffer += "\n<dt>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</dt>\n<dd><code>"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</code></dd>\n";
+          return buffer;
+          }
 
           buffer += "<div id=\"drive-file-details\">\n<dl>\n<dt>"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
@@ -3563,11 +3566,10 @@ var Drive = {
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.md5sum)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</dt>\n<dd>"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.md5sum)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</dd>\n<dt>"
-            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</dt>\n<dd><code>"
-            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</code></dd>\n</dl>\n</div>";
+            + "</dd>\n";
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.url), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</dl>\n</div>";
           return buffer;
           }
 
