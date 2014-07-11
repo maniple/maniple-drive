@@ -1,6 +1,6 @@
 define(
-["jquery","jquery.magnific-popup","handlebars.runtime","maniple\/core","maniple\/modal","maniple\/modal.ajaxform"],
-function ($, __var0__, Handlebars, Maniple, Dialog, ajaxForm) {
+["jquery","jquery.magnific-popup","handlebars.runtime","maniple/core","maniple/viewtils","maniple/modal","maniple/modal.ajaxform"],
+function ($, __var0__, Handlebars, Maniple, Viewtils, Dialog, ajaxForm) {
 var Drive = {
     I18n: (function() {
         var I18n = {

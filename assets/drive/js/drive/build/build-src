@@ -114,7 +114,7 @@ if ($DEPS) {
     }
 }
 echo "define(\n",
-    "", json_encode(array_keys($deps)), ",\n",
+    "", str_replace("\\/", "/", json_encode(array_keys($deps))), ",\n",
     "function (", implode(', ', $deps), ") {\n",
     "var $NAME = {\n";
 

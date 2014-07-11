@@ -3,6 +3,7 @@
     "jquery.magnific-popup": null,
     "handlebars.runtime": "Handlebars",
     "maniple/core": "Maniple",
+    "maniple/viewtils": "Viewtils",
     "maniple/modal": "Dialog",
     "maniple/modal.ajaxform": "ajaxForm"
 }
