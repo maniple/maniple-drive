@@ -12,7 +12,7 @@
 
 <script type="text/javascript">
 $(function() {
-    require(['<?= $this->moduleAsset('js/drive.' . locale . '.js', 'maniple-drive') ?>'], function (Drive) {
+    require(['<?= $this->moduleAsset('js/drive.' . $this->locale . '.js', 'maniple-drive') ?>'], function (Drive) {
         new Drive.DirBrowser('#drive-dir-browser', <?= Zefram_Json::encode(array(
             'uriTemplates'   => $this->uri_templates,
             'breadcrumbs'    => $this->dir_browser_breadcrumbs ? $this->dir_browser_breadcrumbs : '#breadcrumbs',
