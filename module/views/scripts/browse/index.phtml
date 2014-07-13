@@ -1,4 +1,4 @@
-<?php $this->headLink()->appendStylesheet($this->baseUrl('/assets/drive/css/drive.css')) ?>
+<?php $this->headLink()->appendStylesheet($this->moduleAsset('css/drive.css', 'maniple-drive')) ?>
 <div id="breadcrumbs"></div>
 <style>
 #breadcrumbs .separator:before {
@@ -6,18 +6,13 @@
 }
 </style>
 <div id="drive-dir-browser"></div>
-<script type="text/javascript" src="<?= $this->baseUrl('/assets/drive/js/vendor/jquery.history-1.5.0a.min.js') ?>"></script>
-<script type="text/javascript" src="<?= $this->baseUrl('/assets/drive/js/vendor/jquery.eip-0.2.0.min.js') ?>"></script>
-<script type="text/javascript" src="<?= $this->baseUrl('/assets/drive/js/vendor/jquery.grab.min.js') ?>"></script>
+<script type="text/javascript" src="<?= $this->moduleAsset('js/vendor/jquery.history-1.5.0a.min.js', 'maniple-drive') ?>"></script>
+<script type="text/javascript" src="<?= $this->moduleAsset('js/vendor/jquery.eip-0.2.0.min.js', 'maniple-drive') ?>"></script>
+<script type="text/javascript" src="<?= $this->moduleAsset('js/vendor/jquery.grab.min.js', 'maniple-drive') ?>"></script>
 
 <script type="text/javascript">
-requirejs.config({
-    paths: {
-        "maniple": "<?= $this->baseUrl('/assets/core/js/maniple') ?>"
-    }
-});
 $(function() {
-    require(['<?= $this->baseUrl('/assets/drive/js/drive.' . $this->locale . '.js') ?>'], function (Drive) {
+    require(['<?= $this->moduleAsset('js/drive.' . locale . '.js', 'maniple-drive') ?>'], function (Drive) {
         new Drive.DirBrowser('#drive-dir-browser', <?= Zefram_Json::encode(array(
             'uriTemplates'   => $this->uri_templates,
             'breadcrumbs'    => $this->dir_browser_breadcrumbs ? $this->dir_browser_breadcrumbs : '#breadcrumbs',

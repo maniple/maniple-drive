@@ -1,7 +1,12 @@
 <?php
 
-class ManipleDrive_Bootstrap extends Zend_Application_Module_Bootstrap
+class ManipleDrive_Bootstrap extends Maniple_Application_ModuleBootstrap
 {
+    public function getAssetsBaseDir()
+    {
+        return 'drive';
+    }
+
     public function getRoutesConfig()
     {
         return require dirname(__FILE__) . '/configs/routes.config.php';
