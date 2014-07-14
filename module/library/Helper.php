@@ -267,6 +267,12 @@ class ManipleDrive_Helper
                     $data['thumb_url'] = $this->getView()->url('drive.file.thumb', array('file_id' => $row->file_id, 'dims' => '100x100'));
                     $data['preview_url'] = $this->getView()->url('drive.file.thumb', array('file_id' => $row->file_id));
                 }
+
+                // content metadata
+                $title = trim($row->title);
+                $data['title'] = strlen($title) ? $title : $row->name;
+                $data['author'] = $row->author;
+                $data['description'] = $row->description;
                 break;
 
             case $row instanceof ManipleDrive_Model_DirInterface:

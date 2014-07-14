@@ -23,13 +23,16 @@ var Drive = {
                 uploadSuccess:          'Wszystkie pliki zostały pomyślnie przesłane',
                 uploadError:            'Przesyłanie zakończone. Wystąpiły błędy',
                 uploadProgress:         'Przesyłanie pliku {number} z {total} ... {percent}%',
-                dropHere:               'Przeciągnij i upuść pliki tutaj. <small>Lub kliknij tutaj, aby dodać pliki</small>',
-                dropHereOpera:          'Kliknij aby dodać pliki. <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
-                dropHereLegacy:         'Kliknij aby dodać plik. <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
+                dropHere:               'Przeciągnij i upuść pliki tutaj <small>Lub kliknij, aby dodać pliki</small>',
+                dropHereOpera:          'Kliknij aby dodać pliki <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
+                dropHereLegacy:         'Kliknij aby dodać plik <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
                 responseError:          'Nieoczekiwana odpowiedź od serwera',
                 cancelUploadConfirm:    'Opuszczenie tej strony przerwie przesyłanie plików. Czy na pewno chcesz przejść do innej strony?',
             },
             DirBrowser: {
+                submitLabel:            'Wykonaj',
+                cancelLabel:            'Anuluj',
+                loadingDirContents:     'Ładowanie zawartości katalogu...',
                 noItems:                'Katalog jest pusty',
                 moreOps:                'Więcej',
                 eipHint:                'Kliknij aby edytować',
@@ -51,15 +54,20 @@ var Drive = {
                     size:               'Rozmiar',
                     mtime:              'Zmodyfikowany'
                 },
+                opOpenDir: {
+                    opname:             'Otwórz'
+                },
                 opCreateDir: {
                     opname:             'Nowy katalog',
                     title:              'Nowy katalog',
-                    submit:             'Zastosuj'
+                    submit:             'Zastosuj',
+                    nameLabel:          'Nazwa katalogu'
                 },
                 opRenameDir: {
                     opname:             'Zmień nazwę',
                     title:              'Zmiana nazwy katalogu',
-                    submit:             'Zastosuj'
+                    submit:             'Zastosuj',
+                    nameLabel:          'Nowa nazwa katalogu'
                 },
                 opRemoveDir: {
                     opname:             'Usuń',
@@ -111,7 +119,10 @@ var Drive = {
                     messageSuccess:     'Metadane pliku zostały zapisane'
                 },
                 opRenameFile: {
-                    opname:             'Zmień nazwę'
+                    opname:             'Zmień nazwę',
+                    title:              'Zmiana nazwy pliku',
+                    submit:             'Zastosuj',
+                    nameLabel:          'Nowa nazwa pliku'
                 },
                 opRemoveFile: {
                     opname:             'Usuń',
@@ -166,6 +177,8 @@ var Drive = {
 
             self.$ = $;
 
+            self._events = {};
+
             self._element = $(selector).first();
             self._options = $.extend({}, options);
 
@@ -175,6 +188,9 @@ var Drive = {
 
             // biezacy katalog
             self._currentDir = null;
+
+            // tryb wyswietlania (CSS)
+            self._displayMode = null;
 
             // slownik z templejtami adresow operacji na plikach i katalogach
             self._uriTemplates = self._options.uriTemplates;
@@ -211,10 +227,10 @@ var Drive = {
             // ustaw referencje do tego obiektu w powiazanym elemencie drzewa
             self._element.data('DirBrowser', self);
 
-            self._element.empty().append(self._renderTemplate(
-                'DirBrowser.loading',
-                {str: Drive.Util.i18n('DirBrowser.loading')}
-            ));
+            //self._element.empty().append(self._renderTemplate(
+            //    'DirBrowser.loading',
+            //    {str: Drive.Util.i18n('DirBrowser.loading')}
+            //));
 
             // zainicjuj obsluge zmiany hasha w adresie
             $.History.bind(function (state) {
@@ -236,11 +252,39 @@ var Drive = {
             });
             $.History.start();
 
+            if (self._options.displayMode) {
+                self.setDisplayMode(self._options.displayMode);
+            }
+
             if (self._options.dir && document.location.hash.substr(0, 2) != '#/') {
                 self.setDir(self._options.dir);
             }
             return;
         } // }}}
+
+        DirBrowser.prototype.on = function (type, handler) {
+            if (typeof handler !== 'function') {
+                throw new Error('Event handler must be a function');
+            }
+            if (!this._events[type]) {
+                this._events[type] = [];
+            }
+            this._events[type].push(handler);
+            return this;
+        };
+
+        DirBrowser.prototype.emit = function (type) {
+            var self = this,
+                handlers = self._events[type],
+                args;
+            if (handlers && handlers.length) {
+                args = Array.prototype.slice.call(arguments, 1);
+                handlers.forEach(function (handler) {
+                    handler.apply(self, args);
+                });
+            }
+            return self;
+        };
 
         DirBrowser.prototype._initMainView = function (selector) { // {{{
             if (!this._view) {
@@ -285,6 +329,12 @@ var Drive = {
         }; // }}}
 
         DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
+            this.emit('diskUsageChanged', {
+                diskSize:  +available > 0 ? +available : Infinity,
+                freeBytes: +available > 0 ? (+available - +used) : Infinity,
+                usedBytes: +used
+            });
+
             var view = this._view.childViews.diskUsage,
                 element = view.element,
                 hooks = view.hooks,
@@ -614,7 +664,7 @@ var Drive = {
                 var title = dirNameHook.attr('title');
                 dirNameHook
                     .addClass('loading')
-                    .attr('title', 'Ładowanie zawartości katalogu...');
+                    .attr('title', String(Drive.Util.i18n('DirBrowser.loadingDirContents')));
             }
 
             Maniple.ajax({
@@ -682,7 +732,45 @@ var Drive = {
 
             // pokaz zawartosc katalogu
             self._renderDirContents(dir);
+
+            self.emit('dirChanged');
         }; // }}}
+
+        DirBrowser.prototype.getDisplayMode = function () {
+            if (this._displayMode === null) {
+                if ($.cookie) {
+                    this.setDisplayMode($.cookie('DirBrowser.displayMode'));
+                }
+                if (this._displayMode === null) {
+                    this._displayMode = this._options.defaultDisplayMode || 'list';
+                }
+            }
+            return this._displayMode;
+        };
+
+        DirBrowser.prototype.setDisplayMode = function (mode) {
+            switch (mode) {
+                case 'grid':
+                case 'list':
+                case 'media':
+                    this._displayMode = mode;
+                    $.cookie && $.cookie('DirBrowser.displayMode', mode);
+
+                    if (this._view) {
+                        this._view.hooks.dirContents
+                            .removeClass('display-grid display-list display-media')
+                            .addClass('display-' + mode);
+                    }
+
+                    this.emit('displayModeChanged', mode);
+                    break;
+
+                default:
+                    window.console && console.warn('Unsupported display mode: ' + mode);
+            }
+
+            return this;
+        };
 
         var _dialogForm = function (options) // {{{
         {
@@ -693,7 +781,7 @@ var Drive = {
                 buttons: [
                     {
                         id: 'submit',
-                        label: options.submitLabel || 'Submit',
+                        label: options.submitLabel || Drive.Util.i18n('DirBrowser.submitLabel'),
                         action: function (dialog) {
                             if (options.submitMessage) {
                                 dialog.setStatus(options.submitMessage);
@@ -735,7 +823,7 @@ var Drive = {
                     },
                     {
                         id: 'cancel',
-                        label: options.cancelLabel || 'Cancel',
+                        label: options.cancelLabel || Drive.Util.i18n('DirBrowser.cancelLabel'),
                         action: 'close',
                         className: 'btn'
                     }
@@ -762,8 +850,14 @@ var Drive = {
             return this.opCreateDir(this._currentDir);
         };
 
+        DirBrowser.prototype.isWritable = function () {
+            return !!this._currentDir.perms.write;
+        };
+
         DirBrowser.prototype.showUploader = function () {
-            this._uploader.showDropZone();
+            if (this._currentDir.perms.write) {
+                this._uploader.showDropZone();
+            }
         };
 
         DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
@@ -774,8 +868,6 @@ var Drive = {
             function buildForm(dialog, values, errors) {
                 var content = self._renderTemplate('DirBrowser.nameForm', {
                     str: str,
-
-                    label: 'Directory name',
                     value: values && values.name,
                     errors: errors && errors.name
                 });
@@ -784,12 +876,11 @@ var Drive = {
             }
 
             _dialogForm({
-                width:  300,
-                title: str.title,
-                submitLabel: 'Create',
-                submitMessage: 'Creating directory, please wait...',
-                url: url,
-                form: buildForm,
+                width:         300,
+                title:         str.title,
+                submitLabel:   str.submit,
+                url:           url,
+                form:          buildForm,
                 open: function () {
                     this.getContentElement().find('input[name="name"]').focus();
                 },
@@ -805,25 +896,6 @@ var Drive = {
                     dialog.close();
                 }
             });
-
-            /*ajaxForm({
-                width:       440,
-                height:      120,
-                url:         url,
-                title:       str.title,
-                submitLabel: str.submit,
-                complete: function (dialog, response) {
-                    var dir = response.data.dir;
-
-                    if (!dir.path) {
-                        dir.path = self._currentDir.path + '/' + dir.dir_id;
-                    }
-
-                    self.addSubdir(dir);
-                    self._currentDir.subdirs.push(dir);
-                    dialog.close();
-                }
-            });*/
         }; // }}}
 
         DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
@@ -835,8 +907,6 @@ var Drive = {
             function buildForm(dialog, values, errors) {
                 var content = self._renderTemplate('DirBrowser.nameForm', {
                     str: str,
-
-                    label: 'New directory name',
                     value: values ? values.name : dir.name,
                     errors: errors && errors.name
                 });
@@ -845,12 +915,11 @@ var Drive = {
             }
 
             _dialogForm({
-                width:  300,
-                title: str.title,
-                submitLabel: 'Rename',
-                submitMessage: 'Renaming directory, please wait...',
-                url: url,
-                form: buildForm,
+                width:       300,
+                title:       str.title,
+                submitLabel: str.submit,
+                url:         url,
+                form:        buildForm,
                 open: function () {
                     this.getContentElement().find('input[name="name"]').focus().select();
                 },
@@ -1177,7 +1246,8 @@ var Drive = {
         DirBrowser.prototype.opRenameFile = function(file) { // {{{
             var $ = this.$,
                 self = this,
-                url = Drive.Util.uri(self._uriTemplates.file.rename, file);
+                url = Drive.Util.uri(self._uriTemplates.file.rename, file),
+                str = Drive.Util.i18n('DirBrowser.opRenameFile');
 
             function selection(element, start, end) { // {{{
                 if (element instanceof $) {
@@ -1204,9 +1274,7 @@ var Drive = {
 
             function buildForm(dialog, values, errors) {
                 var content = self._renderTemplate('DirBrowser.nameForm', {
-                    str: {},
-
-                    label: 'New file name',
+                    str: str,
                     value: values ? values.name : file.name,
                     errors: errors && errors.name
                 });
@@ -1215,12 +1283,11 @@ var Drive = {
             }
 
             _dialogForm({
-                width:  240,
-                title: 'Zmiana nazwy pliku',
-                submitLabel: 'Rename',
-                submitMessage: 'Renaming file, please wait...',
-                url: url,
-                form: buildForm,
+                width:       240,
+                title:       str.title,
+                submitLabel: str.submit,
+                url:         url,
+                form:        buildForm,
                 open: function () {
                     this.getContentElement().find('input[name="name"]').each(function() {
                         var j = $(this),
@@ -1325,6 +1392,14 @@ var Drive = {
                 complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
+                        var responseFile = response.data;
+
+                        $.extend(file, responseFile);
+
+                        if (file.element) {
+                            self._renderFile(file, true);
+                        }
+
                         dialog.close();
                     }
                 }
@@ -1435,6 +1510,15 @@ var Drive = {
         DirBrowser.prototype._subdirOps = function (dir) { // {{{
             var self = this,
                 ops = {};
+
+            ops.open = {
+                op: 'open',
+                title: Drive.Util.i18n('DirBrowser.opOpenDir.opname'),
+                handler: function () {
+                    document.location = self._dirUrl(dir);
+                    return false;
+                }
+            };
 
             if(0)ops.details = {
                 op: 'details',
@@ -1850,6 +1934,8 @@ var Drive = {
                 view = new Drive.View(element, ['header', 'updir', 'subdirs', 'files']);
 
             self._view.inject('dirContents', view);
+
+            self.setDisplayMode(self.getDisplayMode());
 
             view.hooks.header.append(self._renderHeader());
 
@@ -3079,7 +3165,7 @@ var Drive = {
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
 
 
-          buffer += "<div class=\"dir-entry dir-entry-updir\">\n<div class=\"col-grab\"></div>\n<div class=\"col-name\" colspan=\"5\">\n<span class=\"dir-entry-icon\"></span>\n<span class=\"dir-entry-name\" title=\""
+          buffer += "<div class=\"dir-entry dir-entry-updir\">\n<div class=\"col-grab\"></div>\n<div class=\"col-name\">\n<span class=\"dir-entry-icon\">\n<span class=\"drive-icon drive-icon-updir\" data-hook=\"icon\"></span>\n</span>\n<span class=\"dir-entry-name\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "\" data-hook=\"name\">..</span>\n</div>\n</div>";
           return buffer;
@@ -3095,16 +3181,19 @@ var Drive = {
 
           var buffer = "", stack1;
           buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" class=\"dropdown-toggle\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n";
           stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.share)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(6, program6, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(2, program2, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(8, program8, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(4, program4, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</ul>\n</div>\n";
           return buffer;
@@ -3116,7 +3205,7 @@ var Drive = {
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-share-alt\"></i> ";
+            + "\">";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
@@ -3127,41 +3216,11 @@ var Drive = {
         function program4(depth0,data) {
 
           var buffer = "", stack1, helper;
-          buffer += "\n<li><a href=\"#!\" data-op=\"";
-          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-font\"></i> ";
-          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "</a></li>\n";
-          return buffer;
-          }
-
-        function program6(depth0,data) {
-
-          var buffer = "", stack1, helper;
-          buffer += "\n<li><a href=\"#!\" data-op=\"";
-          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-list\"></i> ";
-          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "</a></li>\n";
-          return buffer;
-          }
-
-        function program8(depth0,data) {
-
-          var buffer = "", stack1, helper;
           buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-trash-o\"></i> ";
+            + "\">";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
@@ -3197,7 +3256,7 @@ var Drive = {
           var buffer = "", stack1;
           buffer += "\n<img src=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" alt=\"\" style=\"width:48px;height:48px;\" />\n";
+            + "\" alt=\"\" />\n";
           return buffer;
           }
 
@@ -3210,92 +3269,77 @@ var Drive = {
         function program5(depth0,data) {
 
           var buffer = "", stack1;
+          buffer += "\n"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.author)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\n";
+          return buffer;
+          }
+
+        function program7(depth0,data) {
+
+
+          return "\n<i>Brak autora / źródła</i>\n";
+          }
+
+        function program9(depth0,data) {
+
+          var buffer = "", stack1;
+          buffer += "\n"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.description)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "\n";
+          return buffer;
+          }
+
+        function program11(depth0,data) {
+
+
+          return "\n<i>Brak opisu</i>\n";
+          }
+
+        function program13(depth0,data) {
+
+          var buffer = "", stack1;
           buffer += "\n<div class=\"dropdown\">\n<div data-toggle=\"dropdown\" class=\"dropdown-toggle\"><span class=\"caret\"></span></div>\n<ul class=\"dropdown-menu dropdown-menu-right has-tip\">\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(6, program6, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.open)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(14, program14, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(8, program8, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.edit)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(14, program14, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(10, program10, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.rename)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(14, program14, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(12, program12, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.details)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(14, program14, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n";
-          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(14, program14, data),data:data}));
+          stack1 = ((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.ops)),stack1 == null || stack1 === false ? stack1 : stack1.remove)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1)),blockHelperMissing.call(depth0, stack1, {hash:{},inverse:self.noop,fn:self.program(16, program16, data),data:data}));
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</ul>\n</div>\n";
           return buffer;
           }
-        function program6(depth0,data) {
-
-          var buffer = "", stack1, helper;
-          buffer += "\n<li><a href=\"#!\" data-op=\"";
-          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-download\"></i> ";
-          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "</a></li>\n";
-          return buffer;
-          }
-
-        function program8(depth0,data) {
-
-          var buffer = "", stack1, helper;
-          buffer += "\n<li><a href=\"#!\" data-op=\"";
-          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-pencil\"></i> ";
-          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "</a></li>\n";
-          return buffer;
-          }
-
-        function program10(depth0,data) {
-
-          var buffer = "", stack1, helper;
-          buffer += "\n<li><a href=\"#!\" data-op=\"";
-          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-font\"></i> ";
-          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "</a></li>\n";
-          return buffer;
-          }
-
-        function program12(depth0,data) {
-
-          var buffer = "", stack1, helper;
-          buffer += "\n<li><a href=\"#!\" data-op=\"";
-          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-list\"></i> ";
-          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
-            + "</a></li>\n";
-          return buffer;
-          }
-
         function program14(depth0,data) {
+
+          var buffer = "", stack1, helper;
+          buffer += "\n<li><a href=\"#!\" data-op=\"";
+          if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "\">";
+          if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+          else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+          buffer += escapeExpression(stack1)
+            + "</a></li>\n";
+          return buffer;
+          }
+
+        function program16(depth0,data) {
 
           var buffer = "", stack1, helper;
           buffer += "\n<li class=\"divider\"></li>\n<li><a href=\"#!\" data-op=\"";
           if (helper = helpers.op) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.op); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
-            + "\"><i class=\"fa fa-trash-o\"></i> ";
+            + "\">";
           if (helper = helpers.title) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.title); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
           buffer += escapeExpression(stack1)
@@ -3310,7 +3354,15 @@ var Drive = {
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</span>\n<span class=\"dir-entry-name\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</span>\n</a>\n</div>\n<div class=\"col-owner\">"
+            + "</span>\n</a>\n</div>\n<div class=\"col-cmeta\">\n<div class=\"title\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.title)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+            + "</div>\n<div class=\"author\">\n";
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.author), {hash:{},inverse:self.program(7, program7, data),fn:self.program(5, program5, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</div>\n<div class=\"desc\">\n";
+          stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.description), {hash:{},inverse:self.program(11, program11, data),fn:self.program(9, program9, data),data:data});
+          if(stack1 || stack1 === 0) { buffer += stack1; }
+          buffer += "\n</div>\n</div>\n<div class=\"col-owner\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n<div class=\"col-size\">"
             + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options) : helperMissing.call(depth0, "fileSize", ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options)))
@@ -3319,7 +3371,7 @@ var Drive = {
             + "</div>\n<div class=\"date-only\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n</div>\n<div class=\"col-ops\">\n";
-          stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(5, program5, data),data:data});
+          stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(13, program13, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
           buffer += "\n</div>\n</div>";
           return buffer;
@@ -3361,10 +3413,8 @@ var Drive = {
           buffer += "<form method=\"post\">\n<div class=\"form-group";
           stack1 = helpers['if'].call(depth0, (depth0 && depth0.errors), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
-          buffer += "\">\n<label class=\"required\" for=\"drive-dir-form-name\">";
-          if (helper = helpers.label) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-          else { helper = (depth0 && depth0.label); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-          buffer += escapeExpression(stack1)
+          buffer += "\">\n<label class=\"required\" for=\"drive-dir-form-name\">"
+            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.nameLabel)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</label>\n<input type=\"text\" name=\"name\" class=\"form-control\" value=\"";
           if (helper = helpers.value) { stack1 = helper.call(depth0, {hash:{},data:data}); }
           else { helper = (depth0 && depth0.value); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }

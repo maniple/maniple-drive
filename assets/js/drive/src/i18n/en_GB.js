@@ -18,13 +18,16 @@ var I18n = {
         uploadSuccess:          'All files have been successfully uploaded',
         uploadError:            'File upload complete. There were errors',
         uploadProgress:         'Uploading file {number} of {total} ... {percent}%',
-        dropHere:               'Drag and drop files here. <small>Or click here to add files</small>',
-        dropHereOpera:          'Click to add files. <small>Use Firefox or Chrome browser to add files using drag and drop</small>',
-        dropHereLegacy:         'Click to add file. <small>Use Firefox or Chrome browser to add more than one file at once and to add files using drag and dro</small>',
+        dropHere:               'Drag and drop files here <small>Or click to add files</small>',
+        dropHereOpera:          'Click to add files <small>Use Firefox or Chrome browser to add files using drag and drop</small>',
+        dropHereLegacy:         'Click to add file <small>Use Firefox or Chrome browser to add more than one file at once and to add files using drag and dro</small>',
         responseError:          'Unexpected response from server',
         cancelUploadConfirm:    'Leaving this page will abort any pending file uploads. Are you sure you want to leave this page?'
     },
     DirBrowser: {
+        submitLabel:            'Submit',
+        cancelLabel:            'Cancel',
+        loadingDirContents:     'Loading dir contents...',
         noItems:                'Directory is empty',
         moreOps:                'More',
         eipHint:                'Click to edit',
@@ -46,15 +49,20 @@ var I18n = {
             size:               'Size',
             mtime:              'Modified'
         },
+        opOpenDir: {
+            opname:             'Open'
+        },
         opCreateDir: {
             opname:             'New directory',
             title:              'New directory',
-            submit:             'Apply'
+            submit:             'Apply',
+            nameLabel:          'Directory name'
         },
         opRenameDir: {
             opname:             'Rename',
             title:              'Rename directory',
-            submit:             'Apply'
+            submit:             'Apply',
+            nameLabel:          'New directory name'
         },
         opRemoveDir: {
             opname:             'Remove',
@@ -106,7 +114,10 @@ var I18n = {
             messageSuccess:     'File metadate have been saved successfully'
         },
         opRenameFile: {
-            opname:             'Rename'
+            opname:             'Rename',
+            title:              'Zmiana nazwy pliku',
+            submit:             'Zastosuj',
+            nameLabel:          'Nowa nazwa pliku'
         },
         opRemoveFile: {
             opname:             'Remove',

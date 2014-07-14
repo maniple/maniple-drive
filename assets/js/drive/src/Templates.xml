@@ -145,11 +145,13 @@ Loading directory contents...
 <template id="DirBrowser.dirContents.updir">
 <![CDATA[
 <div class="dir-entry dir-entry-updir">
- <div class="col-grab"></div>
- <div class="col-name" colspan="5">
-  <span class="dir-entry-icon"></span>
-  <span class="dir-entry-name" title="{{ dir.name }}" data-hook="name">..</span>
- </div>
+    <div class="col-grab"></div>
+    <div class="col-name">
+        <span class="dir-entry-icon">
+            <span class="drive-icon drive-icon-updir" data-hook="icon"></span>
+        </span>
+        <span class="dir-entry-name" title="{{ dir.name }}" data-hook="name">..</span>
+    </div>
 </div>
 ]]>
 </template>
@@ -175,18 +177,21 @@ Loading directory contents...
         <div class="dropdown">
             <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
             <ul class="dropdown-menu dropdown-menu-right has-tip">
+            {{# ops.open }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.open }}
             {{# ops.share }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-share-alt"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.share }}
             {{# ops.rename }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.rename }}
             {{# ops.details }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.details }}
             {{# ops.remove }}
                 <li class="divider"></li>
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.remove }}
             </ul>
         </div>
@@ -204,13 +209,30 @@ Loading directory contents...
         <a href="#!" data-hook="name" title="{{ file.name }}">
             <span class="dir-entry-icon" data-hook="icon">
                 {{#if file.thumb_url }}
-                <img src="{{ file.thumb_url }}" alt="" style="width:48px;height:48px;" />
+                <img src="{{ file.thumb_url }}" alt="" />
                 {{ else }}
                 <span class="drive-icon"></span>
                 {{/if }}
             </span>
             <span class="dir-entry-name">{{ file.name }}</span>
         </a>
+    </div>
+    <div class="col-cmeta">
+        <div class="title">{{ file.title }}</div>
+        <div class="author">
+            {{#if file.author }}
+                {{ file.author }}
+            {{ else }}
+                <i>Brak autora / źródła</i>
+            {{/if }}
+        </div>
+        <div class="desc">
+            {{#if file.description }}
+                {{ file.description }}
+            {{ else }}
+                <i>Brak opisu</i>
+            {{/if }}
+        </div>
     </div>
     <div class="col-owner">{{ file.owner.name }}</div>
     <div class="col-size">{{ fileSize file.size }}</div>
@@ -224,20 +246,20 @@ Loading directory contents...
             <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
             <ul class="dropdown-menu dropdown-menu-right has-tip">
             {{# ops.open }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-download"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.open }}
             {{# ops.edit }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-pencil"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.edit }}
             {{# ops.rename }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.rename }}
             {{# ops.details }}
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.details }}
             {{# ops.remove }}
                 <li class="divider"></li>
-                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
             {{/ ops.remove }}
             </ul>
         </div>
@@ -251,7 +273,7 @@ Loading directory contents...
 <![CDATA[
 <form method="post">
     <div class="form-group{{#if errors }} has-error{{/if }}">
-        <label class="required" for="drive-dir-form-name">{{ label }}</label>
+        <label class="required" for="drive-dir-form-name">{{ str.nameLabel }}</label>
         <input type="text" name="name" class="form-control" value="{{ value }}" autocomplete="off" id="drive-dir-form-name" />
         {{#if errors }}
         <div class="message-block">

@@ -27,6 +27,8 @@ function DirBrowser(selector, options) { // {{{
 
     self.$ = $;
 
+    self._events = {};
+
     self._element = $(selector).first();
     self._options = $.extend({}, options);
 
@@ -36,6 +38,9 @@ function DirBrowser(selector, options) { // {{{
 
     // biezacy katalog
     self._currentDir = null;
+
+    // tryb wyswietlania (CSS)
+    self._displayMode = null;
 
     // slownik z templejtami adresow operacji na plikach i katalogach
     self._uriTemplates = self._options.uriTemplates;
@@ -72,10 +77,10 @@ function DirBrowser(selector, options) { // {{{
     // ustaw referencje do tego obiektu w powiazanym elemencie drzewa
     self._element.data('DirBrowser', self);
 
-    self._element.empty().append(self._renderTemplate(
-        'DirBrowser.loading',
-        {str: Drive.Util.i18n('DirBrowser.loading')}
-    ));
+    //self._element.empty().append(self._renderTemplate(
+    //    'DirBrowser.loading',
+    //    {str: Drive.Util.i18n('DirBrowser.loading')}
+    //));
 
     // zainicjuj obsluge zmiany hasha w adresie
     $.History.bind(function (state) {
@@ -97,11 +102,39 @@ function DirBrowser(selector, options) { // {{{
     });
     $.History.start();
 
+    if (self._options.displayMode) {
+        self.setDisplayMode(self._options.displayMode);
+    }
+
     if (self._options.dir && document.location.hash.substr(0, 2) != '#/') {
         self.setDir(self._options.dir);
     }
     return;
 } // }}}
+
+DirBrowser.prototype.on = function (type, handler) {
+    if (typeof handler !== 'function') {
+        throw new Error('Event handler must be a function');
+    }
+    if (!this._events[type]) {
+        this._events[type] = [];
+    }
+    this._events[type].push(handler);
+    return this;
+};
+
+DirBrowser.prototype.emit = function (type) {
+    var self = this,
+        handlers = self._events[type],
+        args;
+    if (handlers && handlers.length) {
+        args = Array.prototype.slice.call(arguments, 1);
+        handlers.forEach(function (handler) {
+            handler.apply(self, args);
+        });
+    }
+    return self;
+};
 
 DirBrowser.prototype._initMainView = function (selector) { // {{{
     if (!this._view) {
@@ -146,6 +179,12 @@ DirBrowser.prototype._initDiskUsageView = function () { // {{{
 }; // }}}
 
 DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
+    this.emit('diskUsageChanged', {
+        diskSize:  +available > 0 ? +available : Infinity,
+        freeBytes: +available > 0 ? (+available - +used) : Infinity,
+        usedBytes: +used
+    });
+
     var view = this._view.childViews.diskUsage,
         element = view.element,
         hooks = view.hooks,
@@ -475,7 +514,7 @@ DirBrowser.prototype.loadDir = function (path, success) { // {{{
         var title = dirNameHook.attr('title');
         dirNameHook
             .addClass('loading')
-            .attr('title', 'Ładowanie zawartości katalogu...');
+            .attr('title', String(Drive.Util.i18n('DirBrowser.loadingDirContents')));
     }
 
     Maniple.ajax({
@@ -543,7 +582,45 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
 
     // pokaz zawartosc katalogu
     self._renderDirContents(dir);
+
+    self.emit('dirChanged');
 }; // }}}
+
+DirBrowser.prototype.getDisplayMode = function () {
+    if (this._displayMode === null) {
+        if ($.cookie) {
+            this.setDisplayMode($.cookie('DirBrowser.displayMode'));
+        }
+        if (this._displayMode === null) {
+            this._displayMode = this._options.defaultDisplayMode || 'list';
+        }
+    }
+    return this._displayMode;
+};
+
+DirBrowser.prototype.setDisplayMode = function (mode) {
+    switch (mode) {
+        case 'grid':
+        case 'list':
+        case 'media':
+            this._displayMode = mode;
+            $.cookie && $.cookie('DirBrowser.displayMode', mode);
+
+            if (this._view) {
+                this._view.hooks.dirContents
+                    .removeClass('display-grid display-list display-media')
+                    .addClass('display-' + mode);
+            }
+
+            this.emit('displayModeChanged', mode);
+            break;
+
+        default:
+            window.console && console.warn('Unsupported display mode: ' + mode);
+    }
+
+    return this;
+};
 
 var _dialogForm = function (options) // {{{
 {
@@ -554,7 +631,7 @@ var _dialogForm = function (options) // {{{
         buttons: [
             {
                 id: 'submit',
-                label: options.submitLabel || 'Submit',
+                label: options.submitLabel || Drive.Util.i18n('DirBrowser.submitLabel'),
                 action: function (dialog) {
                     if (options.submitMessage) {
                         dialog.setStatus(options.submitMessage);
@@ -596,7 +673,7 @@ var _dialogForm = function (options) // {{{
             },
             {
                 id: 'cancel',
-                label: options.cancelLabel || 'Cancel',
+                label: options.cancelLabel || Drive.Util.i18n('DirBrowser.cancelLabel'),
                 action: 'close',
                 className: 'btn'
             }
@@ -623,8 +700,14 @@ DirBrowser.prototype.createDir = function () {
     return this.opCreateDir(this._currentDir);
 };
 
+DirBrowser.prototype.isWritable = function () {
+    return !!this._currentDir.perms.write;
+};
+
 DirBrowser.prototype.showUploader = function () {
-    this._uploader.showDropZone();
+    if (this._currentDir.perms.write) {
+        this._uploader.showDropZone();
+    }
 };
 
 DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
@@ -635,8 +718,6 @@ DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     function buildForm(dialog, values, errors) {
         var content = self._renderTemplate('DirBrowser.nameForm', {
             str: str,
-            
-            label: 'Directory name',
             value: values && values.name,
             errors: errors && errors.name
         });
@@ -645,12 +726,11 @@ DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
     }
 
     _dialogForm({
-        width:  300,
-        title: str.title,
-        submitLabel: 'Create',
-        submitMessage: 'Creating directory, please wait...',
-        url: url,
-        form: buildForm,
+        width:         300,
+        title:         str.title,
+        submitLabel:   str.submit,
+        url:           url,
+        form:          buildForm,
         open: function () {
             this.getContentElement().find('input[name="name"]').focus();
         },
@@ -666,25 +746,6 @@ DirBrowser.prototype.opCreateDir = function (parentDir) { // {{{
             dialog.close();
         }
     });
-
-    /*ajaxForm({
-        width:       440,
-        height:      120,
-        url:         url,
-        title:       str.title,
-        submitLabel: str.submit,
-        complete: function (dialog, response) {
-            var dir = response.data.dir;
-
-            if (!dir.path) {
-                dir.path = self._currentDir.path + '/' + dir.dir_id;
-            }
-
-            self.addSubdir(dir);
-            self._currentDir.subdirs.push(dir);
-            dialog.close();
-        }
-    });*/
 }; // }}}
 
 DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
@@ -696,8 +757,6 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
     function buildForm(dialog, values, errors) {
         var content = self._renderTemplate('DirBrowser.nameForm', {
             str: str,
-            
-            label: 'New directory name',
             value: values ? values.name : dir.name,
             errors: errors && errors.name
         });
@@ -706,12 +765,11 @@ DirBrowser.prototype.opRenameDir = function(dir, complete) { // {{{
     }
 
     _dialogForm({
-        width:  300,
-        title: str.title,
-        submitLabel: 'Rename',
-        submitMessage: 'Renaming directory, please wait...',
-        url: url,
-        form: buildForm,
+        width:       300,
+        title:       str.title,
+        submitLabel: str.submit,
+        url:         url,
+        form:        buildForm,
         open: function () {
             this.getContentElement().find('input[name="name"]').focus().select();
         },
@@ -1038,7 +1096,8 @@ DirBrowser.prototype.opDirDetails = function(dir) { // {{{
 DirBrowser.prototype.opRenameFile = function(file) { // {{{
     var $ = this.$,
         self = this,
-        url = Drive.Util.uri(self._uriTemplates.file.rename, file);
+        url = Drive.Util.uri(self._uriTemplates.file.rename, file),
+        str = Drive.Util.i18n('DirBrowser.opRenameFile');
 
     function selection(element, start, end) { // {{{
         if (element instanceof $) {
@@ -1065,9 +1124,7 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
 
     function buildForm(dialog, values, errors) {
         var content = self._renderTemplate('DirBrowser.nameForm', {
-            str: {},
-            
-            label: 'New file name',
+            str: str,
             value: values ? values.name : file.name,
             errors: errors && errors.name
         });
@@ -1076,12 +1133,11 @@ DirBrowser.prototype.opRenameFile = function(file) { // {{{
     }
 
     _dialogForm({
-        width:  240,
-        title: 'Zmiana nazwy pliku',
-        submitLabel: 'Rename',
-        submitMessage: 'Renaming file, please wait...',
-        url: url,
-        form: buildForm,
+        width:       240,
+        title:       str.title,
+        submitLabel: str.submit,
+        url:         url,
+        form:        buildForm,
         open: function () {
             this.getContentElement().find('input[name="name"]').each(function() {
                 var j = $(this),
@@ -1186,6 +1242,14 @@ DirBrowser.prototype.opEditFile = function(file) { // {{{
         complete: function (dialog, response) {
             response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
+                var responseFile = response.data;
+
+                $.extend(file, responseFile);
+
+                if (file.element) {
+                    self._renderFile(file, true);
+                }
+
                 dialog.close();
             }
         }
@@ -1296,6 +1360,15 @@ DirBrowser.prototype._closeOpdd = function() { // {{{
 DirBrowser.prototype._subdirOps = function (dir) { // {{{
     var self = this,
         ops = {};
+
+    ops.open = {
+        op: 'open',
+        title: Drive.Util.i18n('DirBrowser.opOpenDir.opname'),
+        handler: function () {
+            document.location = self._dirUrl(dir);
+            return false;
+        }
+    };
 
     if(0)ops.details = {
         op: 'details',
@@ -1711,6 +1784,8 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
         view = new Drive.View(element, ['header', 'updir', 'subdirs', 'files']);
 
     self._view.inject('dirContents', view);
+
+    self.setDisplayMode(self.getDisplayMode());
 
     view.hooks.header.append(self._renderHeader());
 

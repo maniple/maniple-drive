@@ -24,10 +24,13 @@ dist/drive.%.js: src/deps.json $(wildcard src/*.js) src/Templates.js
 	php$(BIN_SUFFIX) build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ -d $^
 
 
-.PHONY: install clean dist
+.PHONY: install clean dist distclean
 
 install: all
 	cp$(BIN_SUFFIX) -f $(OUTPUT) ..
 
 clean:
 	rm$(BIN_SUFFIX) -rf $(OUTPUT) src/Templates.js dist
+
+distclean:
+	rm -rf dist

@@ -18,13 +18,16 @@ var I18n = {
         uploadSuccess:          'Wszystkie pliki zostały pomyślnie przesłane',
         uploadError:            'Przesyłanie zakończone. Wystąpiły błędy',
         uploadProgress:         'Przesyłanie pliku {number} z {total} ... {percent}%',
-        dropHere:               'Przeciągnij i upuść pliki tutaj. <small>Lub kliknij tutaj, aby dodać pliki</small>',
-        dropHereOpera:          'Kliknij aby dodać pliki. <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
-        dropHereLegacy:         'Kliknij aby dodać plik. <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
+        dropHere:               'Przeciągnij i upuść pliki tutaj <small>Lub kliknij, aby dodać pliki</small>',
+        dropHereOpera:          'Kliknij aby dodać pliki <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
+        dropHereLegacy:         'Kliknij aby dodać plik <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
         responseError:          'Nieoczekiwana odpowiedź od serwera',
         cancelUploadConfirm:    'Opuszczenie tej strony przerwie przesyłanie plików. Czy na pewno chcesz przejść do innej strony?',
     },
     DirBrowser: {
+        submitLabel:            'Wykonaj',
+        cancelLabel:            'Anuluj',
+        loadingDirContents:     'Ładowanie zawartości katalogu...',
         noItems:                'Katalog jest pusty',
         moreOps:                'Więcej',
         eipHint:                'Kliknij aby edytować',
@@ -46,15 +49,20 @@ var I18n = {
             size:               'Rozmiar',
             mtime:              'Zmodyfikowany'
         },
+        opOpenDir: {
+            opname:             'Otwórz'
+        },
         opCreateDir: {
             opname:             'Nowy katalog',
             title:              'Nowy katalog',
-            submit:             'Zastosuj'
+            submit:             'Zastosuj',
+            nameLabel:          'Nazwa katalogu'
         },
         opRenameDir: {
             opname:             'Zmień nazwę',
             title:              'Zmiana nazwy katalogu',
-            submit:             'Zastosuj'
+            submit:             'Zastosuj',
+            nameLabel:          'Nowa nazwa katalogu'
         },
         opRemoveDir: {
             opname:             'Usuń',
@@ -106,7 +114,10 @@ var I18n = {
             messageSuccess:     'Metadane pliku zostały zapisane'
         },
         opRenameFile: {
-            opname:             'Zmień nazwę'
+            opname:             'Zmień nazwę',
+            title:              'Zmiana nazwy pliku',
+            submit:             'Zastosuj',
+            nameLabel:          'Nowa nazwa pliku'
         },
         opRemoveFile: {
             opname:             'Usuń',

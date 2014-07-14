@@ -2,6 +2,8 @@
 
 class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_StandaloneForm
 {
+    protected $_ajaxFormHtml = true;
+
     /**
      * @var ManipleDrive_Model_File
      */
@@ -30,14 +32,27 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
                 'type' => 'text',
                 'options' => array(
                     'label' => 'Tytuł',
-                    'value' => $file->title,
+                    'required' => true,
+                    'value' => strlen($file->title) ? $file->title : $file->name,
+                    'validators' => array(
+                        array('StringLength', true, array('max' => 128)),
+                    ),
+                    'filters' => array(
+                        'StringTrim',
+                    ),
                 ),
             ),
             'author' => array(
                 'type' => 'text',
                 'options' => array(
-                    'label' => 'Autor',
+                    'label' => 'Autor / źródło',
                     'value' => $file->author,
+                    'validators' => array(
+                        array('StringLength', true, array('max' => 128)),
+                    ),
+                    'filters' => array(
+                        'StringTrim',
+                    ),
                 ),
             ),
             'description' => array(
@@ -45,6 +60,12 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
                 'options' => array(
                     'label' => 'Opis',
                     'value' => $file->description,
+                    'validators' => array(
+                        array('StringLength', true, array('max' => 512)),
+                    ),
+                    'filters' => array(
+                        'StringTrim',
+                    ),
                 ),
             ),
         )));
@@ -73,9 +94,7 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
         }
 
         $response = $this->_helper->ajaxResponse();
-        $response->setData(array(
-            'file_id' => $file->file_id,
-        ));
+        $response->setData($this->getDriveHelper()->getViewableData($file));
         $response->sendAndExit();
     } // }}}
 }
