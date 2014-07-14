@@ -23,7 +23,7 @@ var Drive = {
                 uploadSuccess:          'All files have been successfully uploaded',
                 uploadError:            'File upload complete. There were errors',
                 uploadProgress:         'Uploading file {number} of {total} ... {percent}%',
-                dropHere:               'Drag and drop files here.',
+                dropHere:               'Drag and drop files here. <small>Or click here to add files</small>',
                 dropHereOpera:          'Click to add files. <small>Use Firefox or Chrome browser to add files using drag and drop</small>',
                 dropHereLegacy:         'Click to add file. <small>Use Firefox or Chrome browser to add more than one file at once and to add files using drag and dro</small>',
                 responseError:          'Unexpected response from server',
@@ -1704,7 +1704,7 @@ var Drive = {
 
         DirBrowser.prototype._renderUpdir = function (dir) { // {{{
             var self = this;
-            var element = self._renderTemplate('DirBrowser.dirContents.updir', {dir: dir});
+            var element = self._renderTemplate('DirBrowser.dirContents.updir', {dir: dir}),
                 hooks = Viewtils.hooks(element, {
                     required: ['name'],
                     wrapper: self.$
@@ -2981,7 +2981,7 @@ var Drive = {
           var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
 
 
-          buffer += "<div id=\"drive-du\">\n<div class=\"pane\">\n<div class=\"progress-bar\">\n<div class=\"bar\" data-hook=\"progress-bar\" data-level-template=\"bar-{level}\"></div>\n</div>\n<dl class=\"used\">\n<dt>"
+          buffer += "<div id=\"drive-du\">\n<div class=\"pane\">\n<div class=\"progress\">\n<div class=\"progress-bar\" role=\"progressbar\" data-hook=\"progress-bar\" data-level-template=\"progress-bar-{level}\"></div>\n</div>\n<dl class=\"used\">\n<dt>"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.used)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</dt>\n<dd>\n<span data-hook=\"used\">"
             + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, (depth0 && depth0.used), options) : helperMissing.call(depth0, "fileSize", (depth0 && depth0.used), options)))
@@ -3047,7 +3047,7 @@ var Drive = {
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
 
 
-          buffer += "<div id=\"drive-dir-contents\">\n<table>\n<thead data-hook=\"header\"></thead>\n<tbody data-hook=\"updir\"></tbody>\n<tbody data-hook=\"subdirs\"></tbody>\n<tbody data-hook=\"files\"></tbody>\n</table>\n<div class=\"no-items-message\">"
+          buffer += "<div id=\"drive-dir-contents\">\n<div>\n<ul class=\"dir-entries\" data-hook=\"header\"></ul>\n<ul class=\"dir-entries\" data-hook=\"updir\"></ul>\n<ul class=\"dir-entries\" data-hook=\"subdirs\"></ul>\n<ul class=\"dir-entries\" data-hook=\"files\"></ul>\n</div>\n<div class=\"no-items-message\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.noItems)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n</div>";
           return buffer;
@@ -3060,15 +3060,15 @@ var Drive = {
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
 
 
-          buffer += "<tr>\n<th class=\"col-grab\"></th>\n<th class=\"col-icon\"></th>\n<th class=\"col-name\">"
+          buffer += "<div class=\"dir-entry dir-entry-header\">\n<div class=\"col-grab\"></div>\n<div class=\"col-name\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</th>\n<th class=\"col-owner\">"
+            + "</div>\n<div class=\"col-owner\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</th>\n<th class=\"col-size\">"
+            + "</div>\n<div class=\"col-size\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.size)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</th>\n<th class=\"col-mtime\">"
+            + "</div>\n<div class=\"col-mtime\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</th>\n<th class=\"col-ops\"></th>\n</tr>";
+            + "</div>\n<div class=\"col-ops\"></div>\n</div>";
           return buffer;
           }
 
@@ -3079,9 +3079,9 @@ var Drive = {
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
 
 
-          buffer += "<tr>\n<td class=\"col-grab\"></td>\n<td class=\"col-icon\"></td>\n<td class=\"col-name\" colspan=\"5\">\n<span title=\""
+          buffer += "<div class=\"dir-entry dir-entry-updir\">\n<div class=\"col-grab\"></div>\n<div class=\"col-name\" colspan=\"5\">\n<span class=\"dir-entry-icon\"></span>\n<span class=\"dir-entry-name\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" class=\"dir\" data-hook=\"name\">..</span>\n</td>\n</tr>";
+            + "\" data-hook=\"name\">..</span>\n</div>\n</div>";
           return buffer;
           }
 
@@ -3169,20 +3169,20 @@ var Drive = {
           return buffer;
           }
 
-          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\"><span class=\"drive-icon drive-icon-folder\" data-hook=\"icon\"></span></td>\n<td class=\"col-name\">\n<span title=\""
+          buffer += "<div class=\"dir-entry dir-entry-subdir\">\n<div class=\"col-grab\" data-hook=\"grab\"></div>\n<div class=\"col-name\" data-hook=\"name\">\n<span class=\"dir-entry-icon\">\n<span class=\"drive-icon drive-icon-folder\" data-hook=\"icon\"></span>\n</span>\n<span class=\"dir-entry-name\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\" data-hook=\"name\">"
+            + "\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</span>\n</td>\n<td class=\"col-owner\">"
+            + "</span>\n</div>\n<div class=\"col-owner\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</td>\n<td class=\"col-size\"></td>\n<td class=\"col-mtime\">\n<div class=\"full\">"
+            + "</div>\n<div class=\"col-size\"></div>\n<div class=\"col-mtime\">\n<div class=\"full\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['short'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n<div class=\"date-only\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.dir)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</div>\n</td>\n<td class=\"col-ops\">\n";
+            + "</div>\n</div>\n<div class=\"col-ops\">\n";
           stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
-          buffer += "\n</td>\n</tr>";
+          buffer += "\n</div>\n</div>";
           return buffer;
           }
 
@@ -3303,27 +3303,25 @@ var Drive = {
           return buffer;
           }
 
-          buffer += "<tr>\n<td class=\"col-grab\" data-hook=\"grab\"></td>\n<td class=\"col-icon\">\n<span data-hook=\"icon\" title=\""
+          buffer += "<div class=\"dir-entry dir-entry-file\">\n<div class=\"col-grab\" data-hook=\"grab\"></div>\n<div class=\"col-name\">\n<a href=\"#!\" data-hook=\"name\" title=\""
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\">\n";
+            + "\">\n<span class=\"dir-entry-icon\" data-hook=\"icon\">\n";
           stack1 = helpers['if'].call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.thumb_url), {hash:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
-          buffer += "\n</span>\n</td>\n<td class=\"col-name\">\n<a href=\"#!\" data-hook=\"name\" title=\""
+          buffer += "\n</span>\n<span class=\"dir-entry-name\">"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "\">"
-            + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</span>\n</td>\n<td class=\"col-owner\">"
+            + "</span>\n</a>\n</div>\n<div class=\"col-owner\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.owner)),stack1 == null || stack1 === false ? stack1 : stack1.name)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</td>\n<td class=\"col-size\">"
+            + "</div>\n<div class=\"col-size\">"
             + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options) : helperMissing.call(depth0, "fileSize", ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.size), options)))
-            + "</td>\n<td class=\"col-mtime\">\n<div class=\"full\">"
+            + "</div>\n<div class=\"col-mtime\">\n<div class=\"full\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1['short'])),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</div>\n<div class=\"date-only\">"
             + escapeExpression(((stack1 = ((stack1 = ((stack1 = (depth0 && depth0.file)),stack1 == null || stack1 === false ? stack1 : stack1.mtime)),stack1 == null || stack1 === false ? stack1 : stack1.date)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
-            + "</div>\n</td>\n<td class=\"col-ops\">\n";
+            + "</div>\n</div>\n<div class=\"col-ops\">\n";
           stack1 = helpers['if'].call(depth0, (depth0 && depth0.ops), {hash:{},inverse:self.noop,fn:self.program(5, program5, data),data:data});
           if(stack1 || stack1 === 0) { buffer += stack1; }
-          buffer += "\n</td>\n</tr>";
+          buffer += "\n</div>\n</div>";
           return buffer;
           }
 

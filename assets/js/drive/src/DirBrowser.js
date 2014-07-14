@@ -1565,7 +1565,7 @@ DirBrowser.prototype._renderHeader = function() { // {{{
 
 DirBrowser.prototype._renderUpdir = function (dir) { // {{{
     var self = this;
-    var element = self._renderTemplate('DirBrowser.dirContents.updir', {dir: dir});
+    var element = self._renderTemplate('DirBrowser.dirContents.updir', {dir: dir}),
         hooks = Viewtils.hooks(element, {
             required: ['name'],
             wrapper: self.$

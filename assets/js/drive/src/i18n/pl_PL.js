@@ -18,7 +18,7 @@ var I18n = {
         uploadSuccess:          'Wszystkie pliki zostały pomyślnie przesłane',
         uploadError:            'Przesyłanie zakończone. Wystąpiły błędy',
         uploadProgress:         'Przesyłanie pliku {number} z {total} ... {percent}%',
-        dropHere:               'Przeciągnij i upuść pliki tutaj.',
+        dropHere:               'Przeciągnij i upuść pliki tutaj. <small>Lub kliknij tutaj, aby dodać pliki</small>',
         dropHereOpera:          'Kliknij aby dodać pliki. <small>Użyj przeglądarki Firefox lub Chrome aby dodawać pliki metodą przeciągnij i upuść</small>',
         dropHereLegacy:         'Kliknij aby dodać plik. <small>Użyj przeglądarki Firefox lub Chrome aby wgrywać więcej niż jeden plik naraz i aby korzystać z metody przeciągnij i upuść.</small>',
         responseError:          'Nieoczekiwana odpowiedź od serwera',

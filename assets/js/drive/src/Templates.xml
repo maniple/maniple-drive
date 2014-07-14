@@ -78,8 +78,8 @@ Loading directory contents...
 <![CDATA[
 <div id="drive-du">
  <div class="pane">
-  <div class="progress-bar">
-   <div class="bar" data-hook="progress-bar" data-level-template="bar-{level}"></div>
+  <div class="progress">
+   <div class="progress-bar" role="progressbar" data-hook="progress-bar" data-level-template="progress-bar-{level}"></div>
   </div>
   <dl class="used">
    <dt>{{ str.used }}</dt>
@@ -120,129 +120,130 @@ Loading directory contents...
 <template id="DirBrowser.dirContents">
 <![CDATA[
 <div id="drive-dir-contents">
- <table>
-  <thead data-hook="header"></thead>
-  <tbody data-hook="updir"></tbody>
-  <tbody data-hook="subdirs"></tbody>
-  <tbody data-hook="files"></tbody>
- </table>
+ <div>
+  <ul class="dir-entries" data-hook="header"></ul>
+  <ul class="dir-entries" data-hook="updir"></ul>
+  <ul class="dir-entries" data-hook="subdirs"></ul>
+  <ul class="dir-entries" data-hook="files"></ul>
+ </div>
  <div class="no-items-message">{{ str.noItems }}</div>
 </div>
 ]]>
 </template>
 <template id="DirBrowser.dirContents.header">
 <![CDATA[
-<tr>
- <th class="col-grab"></th>
- <th class="col-icon"></th>
- <th class="col-name">{{ str.name }}</th>
- <th class="col-owner">{{ str.owner }}</th>
- <th class="col-size">{{ str.size }}</th>
- <th class="col-mtime">{{ str.mtime }}</th>
- <th class="col-ops"></th>
-</tr>
+<div class="dir-entry dir-entry-header">
+ <div class="col-grab"></div>
+ <div class="col-name">{{ str.name }}</div>
+ <div class="col-owner">{{ str.owner }}</div>
+ <div class="col-size">{{ str.size }}</div>
+ <div class="col-mtime">{{ str.mtime }}</div>
+ <div class="col-ops"></div>
+</div>
 ]]>
 </template>
 <template id="DirBrowser.dirContents.updir">
 <![CDATA[
-<tr>
- <td class="col-grab"></td>
- <td class="col-icon"></td>
- <td class="col-name" colspan="5">
-  <span title="{{ dir.name }}" class="dir" data-hook="name">..</span>
- </td>
-</tr>
+<div class="dir-entry dir-entry-updir">
+ <div class="col-grab"></div>
+ <div class="col-name" colspan="5">
+  <span class="dir-entry-icon"></span>
+  <span class="dir-entry-name" title="{{ dir.name }}" data-hook="name">..</span>
+ </div>
+</div>
 ]]>
 </template>
 
 <template id="DirBrowser.dirContents.subdir">
 <![CDATA[
-    <tr>
-        <td class="col-grab" data-hook="grab"></td>
-        <td class="col-icon"><span class="drive-icon drive-icon-folder" data-hook="icon"></span></td>
-        <td class="col-name">
-            <span title="{{ dir.name }}" data-hook="name">{{ dir.name }}</span>
-        </td>
-        <td class="col-owner">{{ dir.owner.name }}</td>
-        <td class="col-size"></td>
-        <td class="col-mtime">
-            <div class="full">{{ dir.mtime.short }}</div>
-            <div class="date-only">{{ dir.mtime.date }}</div>
-        </td>
-        <td class="col-ops">
-        {{#if ops }}
-            <div class="dropdown">
-                <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
-                <ul class="dropdown-menu dropdown-menu-right has-tip">
-                {{# ops.share }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-share-alt"></i> {{ title }}</a></li>
-                {{/ ops.share }}
-                {{# ops.rename }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
-                {{/ ops.rename }}
-                {{# ops.details }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
-                {{/ ops.details }}
-                {{# ops.remove }}
-                    <li class="divider"></li>
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
-                {{/ ops.remove }}
-                </ul>
-            </div>
-        {{/ if }}
-        </td>
-    </tr>
+<div class="dir-entry dir-entry-subdir">
+    <div class="col-grab" data-hook="grab"></div>
+    <div class="col-name" data-hook="name">
+        <span class="dir-entry-icon">
+            <span class="drive-icon drive-icon-folder" data-hook="icon"></span>
+        </span>
+        <span class="dir-entry-name" title="{{ dir.name }}">{{ dir.name }}</span>
+    </div>
+    <div class="col-owner">{{ dir.owner.name }}</div>
+    <div class="col-size"></div>
+    <div class="col-mtime">
+        <div class="full">{{ dir.mtime.short }}</div>
+        <div class="date-only">{{ dir.mtime.date }}</div>
+    </div>
+    <div class="col-ops">
+    {{#if ops }}
+        <div class="dropdown">
+            <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
+            <ul class="dropdown-menu dropdown-menu-right has-tip">
+            {{# ops.share }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-share-alt"></i> {{ title }}</a></li>
+            {{/ ops.share }}
+            {{# ops.rename }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
+            {{/ ops.rename }}
+            {{# ops.details }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
+            {{/ ops.details }}
+            {{# ops.remove }}
+                <li class="divider"></li>
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
+            {{/ ops.remove }}
+            </ul>
+        </div>
+    {{/ if }}
+    </div>
+</div>
 ]]>
 </template>
 
 <template id="DirBrowser.dirContents.file">
 <![CDATA[
-    <tr>
-        <td class="col-grab" data-hook="grab"></td>
-        <td class="col-icon">
-            <span data-hook="icon" title="{{ file.name }}">
+<div class="dir-entry dir-entry-file">
+    <div class="col-grab" data-hook="grab"></div>
+    <div class="col-name">
+        <a href="#!" data-hook="name" title="{{ file.name }}">
+            <span class="dir-entry-icon" data-hook="icon">
                 {{#if file.thumb_url }}
                 <img src="{{ file.thumb_url }}" alt="" style="width:48px;height:48px;" />
                 {{ else }}
                 <span class="drive-icon"></span>
                 {{/if }}
             </span>
-        </td>
-        <td class="col-name">
-            <a href="#!" data-hook="name" title="{{ file.name }}">{{ file.name }}</span>
-        </td>
-        <td class="col-owner">{{ file.owner.name }}</td>
-        <td class="col-size">{{ fileSize file.size }}</td>
-        <td class="col-mtime">
-            <div class="full">{{ file.mtime.short }}</div>
-            <div class="date-only">{{ file.mtime.date }}</div>
-        </td>
-        <td class="col-ops">
-        {{#if ops }}
-            <div class="dropdown">
-                <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
-                <ul class="dropdown-menu dropdown-menu-right has-tip">
-                {{# ops.open }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-download"></i> {{ title }}</a></li>
-                {{/ ops.open }}
-                {{# ops.edit }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-pencil"></i> {{ title }}</a></li>
-                {{/ ops.edit }}
-                {{# ops.rename }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
-                {{/ ops.rename }}
-                {{# ops.details }}
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
-                {{/ ops.details }}
-                {{# ops.remove }}
-                    <li class="divider"></li>
-                    <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
-                {{/ ops.remove }}
-                </ul>
-            </div>
-        {{/if }}
-        </td>
-    </tr>
+            <span class="dir-entry-name">{{ file.name }}</span>
+        </a>
+    </div>
+    <div class="col-owner">{{ file.owner.name }}</div>
+    <div class="col-size">{{ fileSize file.size }}</div>
+    <div class="col-mtime">
+        <div class="full">{{ file.mtime.short }}</div>
+        <div class="date-only">{{ file.mtime.date }}</div>
+    </div>
+    <div class="col-ops">
+    {{#if ops }}
+        <div class="dropdown">
+            <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
+            <ul class="dropdown-menu dropdown-menu-right has-tip">
+            {{# ops.open }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-download"></i> {{ title }}</a></li>
+            {{/ ops.open }}
+            {{# ops.edit }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-pencil"></i> {{ title }}</a></li>
+            {{/ ops.edit }}
+            {{# ops.rename }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-font"></i> {{ title }}</a></li>
+            {{/ ops.rename }}
+            {{# ops.details }}
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-list"></i> {{ title }}</a></li>
+            {{/ ops.details }}
+            {{# ops.remove }}
+                <li class="divider"></li>
+                <li><a href="#!" data-op="{{ op }}"><i class="fa fa-trash-o"></i> {{ title }}</a></li>
+            {{/ ops.remove }}
+            </ul>
+        </div>
+    {{/if }}
+    </div>
+</div>
 ]]>
 </template>
 

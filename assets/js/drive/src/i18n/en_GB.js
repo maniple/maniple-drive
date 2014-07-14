@@ -18,7 +18,7 @@ var I18n = {
         uploadSuccess:          'All files have been successfully uploaded',
         uploadError:            'File upload complete. There were errors',
         uploadProgress:         'Uploading file {number} of {total} ... {percent}%',
-        dropHere:               'Drag and drop files here.',
+        dropHere:               'Drag and drop files here. <small>Or click here to add files</small>',
         dropHereOpera:          'Click to add files. <small>Use Firefox or Chrome browser to add files using drag and drop</small>',
         dropHereLegacy:         'Click to add file. <small>Use Firefox or Chrome browser to add more than one file at once and to add files using drag and dro</small>',
         responseError:          'Unexpected response from server',

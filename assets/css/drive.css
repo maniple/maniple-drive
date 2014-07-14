@@ -538,14 +538,7 @@ html.grabbing * {
 }
 
 
-#drive-dir-contents .col-icon {
-    padding: 0 0 0 .25em;
-    vertical-align: middle;
-    text-align: center;
-}
-#drive-dir-contents .col-icon .drive-icon {
-    vertical-align: middle;
-}
+
 
 #drive-dir-contents td.col-name {
     cursor: pointer;
@@ -612,25 +605,6 @@ html.grabbing * {
     display: inline-block;
     width: 1.35em;
     text-align: left;
-}
-#drive-dir-contents tbody td .dropdown-toggle {
-    cursor: pointer;
-}
-#drive-dir-contents tbody tr.moving {
-    opacity: 0.5;
-}
-#drive-dir-contents tbody tr:hover {
-  background: #ffffd6;
-}
-#drive-dir-contents .col-grab {
-    width: 24px;
-    padding: 0;
-}
-tbody > tr:hover .col-grab.grabbable {
-    cursor: -webkit-grab;
-    cursor: -moz-grab;
-    cursor: grab;
-    background: url(../img/grab.png) repeat-y 10px 0;
 }
 
 .drive-grablabel {
@@ -1039,3 +1013,106 @@ tbody > tr:hover .col-grab.grabbable {
 .maniple-modal-buttons button + button {
     margin-left: 4px;
 }
+
+.dir-entries {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.dir-entry {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+    border-bottom: 1px solid rgb(234, 234, 234);
+}
+
+.dir-entry.dir-entry-header {
+    text-transform: uppercase;
+    font-size: 0.75em;
+    text-align: left;
+    border-bottom: 2px solid rgb(187, 187, 187);
+    padding: 0.75em 0.25em;
+    font-weight: bold;
+}
+
+.dir-entry > .col-grab, 
+.dir-entry > .col-name,
+.dir-entry > .col-owner,
+.dir-entry > .col-size,
+.dir-entry > .col-mtime,
+.dir-entry > .col-ops {
+    display: table-cell;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+.dir-entry > .col-owner {
+    display: none;
+}
+.dir-entry > .col-owner,
+.dir-entry > .col-size,
+.dir-entry > .col-mtime {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: .25em .5em;
+}
+.dir-entry > .col-name .dir-entry-name {
+    padding: .75em;
+}
+.dir-entry > .col-name a {
+    display: block;
+}
+.dir-entry > .col-name a, 
+.dir-entry > .col-name a:hover, 
+.dir-entry > .col-name a:focus {
+    text-decoration: none;
+    outline: none;
+}
+.dir-entry > .col-grab {
+    width: 24px;
+    padding: 0;
+}
+.dir-entry-icon,
+.dir-entry-icon > img {
+    width: 48px;
+    height: 48px;
+    display: inline-block;
+    border: none;
+    text-align: center;
+}
+.dir-entry-icon .drive-icon {
+    margin: 13px;
+}
+.dir-entry > .col-icon .drive-icon {
+    vertical-align: middle;
+}
+.dir-entry-name {
+    cursor: pointer;
+}
+
+.dir-entry > .col-ops {
+    width: 24px;
+    text-align: center;
+}
+.dir-entry > .col-name {
+    width: 50%;
+}
+
+.dir-entry .dropdown-toggle {
+    cursor: pointer;
+}
+
+.dir-entry.moving {
+    opacity: 0.5;
+}
+.dir-entry:hover {
+  background: #ffffd6;
+}
+
+.dir-entry:hover > .col-grab.grabbable {
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+    cursor: grab;
+    background: url(../img/grab.png) repeat-y 10px 0;
+}
+
