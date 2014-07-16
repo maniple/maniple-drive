@@ -1,7 +1,9 @@
 <?php
 
-class ManipleDrive_Bootstrap extends Maniple_Application_ModuleBootstrap
+class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
 {
+    protected $_moduleDeps = array('maniple-core');
+
     public function getAssetsBaseDir()
     {
         return 'drive';
