@@ -1723,7 +1723,8 @@ DirBrowser.prototype._bindOpHandler = function (element, ops) { // {{{
 DirBrowser.prototype._renderFile = function (file, replace) { // {{{
     var self = this,
         ops = self._fileOps(file),
-        element = self._renderTemplate('DirBrowser.dirContents.file', {file: file, ops: ops}),
+        str = Drive.Util.i18n('DirBrowser.dirContents'),
+        element = self._renderTemplate('DirBrowser.dirContents.file', {file: file, ops: ops, str: str}),
         hooks = Viewtils.hooks(element, {
             required: ['grab', 'icon', 'name'],
             wrapper: self.$

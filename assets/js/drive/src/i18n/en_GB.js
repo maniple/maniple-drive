@@ -47,7 +47,9 @@ var I18n = {
             name:               'Name',
             owner:              'Owner',
             size:               'Size',
-            mtime:              'Modified'
+            mtime:              'Modified',
+            noAuthor:           'No author / source',
+            noDescription:      'No description'
         },
         opOpenDir: {
             opname:             'Open'

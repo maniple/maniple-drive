@@ -267,8 +267,11 @@ function program5(depth0,data) {
 
 function program7(depth0,data) {
   
-  
-  return "\n<i>Brak autora / źródła</i>\n";
+  var buffer = "", stack1;
+  buffer += "\n<i>"
+    + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.noAuthor)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+    + "</i>\n";
+  return buffer;
   }
 
 function program9(depth0,data) {
@@ -282,8 +285,11 @@ function program9(depth0,data) {
 
 function program11(depth0,data) {
   
-  
-  return "\n<i>Brak opisu</i>\n";
+  var buffer = "", stack1;
+  buffer += "\n<i>"
+    + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.noDescription)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
+    + "</i>\n";
+  return buffer;
   }
 
 function program13(depth0,data) {
