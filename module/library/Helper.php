@@ -104,6 +104,10 @@ class ManipleDrive_Helper
     const SHARE  = 'share';
     const CHOWN  = 'chown';
 
+    const PERM_CHANGE_OWNER = 'drive.change_owner';
+    const PERM_READ_ANY     = 'drive.read_any';
+    const PERM_EDIT_ANY     = 'drive.edit_any';
+
     protected $_dirPermissions = array();
 
     public function getDirPermissions(ManipleDrive_Model_DirInterface $dir, $property = null) // {{{
@@ -144,15 +148,15 @@ class ManipleDrive_Helper
                     self::CHOWN  => true,
                 );
             } else {
-                $write  = $dir->isWritable($user_id);
-                $read   = $dir->isReadable($user_id);
+                $write  = $this->getSecurityContext()->isAllowed(self::PERM_EDIT_ANY) || $dir->isWritable($user_id);
+                $read   = $this->getSecurityContext()->isAllowed(self::PERM_READ_ANY) || $dir->isReadable($user_id);
                 $rename = false;
                 $remove = false;
 
                 // zeby przeniesc lub usunac katalog trzeba miec uprawnienia do
                 // zapisu tego katalogu, oraz miec uprawnienia do zapisu
                 // w katalogu nadrzednym (ten ostatni musi istniec)
-                if ($write && ($parent = $dir->fetchParent()) && $parent->isWritable($user_id)) {
+                if ($write && ($parent = $dir->fetchParent()) && $this->isDirWritable($parent)) {
                     $remove = !$dir->isInternal();
                     $rename = true;
                 }
@@ -163,7 +167,7 @@ class ManipleDrive_Helper
                     self::RENAME => $rename,
                     self::REMOVE => $remove,
                     self::SHARE  => $dir->owner && $dir->owner == $user_id,
-                    self::CHOWN  => false, // tylko administrator
+                    self::CHOWN  => $this->getSecurityContext()->isAllowed(self::PERM_CHANGE_OWNER),
                 );
             }
 
