@@ -1228,3 +1228,24 @@ html.grabbing * {
 .dir-entry .col-ops .dropdown.open .caret {
     border-top-color: #222;
 }
+.dir-entry .col-ops .dropdown-menu {
+    text-align: left;
+}
+.dir-display-mode-icon {
+    width: 24px;
+    height: 24px;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: #ccc url(../img/display-mode.png) no-repeat 0 0;
+}
+.dir-display-mode-icon.display-mode-media {
+    background-position: -24px 0;
+}
+.dir-display-mode-icon:hover {
+    background-color: #999;
+}
+.dir-display-mode-icon.active {
+    background-color: #222;
+}
+

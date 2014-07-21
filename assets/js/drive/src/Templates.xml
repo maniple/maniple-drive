@@ -223,14 +223,14 @@ Loading directory contents...
             {{#if file.author }}
                 {{ file.author }}
             {{ else }}
-                <i>Brak autora / źródła</i>
+                <i>{{ str.noAuthor }}</i>
             {{/if }}
         </div>
         <div class="desc">
             {{#if file.description }}
                 {{ file.description }}
             {{ else }}
-                <i>Brak opisu</i>
+                <i>{{ str.noDescription }}</i>
             {{/if }}
         </div>
     </div>
