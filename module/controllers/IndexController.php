@@ -108,4 +108,55 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         $this->view->shared_files = $shared_files;
         $this->view->public_files = $public_files;
     }
+
+    public function searchAction()
+    {
+        $q = $this->getScalarParam('q');
+        $q = mb_strtolower($q);
+        $indexFactory = $this->getResource('search')->getIndexFactory('drive');
+        $index = $indexFactory->getIndex('drive');
+        if (!$index) {
+            echo '[NO RESULTS]';
+            exit;
+        }
+
+        $hits = $index->search($q);
+        exit;
+    }
+
+    public function updateIndexAction()
+    {
+        $this->_helper->viewRenderer->setNoRender();
+
+        $indexFactory = $this->getResource('search')->getIndexFactory('drive');
+        $index = $indexFactory->getIndex('drive');
+        if ($index) {
+            return;
+        }
+
+        $index = $indexFactory->createIndex('drive');
+        $sql = "SELECT files.*, dirs.drive_id FROM " . 
+            $this->getResource('db.table_provider')->tableName('drive_files')
+            . " files JOIN " .
+            $this->getResource('db.table_provider')->tableName('drive_dirs')
+            . " dirs ON files.dir_id = dirs.dir_id ORDER BY ctime";
+        $stmt = $this->getResource('db.adapter')->query($sql);
+        while ($row = $stmt->fetch()) {
+            $doc = new Maniple_Search_Document();
+            $doc->addField(Maniple_Search_Field::Meta('file_id', $row['file_id']));
+            $doc->addField(Maniple_Search_Field::Meta('name',    mb_strtolower($row['name'])));
+
+            $doc->addField(Maniple_Search_Field::Meta('title',   mb_strtolower($row['title'])));
+            $doc->addField(Maniple_Search_Field::Meta('author',  mb_strtolower($row['author'])));
+
+            $doc->addField(Maniple_Search_Field::Text('title_t', $row['title']));
+            $doc->addField(Maniple_Search_Field::Meta('author_t',$row['author']));
+            $doc->addField(Maniple_Search_Field::Text('name_t',  $row['name']));
+            $doc->addField(Maniple_Search_Field::Text('description', $row['description']));
+
+            // TODO extract and index file contents
+            $index->insert($doc);
+        }
+        $index->rebuild();
+    }
 }

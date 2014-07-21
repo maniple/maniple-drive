@@ -187,6 +187,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         // liczb calkowitych na 32-bitowych maszynach
         $result['disk_usage'] = $drive->getDiskUsage();
         $result['quota'] = (float) $drive->quota;
+        $result['file'] = $file;
 
         return $result;
     }
@@ -207,6 +208,8 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
             $fileinfo = $this->_handlePostUpload();
             $result = $this->_saveUploadedFile($dir, $fileinfo);
+            $file = $result['file'];
+            unset($result['file']);
 
         } catch (Exception $e) {
             $result = array(
@@ -216,8 +219,38 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
         // nie helper, bo to moze byc otwarte w IFRAME, a wtedy ssacy niemozebnie
         // IE bedzie chcial otworzyc to jako plik
+        $output = Zefram_Json::encode($result);
+
         header('Content-Type: text/html; charset=utf-8');
-        echo Zefram_Json::encode($result);
+        header('Connection: close');
+        header('Content-Length: ' . strlen($output));
+
+        while (@ob_end_clean());
+
+        echo $output;
+        flush();
+
+        // this is a must
+        session_write_close();
+
+        if (isset($file)) {
+            // file was successfully uploaded, add it to index
+            $indexFactory = $this->getResource('search')->getIndexFactory('drive');
+            $index = $indexFactory->getIndex('drive');
+            if ($index) {
+                $doc = new Maniple_Search_Document();
+                $doc->addField(Maniple_Search_Field::Meta('file_id', $file->file_id));
+                $doc->addField(Maniple_Search_Field::Meta('name',    mb_strtolower($file->name)));
+                $doc->addField(Maniple_Search_Field::Meta('md5sum',  mb_strtolower($file->md5sum)));
+
+                $doc->addField(Maniple_Search_Field::Text('name_t',  $file->name));
+                // at this point no title, author, description is available
+
+                // TODO extract and index file contents
+                $index->insert($doc);
+            }
+        }
+
         exit;
     }
 }
