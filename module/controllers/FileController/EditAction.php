@@ -93,8 +93,25 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
             throw $e;
         }
 
-        $response = $this->_helper->ajaxResponse();
-        $response->setData($this->getDriveHelper()->getViewableData($file));
-        $response->sendAndExit();
+        $response = Zefram_Json::encode(array(
+            'status' => 'success',
+            'data' => $this->getDriveHelper()->getViewableData($file)
+        ));
+
+        header('Content-Type: text/html; charset=utf-8');
+        header('Connection: close');
+        header('Content-Length: ' . strlen($output));
+
+        while (@ob_end_clean());
+
+        echo $response;
+        flush();
+
+        // this is a must
+        session_write_close();
+
+        $this->getResource('drive.file_indexer')->update($file);
+
+        exit;
     } // }}}
 }

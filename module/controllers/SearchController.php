@@ -40,14 +40,10 @@ class ManipleDrive_SearchController extends ManipleDrive_Controller_Action
 
     public function indexAction()
     {
-        $searchDir = APPLICATION_PATH . '/../variable/search';
-
         $q = $this->getScalarParam('q');
-        echo $q, '<br/>';
-        $index = Zend_Search_Lucene::open($searchDir . '/drive_index');
+        $hits = $this->getResource('drive.file_indexer')->search($q);
 
-        Zend_Search_Lucene_Analysis_Analyzer::setDefault(new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8());
-
+/*
         $hits = $index->find($q);
 
         $file_ids = array();
@@ -62,6 +58,7 @@ class ManipleDrive_SearchController extends ManipleDrive_Controller_Action
                 echo $file->name, ' (id:', $file->file_id, ', size:', $file->size, ')<br/>';
             }
         }
+*/
         exit;
     }
 }

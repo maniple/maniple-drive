@@ -19,12 +19,26 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
         return array(
             'drive.helper' => array(
                 'class' => 'ManipleDrive_Helper',
-                'params' => array(
+                'options' => array(
                     'view'            => 'resource:view',
                     'securityContext' => null,
                     'tableProvider'   => null,
                     'userMapper'      => null,
                     'userSearchRoute' => null,
+                ),
+            ),
+            'drive.file_indexer' => array(
+                'class' => 'ManipleDrive_FileIndexer',
+                'options' => array(
+                    'indexFactory' => array(
+                        'class' => 'Maniple_Search_Lucene_IndexFactory',
+                        'options' => array(
+                            'storageDir' => APPLICATION_PATH . '/../variable/search',
+                        ),
+                    ),
+                    'stemmer' => array(
+                        'class' => 'Maniple_Search_Stemmer_PorterStemmer',
+                    ),
                 ),
             ),
         );

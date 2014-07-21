@@ -228,26 +228,16 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         while (@ob_end_clean());
 
         echo $output;
-        flush();
+        //flush();
 
-        // this is a must
-        session_write_close();
+        //session_write_close();
 
         if (isset($file)) {
-            // file was successfully uploaded, add it to index
-            $indexFactory = $this->getResource('search')->getIndexFactory('drive');
-            $index = $indexFactory->getIndex('drive');
-            if ($index) {
-                $doc = new Maniple_Search_Document();
-                $doc->addField(Maniple_Search_Field::Meta('file_id', $file->file_id));
-                $doc->addField(Maniple_Search_Field::Meta('name',    mb_strtolower($file->name)));
-                $doc->addField(Maniple_Search_Field::Meta('md5sum',  mb_strtolower($file->md5sum)));
-
-                $doc->addField(Maniple_Search_Field::Text('name_t',  $file->name));
-                // at this point no title, author, description is available
-
-                // TODO extract and index file contents
-                $index->insert($doc);
+            try {
+                $this->getResource('drive.file_indexer')->insert($file);
+            } catch (Exception $e) {
+                echo $e->getMessage();
+                // TODO log exception
             }
         }
 
