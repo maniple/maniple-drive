@@ -30,10 +30,23 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
             'drive.file_indexer' => array(
                 'class' => 'ManipleDrive_FileIndexer',
                 'options' => array(
-                    'indexFactory' => array(
-                        'class' => 'Maniple_Search_Lucene_IndexFactory',
-                        'options' => array(
-                            'storageDir' => APPLICATION_PATH . '/../variable/search',
+                    'index' => array(
+                        'class' => 'Maniple_Search_Lucene_Index',
+                        'args' => array(
+                            'path' => APPLICATION_PATH . '/../variable/search/drive.file_index',
+                            'analyzer' => array(
+                                'class' => 'Zefram_Search_Lucene_Analysis_Analyzer',
+                                'args' => array(
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'filters' => array(
+                                            // 'lowerCase' => true,
+                                            'stopWords' => '',
+                                            'stemmer' => 'Maniple_Search_Stemmer_PorterStemmer',
+                                        ),
+                                    ),
+                                ),
+                            ),
                         ),
                     ),
                     'stemmer' => array(
