@@ -2,63 +2,28 @@
 
 class ManipleDrive_SearchController extends ManipleDrive_Controller_Action
 {
-    public function updateAction()
+    public function updateIndexAction()
     {
-        $searchDir = APPLICATION_PATH . '/../variable/search';
-        if (!is_dir($searchDir)) {
-            mkdir($searchDir, 0777, true);
-        }
+        header('Content-Type: text/plain; charset=utf-8');
 
-//Zend_Search_Lucene_Analysis_Analyzer::setDefault(new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8());
-//Zend_Search_Lucene_Search_QueryParser::setDefaultEncoding('UTF-8');
-//Zend_Search_Lucene_Analysis_Analyzer::setDefault(new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8_CaseInsensitive());
+        while (@ob_end_clean());
+        set_time_limit(0);
+        $start = microtime(true);
 
-        $index = Zend_Search_Lucene::create($searchDir . '/drive_index');
+        $this->_helper->viewRenderer->setNoRender();
 
-        $sql = 'SELECT * FROM ' . $this->getResource('db.table_provider')->tableName(ManipleDrive_Model_TableNames::TABLE_FILES);
-        $db = $this->getResource('db.adapter');
-        $stmt = $db->query($sql);
+        $fileIndexer = $this->getResource('drive.file_indexer');
 
-        while ($row = $stmt->fetch(Zend_Db::FETCH_ASSOC)) {
-            $doc = new Zend_Search_Lucene_Document();
+        $files = $this->getResource('db.table_provider')->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll(null, 'file_id');
 
-            $doc->addField(Zend_Search_Lucene_Field::Text('file_id', $row['file_id'], 'utf-8'));
-
-            $doc->addField(Zend_Search_Lucene_Field::UnStored('name', $row['name'], 'utf-8'));
-            $doc->addField(Zend_Search_Lucene_Field::UnStored('title', $row['title'], 'utf-8'));
-            $doc->addField(Zend_Search_Lucene_Field::UnStored('author', $row['author'], 'utf-8'));
-            $doc->addField(Zend_Search_Lucene_Field::UnStored('description', $row['description'], 'utf-8'));
-
-            $index->addDocument($doc);
-        }
-
-        $index->optimize();
-        exit;
-    }
-
-    // updateFile --> update index 'all' and for matching drive
-
-    public function indexAction()
-    {
-        $q = $this->getScalarParam('q');
-        $hits = $this->getResource('drive.file_indexer')->search($q);
-
-/*
-        $hits = $index->find($q);
-
-        $file_ids = array();
-        foreach ($hits as $hit) {
-            $doc = $hit->getDocument();
-            $file_ids[] = $doc->file_id;
-        }
-
-        $files = $this->getResource('db.table_provider')->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll(array('file_id IN (?)' => $file_ids));
         foreach ($files as $file) {
-            if ($this->getDriveHelper()->isFileReadable($file)) {
-                echo $file->name, ' (id:', $file->file_id, ', size:', $file->size, ')<br/>';
-            }
+            echo sprintf("%-6d %s", $file['file_id'], str_pad($file['name']. ' ', 64, '.'));
+            $fileIndexer->insert($file);
+            echo " done.\n";
+            flush();
         }
-*/
-        exit;
+        echo "\n";
+        echo 'Time elapsed: ', sprintf('%.4fs', (microtime(true) - $start) / 1000000);
+        $fileIndexer->getIndex()->rebuild();
     }
 }
