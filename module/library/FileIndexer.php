@@ -44,6 +44,13 @@ class ManipleDrive_FileIndexer
 
     protected function _getFileTextContent(ManipleDrive_Model_File $file)
     {
+        $tmp = Zefram_Os::getTempDir();
+        $tmpFile = $tmp . '/drive.file_indexer.' . $file->md5sum;
+        if (is_file($tmpFile)) {
+            $contents = file_get_contents($tmpFile);
+            return strlen($contents) ? $contents : null;
+        }
+
         $devnull = stripos(PHP_OS, 'win') !== false ? 'nul' : '/dev/null';
         $commands = array(
             Zefram_File_MimeType_Data::PDF => 'pdftotext -enc UTF-8 %filename% - 2>' . $devnull,
@@ -52,6 +59,8 @@ class ManipleDrive_FileIndexer
             Zefram_File_MimeType_Data::XLS => 'xls2csv -d UTF-8 %filename% 2>' . $devnull,*/
         );
         
+        $output = null;
+
         if (isset($commands[$file->mimetype])) {
             $filename = escapeshellarg($file->name);
             $cmd = str_replace('%filename%', $file->getPath(), $commands[$file->mimetype]);
@@ -62,30 +71,18 @@ class ManipleDrive_FileIndexer
             if ($status === 0) {
                 $output = implode($output, "\n");
                 $output = preg_replace('/[\p{Z}\p{C}]+/u', ' ', $output); // Z - separators, C - other
-                return $output;
+            } else {
+                $output = null;
             }
+            file_put_contents($tmpFile, $output);
         }
 
-        return null;
+        return $output;
     }
 
     public function update(ManipleDrive_Model_File $file)
     {
-        // find document with given
-        $textContent = null;
-        $hits = $this->getIndex()->find($this->getIndex()->getFieldQuery('file_id', $file->file_id));
-
-        foreach ($hits as $hit) {
-            $textContent = $hit->text_content;
-            break;
-        }
-
-        if ($textContent === null) {
-            $textContent = $this->_getFileTextContent($file);
-        }
-
-        $doc = $this->_createFileDocument($file, $textContent);
-        $this->getIndex()->insert($doc);
+        return $this->insert($file);
     }
 
     protected function _createFileDocument(ManipleDrive_Model_File $file, $textContent = null)

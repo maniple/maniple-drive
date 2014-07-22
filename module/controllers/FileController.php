@@ -168,7 +168,10 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         echo '<strong>', $hits->hitCount, '</strong> hits<br/>';
         foreach ($hits->hits as $hit) {
             $file = $this->getDriveHelper()->getRepository()->getFile($hit->document->file_id);
-            if ($this->getDriveHelper()->isFileReadable($file)) {
+            if (empty($file)) {
+                echo 'Invalid file ID: ', $hit->document->file_id;
+            }
+            if ($file && $this->getDriveHelper()->isFileReadable($file)) {
                 echo '<div>', '<strong>', $file->name, '</strong> ', $this->view->fileSize($file->size), '</div>';
             }
         }

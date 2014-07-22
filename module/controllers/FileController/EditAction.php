@@ -98,9 +98,9 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
             'data' => $this->getDriveHelper()->getViewableData($file)
         ));
 
-        header('Content-Type: text/html; charset=utf-8');
+        header('Content-Type: application/json; charset=utf-8');
         header('Connection: close');
-        header('Content-Length: ' . strlen($output));
+        header('Content-Length: ' . strlen($response));
 
         while (@ob_end_clean());
 

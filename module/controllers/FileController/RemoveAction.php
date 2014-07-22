@@ -47,13 +47,31 @@ class ManipleDrive_FileController_RemoveAction extends Zefram_Controller_Action_
             throw $e;
         }
 
-        $response = $this->_helper->ajaxResponse();
-        $response->setData(array(
-            'file_id' => $file_id,
-            'name' => $name,
-            'disk_usage' => $drive->getDiskUsage(),
-            'quota' => (float) $drive->quota,
+
+        $response = Zefram_Json::encode(array(
+            'status' => 'success',
+            'data' => array(
+                'file_id' => $file_id,
+                'name' => $name,
+                'disk_usage' => $drive->getDiskUsage(),
+                'quota' => (float) $drive->quota,
+            ),
         ));
-        $response->sendAndExit();
+
+        header('Content-Type: application/json; charset=utf-8');
+        header('Connection: close');
+        header('Content-Length: ' . strlen($response));
+
+        while (@ob_end_clean());
+
+        echo $response;
+        flush();
+
+        // this is a must
+        session_write_close();
+
+        $this->getResource('drive.file_indexer')->delete($file_id);
+
+        exit;
     } // }}}
 }
