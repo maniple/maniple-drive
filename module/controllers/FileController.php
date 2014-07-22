@@ -151,4 +151,27 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
             )
         );
     } // }}}
+
+    /**
+     * Search for files
+     */
+    public function searchAction()
+    {
+        $user_id = $this->getSecurityContext()->getUser()->getId();
+        $drive = $this->getDriveHelper()->getRepository()->getDriveByUserId($user_id);
+
+        $q = $this->getScalarParam('q');
+        // $hits = $this->getResource('drive.file_indexer')->searchInDrive($q, $drive->drive_id);
+        $hits = $this->getResource('drive.file_indexer')->search($q);
+
+        echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
+        echo '<strong>', $hits->hitCount, '</strong> hits<br/>';
+        foreach ($hits->hits as $hit) {
+            $file = $this->getDriveHelper()->getRepository()->getFile($hit->document->file_id);
+            if ($this->getDriveHelper()->isFileReadable($file)) {
+                echo '<div>', '<strong>', $file->name, '</strong> ', $this->view->fileSize($file->size), '</div>';
+            }
+        }
+        exit;
+    }
 }

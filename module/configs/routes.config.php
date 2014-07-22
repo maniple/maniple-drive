@@ -134,11 +134,19 @@ defaults.action     = image
 defaults.file_id    =
 defaults.d          =
 ; }}}*/
+    'drive.files.search' => array(
+        'route' => 'drive/files/search',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'file',
+            'action'     => 'search',
+        ),
+    ),
     'drive.files.view_public' => array(
         'route' => '^!(?<path>([^/]+)(.*))$',
         'type'  => 'Zend_Controller_Router_Route_Regex',
         'defaults' => array(
-            'module' => 'maniple-drive',
+            'module'     => 'maniple-drive',
             'controller' => 'index',
             'action'     => 'file',
         ),
