@@ -321,7 +321,11 @@ class ManipleDrive_Helper
         if (count($data)) {
             return array(
                 'user_id' => (int) @$data['user_id'],
-                'name' => $this->getView()->fullName($data, array('escape' => false)),
+                'name' => $this->getView()->fullName($data, array(
+                    'escape' => false,
+                    'firstNameAttrib' => 'first_name',
+                    'lastNameAttrib'  => 'last_name',
+                )),
             );
         }
 
