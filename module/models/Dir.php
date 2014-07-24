@@ -464,4 +464,32 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             $dir = $dir->ParentDir;
         }
     } // }}}
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __set($key, $value) // {{{
+    {
+        parent::__set($key, $value);
+
+        // if a parent directory was (un)set, update drive_id accordingly
+        if ($key === 'ParentDir') {
+            $this->drive_id = $value ? $value->drive_id : null;
+        }
+    } // }}}
+
+    /**
+     * Creates a directory and initializes it as a child
+     * of this directory.
+     *
+     * @param  array $data
+     * @return ManipleDrive_Model_Dir
+     */
+    public function createDir(array $data = array()) // {{{
+    {
+        $dir = $this->_getTable()->createRow($data);
+        $dir->parent_id = $this->dir_id;
+        $dir->drive_id = $this->drive_id;
+        return $dir;
+    } // }}}
 }
