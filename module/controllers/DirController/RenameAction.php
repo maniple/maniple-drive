@@ -16,11 +16,6 @@ class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_S
      */
     protected $_dir;
 
-    /**
-     * @var ManipleDrive_DirBrowsingContext
-     */
-    protected $_dirContext;
-
     protected function _prepare() // {{{
     {
         $this->_helper->viewRenderer->setRender('create');
@@ -28,8 +23,8 @@ class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_S
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $dir_context = ManipleDrive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
-        $dir = $this->getDriveHelper()->getDir($dir_context->getDirId());
+        $dir_id = $this->getScalarParam('dir_id');
+        $dir = $this->getDriveHelper()->getRepository()->getDirOrThrow($dir_id);
 
         // za pomoca tej akcji nie mozna zmienic nazwy katalogu,
         // ktory jest w korzeniu dysku (innymi slowy nie mozna
@@ -69,7 +64,6 @@ class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_S
 
         $this->_form = $form;
         $this->_dir = $dir;
-        $this->_dirContext = $dir_context;
     } // }}}
 
     protected function _process() // {{{
@@ -92,7 +86,6 @@ class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_S
         }
 
         $result = $this->getDriveHelper()->getViewableData($dir, true);
-        $result['dir_id'] = (string) $this->_dirContext;
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(
