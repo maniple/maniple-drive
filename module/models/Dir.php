@@ -501,12 +501,15 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      * Creates a directory and initializes it as a child
      * of this directory.
      *
-     * @param  array $data
+     * @param  string|array $data OPTIONAL
      * @return ManipleDrive_Model_Dir
      */
-    public function createDir(array $data = array()) // {{{
+    public function createDir($data = null) // {{{
     {
-        $dir = $this->_getTable()->createRow($data);
+        if (is_string($data)) {
+            $data = array('name' => $data);
+        }
+        $dir = $this->_getTable()->createRow((array) $data);
         $dir->parent_id = $this->dir_id;
         $dir->drive_id = $this->drive_id;
         return $dir;
