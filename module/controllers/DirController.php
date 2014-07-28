@@ -13,8 +13,8 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
     {
         $drive_helper = $this->getDriveHelper();
 
-        $dir_context = ManipleDrive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
-        $dir = $drive_helper->getDir($dir_context->getDirId());
+        $dir_id = $this->getScalarParam('dir_id');
+        $dir = $drive_helper->getRepository()->getDirOrThrow($dir_id);
 
         $this->assertAccess($drive_helper->isDirShareable($dir));
 
@@ -83,7 +83,7 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
 
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData(array(
-            'dir_id'     => (string) $dir_context,
+            'dir_id'     => $dir->dir_id,
             'visibility' => $dir->visibility,
             'can_inherit_visibility' => (bool) $dir->parent_id,
             'shares'     => $shares,
@@ -100,7 +100,7 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
         $drive_helper = $this->getDriveHelper();
 
         $dir_id = $this->_request->getPost('dir_id');
-        $dir = $drive_helper->fetchDir($dir_id);
+        $dir = $drive_helper->getRepository()->getDirOrThrow($dir_id);
 
         $this->assertAccess($drive_helper->isDirChownable($dir));
 

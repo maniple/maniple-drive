@@ -18,7 +18,7 @@ class ManipleDrive_DirController_MoveAction extends Zefram_Controller_Action_Sta
         $drive_helper = $this->getDriveHelper();
 
         $dir_id = $this->getScalarParam('dir_id');
-        $dir = $drive_helper->getDir($dir_id);
+        $dir = $drive_helper->getRepository()->getDirOrThrow($dir_id);
 
         $this->assertAccess($drive_helper->isDirWritable($dir));
 

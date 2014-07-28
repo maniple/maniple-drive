@@ -43,14 +43,6 @@ class ManipleDrive_Helper
         return $this->_eventManager;
     }
 
-    /**
-     * @return ManipleDrive_Mapper
-     */
-    public function getMapper()
-    {
-        return new ManipleDrive_Mapper($this->getTableProvider());
-    }
-
     public function fetchDir($dir_id)
     {
         return $this->getDir($dir_id);
@@ -65,13 +57,7 @@ class ManipleDrive_Helper
      */
     public function getDir($dir_id) // {{{
     {
-        $dir = $this->getMapper()->getDir($dir_id);
-
-        if (empty($dir)) {
-            throw new Exception(sprintf('Directory not found (%s)', $dir_id));
-        }
-
-        return $dir;
+        return $this->getRepository()->getDirOrThrow($dir_id);
     } // }}}
 
     /**

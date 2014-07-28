@@ -4,17 +4,18 @@ class ManipleDrive_DirController_CreateAction extends Zefram_Controller_Action_S
 {
     protected $_ajaxFormHtml = false;
 
+    /**
+     * @var ManipleDrive_Model_Dir
+     */
     protected $_dir;
-
-    protected $_dirContext;
 
     protected function _prepare() // {{{
     {
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $dir_context = ManipleDrive_DirBrowsingContext::createFromString($this->getScalarParam('dir_id'));
-        $dir = $this->getDriveHelper()->getDir($dir_context->getDirId());
+        $dir_id = $this->getScalarParam('dir_id');
+        $dir = $this->getDriveHelper()->getRepository()->getDirOrThrow($dir_id);
 
         $this->assertAccess(
             $this->getDriveHelper()->isDirWritable($dir),
@@ -46,27 +47,19 @@ class ManipleDrive_DirController_CreateAction extends Zefram_Controller_Action_S
 
         $this->_form = new Zefram_Form(array('elements' => $elements));
         $this->_dir = $dir;
-        $this->_dirContext = $dir_context;
     } // }}}
 
     protected function _process() // {{{
     {
         $user = $this->getSecurityContext()->getUser();
-
-        $data = $this->_form->getValues();
-        $data['created_by']  = $user->getId();
-        $data['modified_by'] = $user->getId();
-        $data['owner']       = $user->getId();
-        $data['drive_id']    = $this->_dir->drive_id;
-        $data['parent_id']   = $this->_dir->dir_id;
-
-        $mapper = $this->getDriveHelper()->getMapper();
-
-        $subdir = $mapper->createDir($data);
-        $subdir = $mapper->saveDir($subdir);
+        $name = $this->_form->getValue('name');
+        $data = array(
+            'created_by' => $user->getId(),
+            'owner' => $user->getId(),
+        );
+        $subdir = $this->_dir->createDir($name, $data);
 
         $result = $this->getDriveHelper()->getViewableData($subdir, true);
-        $result['dir_id'] = (string) $this->_dirContext->copy()->setDirId($subdir->dir_id);
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(
