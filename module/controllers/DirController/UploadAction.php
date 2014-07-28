@@ -169,7 +169,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         $db->beginTransaction();
 
         try {
-            $file = $dir->saveFile($info);
+            $file = $dir->saveFile($info['tmp_name'], $info);
             $db->commit();
 
         } catch (Exception $e) {

@@ -201,7 +201,7 @@ CREATE TABLE {PREFIX}drive_files (
     mtime           INTEGER NOT NULL,
 
     -- id uzytkownika, ktory wgral plik
-    created_by      INTEGER NOT NULL,
+    created_by      INTEGER,
 
     -- id uzytkownika, ktory zmodyfikowal dane
     modified_by     INTEGER,

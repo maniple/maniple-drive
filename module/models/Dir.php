@@ -126,16 +126,19 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      * plik przestaje istnieć.
      * W tablicy $data muszą być ustawione wartości dla kluczy owner oraz name.
      *
-     * @param array $data
+     * @param  string $path
+     * @param  array $data
+     * @param  bool $isTempFile OPTIONAL
      * @return Zend_Db_Table_Row
      */
-    public function saveFile(array $data) // {{{
+    public function saveFile($path, array $data, $isTempFile = true) // {{{
     {
-        if (empty($data['tmp_name']) || !is_file($path = $data['tmp_name'])) {
+        if (!is_file($path)) {
             throw new InvalidArgumentException('Plik nie został znaleziony');
         }
 
         $eventManager = Zend_Controller_Front::getInstance()->getParam('bootstrap')->getResource('drive.helper')->getEventManager();
+        $del_path = $isTempFile ? $path : null;
 
         try {
             $drive = $this->Drive;
@@ -148,23 +151,39 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             $md5 = md5_file($path);
             $mimetype = Zefram_File_MimeType_Data::detect($path);
 
+            // be more specific about ZIP archives
+            if ($mimetype === Zefram_File_MimeType_Data::ZIP) {
+                $ext = strtoupper(substr(strrchr($filename, '.'), 1));
+
+                switch ($ext) {
+                    case 'ODT': case 'ODS': case 'ODP':
+                    case 'DOCX': case 'XLSX': case 'PPTX':
+                        $mimetype = constant('Zefram_File_MimeType_Data::' . $ext);
+                        break;
+                }
+            }
+
             // jezeli plik o takiej samej sumie MD5 juz istnieje, usuwamy plik
             // tymczasowy. Jezeli nie istnieje przenies go do docelowej
             // lokalizacji.
             if ($drive->getFilePath($md5)) {
-                @unlink($path);
-
-                // ustawienie $path na pusta wartosc uniemozliwi usuniecie
-                // pliku, i dobrze, bo skoro plik w podanej sciezce istnial
-                // wczesniej oznacza to, ze jest uzywany przez inny rekord
-                $path = null;
+                // usun plik tymczasowy (o ile jest on tymczasowy)
+                if ($isTempFile) {
+                    @unlink($path);
+                }
 
             } else {
                 $dest = $drive->prepareFilePath($md5);
-                if (@rename($path, $dest)) {
-                    // plik nie istnial, jezeli wystapi wyjatek, zostanie on
+                if ($isTempFile) {
+                    $success = @rename($path, $dest);
+                } else {
+                    $success = @copy($path, $dest);
+                }
+                if ($success) {
+                    // plik $dest nie istnial wczesniej, jezeli wystapi wyjatek
+                    // podczas zapisywania rekordu do bazy, plik zostanie
                     // usuniety z docelowej lokalizacji
-                    $path = $dest;
+                    $del_path = $dest;
                 } else {
                     throw new Exception('Nie udało się zapisać pliku na dysku');
                 }
@@ -222,7 +241,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             $drive->refreshDiskUsage();
 
         } catch (Exception $e) {
-            if ($path) {
+            if ($del_path) {
                 @unlink($path);
             }
             throw $e;
