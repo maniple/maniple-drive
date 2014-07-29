@@ -100,6 +100,9 @@ CREATE TABLE {PREFIX}drive_dirs (
     --              nie podano jawnie katalog w korzeniu dysku jest prywatny
     visibility      VARCHAR(32) NOT NULL,
 
+    -- typ zawartosci katalogu, np. obrazy, dokumenty, muzyka
+    dir_type        VARCHAR(32),
+
     -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
     -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
     internal_name   VARCHAR(64),
