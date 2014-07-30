@@ -19,8 +19,7 @@ class ManipleDrive_DirController_CreateAction extends Zefram_Controller_Action_S
 
         $this->assertAccess(
             $this->getDriveHelper()->isDirWritable($dir),
-            'You are not allowed to create new directories inside this directory.'
-            // 'Brak uprawnien do tworzenia nowych katalogów w tym katalogu.'
+            $this->view->translate('You are not allowed to create new directories inside this directory.')
         );
 
         $elements = array(
@@ -32,11 +31,17 @@ class ManipleDrive_DirController_CreateAction extends Zefram_Controller_Action_S
                     'required'   => true,
                     'filters'    => array('StringTrim'),
                     'validators' => array(
-                        new ManipleDrive_Validate_FileName,
-                        new ManipleDrive_Validate_DirNotExists(array(
-                            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
-                            'parentId' => $dir->dir_id
-                        )),
+                        array(
+                            new ManipleDrive_Validate_FileName(),
+                            true
+                        ),
+                        array(
+                            new ManipleDrive_Validate_DirNotExists(array(
+                                'tableProvider' => $this->getDriveHelper()->getTableProvider(),
+                                'parentId' => $dir->dir_id
+                            )),
+                            true
+                        ),
                     ),
                     'attribs'    => array(
                         'autocomplete' => 'off',

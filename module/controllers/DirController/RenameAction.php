@@ -30,12 +30,12 @@ class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_S
         // ktory jest w korzeniu dysku (innymi slowy nie mozna
         // zmienic nazwy dysku)
         if (empty($dir->parent_id)) {
-            throw new Exception('Nazwa tego katalogu nie może zostać zmieniona');
+            throw new Exception('Name of this directory cannot be changed');
         }
 
         $this->assertAccess(
             $this->getDriveHelper()->isDirWritable($dir),
-            'Nie masz uprawnien do zmiany nazwy tego katalogu'
+            $this->view->translate('You are not allowed to rename this directory')
         );
     
         $form = new Zefram_Form(array('elements' => array(

@@ -132,7 +132,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         $name = preg_replace('#[\/:*?"<>|]#', '', $name);
 
         if (!strlen($name)) {
-            throw new InvalidArgumentException('Niepoprawna nazwa pliku.');
+            throw new InvalidArgumentException($this->view->translate('Invalid file name'));
         }
 
         $info['name'] = $name;
