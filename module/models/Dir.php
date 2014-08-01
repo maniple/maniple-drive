@@ -92,7 +92,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      */
     public function fetchFiles($where = null) // {{{
     {
-        return $this->_getTable()->fetchFilesByDir($this->dir_id, $where, 'name_normalized');
+        return $this->_getTable()->fetchFilesByDir($this->dir_id, $where, array('weight', 'name_normalized'));
     } // }}}
 
     /**

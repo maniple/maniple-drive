@@ -42,6 +42,7 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
 
         try {
             $file->dir_id = $dir->dir_id;
+            $file->weight = 0; // reset file weight
             $file->save();
             $db->commit();
 
