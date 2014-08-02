@@ -23,7 +23,7 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
 
         $this->assertAccess(
             $helper->isFileWritable($file),
-            'Nie masz uprawnień do edycji metadanych tego pliku'
+            'You are not allowed to edit metadata of this file'
         );
 
         $form = new Zefram_Form(array('elements' => array(
@@ -31,7 +31,7 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
             'title' => array(
                 'type' => 'text',
                 'options' => array(
-                    'label' => 'Tytuł',
+                    'label' => 'Title',
                     'required' => true,
                     'value' => strlen($file->title) ? $file->title : $file->name,
                     'validators' => array(
@@ -45,7 +45,7 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
             'author' => array(
                 'type' => 'text',
                 'options' => array(
-                    'label' => 'Autor / źródło',
+                    'label' => 'Author / source',
                     'value' => $file->author,
                     'validators' => array(
                         array('StringLength', true, array('max' => 128)),
@@ -58,7 +58,7 @@ class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_St
             'description' => array(
                 'type' => 'textarea',
                 'options' => array(
-                    'label' => 'Opis',
+                    'label' => 'Description',
                     'value' => $file->description,
                     'validators' => array(
                         array('StringLength', true, array('max' => 512)),

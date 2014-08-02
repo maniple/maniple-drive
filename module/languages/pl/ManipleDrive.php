@@ -8,4 +8,8 @@
     'A directory with this name already exists' => 'Katalog o tej nazwie już istnieje',
     'Name contains one or more invalid characters: %invalidChars%' => 'Nazwa zawiera jeden lub więcej niedozwolonych znaków: %invalidChars%',
     'Form validation failed' => 'Formularz zawiera niepoprawne dane',
+    'Title' => 'Tytuł',
+    'Description' => 'Opis',
+    'Author / source' => 'Autor / źródło',
+    'You are not allowed to edit metadata of this file' => 'Nie masz uprawnień do edycji metadanych tego pliku',
 );
