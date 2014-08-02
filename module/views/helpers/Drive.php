@@ -7,15 +7,71 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
         return $this;
     }
 
-    public function browseUrl($path, $url = null)
+    public function browseUrl($path, $url = null, array $params = array())
     {
+        if ($path instanceof ManipleDrive_Model_DirInterface) {
+            $path = $path->getId();
+        }
         $path = '/' . trim($path, '/');
         if (null === $url) {
             $url = $this->view->urlTemplate('drive.browser');
             $url = str_replace(':path', $path, $url);
         } else {
+            try {
+                $url = $this->view->url($url, $params);
+            } catch (Zend_Controller_Router_Exception $e) {
+            }
             $url = preg_replace('/#.*$/', '', $url) . '#' . $path;
         }
         return $url;
+    }
+
+    public function jsLib()
+    {
+        try {
+            $locale = (string) $this->view->translate()->getLocale();
+
+            // FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if ($locale === 'pl') {
+                $locale = 'pl_PL';
+            } elseif ($locale === 'en') {
+                $locale = 'en_GB';
+            }
+        } catch (Exception $e) {
+            $locale = 'en_GB';
+        }
+
+        return $this->view->moduleAsset('js/drive.' . $locale . '.js', 'maniple-drive');
+    }
+
+    public function dirBrowserConfig(array $config)
+    {
+        $config['uriTemplates'] = array(
+            'dir' => array(
+                'read'   => $this->view->urlTemplate('drive.browse'),
+                'create' => $this->view->urlTemplate('drive.dir', array('action' => 'create')),
+                'remove' => $this->view->urlTemplate('drive.dir', array('action' => 'remove')),
+                'rename' => $this->view->urlTemplate('drive.dir', array('action' => 'rename')),
+                'share'  => $this->view->urlTemplate('drive.dir', array('action' => 'share')),
+                'move'   => $this->view->urlTemplate('drive.dir', array('action' => 'move')),
+                'chown'  => $this->view->urlTemplate('drive.dir', array('action' => 'chown')),
+                'upload' => $this->view->urlTemplate('drive.dir', array('action' => 'upload')),
+            ),
+            'file' => array(
+                'read'   => $this->view->urlTemplate('drive.file', array('action' => 'read')),
+                'edit'   => $this->view->urlTemplate('drive.file', array('action' => 'edit')),
+                'remove' => $this->view->urlTemplate('drive.file', array('action' => 'remove')),
+                'rename' => $this->view->urlTemplate('drive.file', array('action' => 'rename')),
+                'move'   => $this->view->urlTemplate('drive.file', array('action' => 'move')),
+                'chown'  => $this->view->urlTemplate('drive.file', array('action' => 'chown')),
+            ),
+        );
+
+        $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
+        $config['userSearchUrl'] = $this->view->url(
+            (string) $bootstrap->getResource('drive.helper')->getUserSearchRoute()
+        );
+
+        return Zefram_Json::encode($config);
     }
 }

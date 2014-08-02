@@ -1,3 +1,8 @@
+/**
+ * @version 2014-08-02
+ * - dirNames option
+ * - fixed breadrumbs (bug in wrapping in itemTag)
+ */
 /* Guidelines:
  * .html() - tylko stringi pobrane z DirBrowser.str (takze interpolowane)
  * .text() - nazwy plikow, katalogow, dane pochodzace z odpowiedzi od serwera
@@ -16,6 +21,8 @@
  * @options
  * {object} uriTemplates
  * {boolean} [disableUpdir=false]
+ * {object} [dirNames] used to override original directory names. If set
+ *           renaming directory with overriden name will be disabled
  * {string|object} [breadcrumbs=false]
  * {string|jQuery|Element} [breadcrumbs.selector]
  * {string} [breadcrumbs.separator="<span class=\"separator\"></span>"] 
@@ -30,7 +37,7 @@ function DirBrowser(selector, options) { // {{{
     self._events = {};
 
     self._element = $(selector).first();
-    self._options = $.extend({}, options);
+    self._options = $.extend({dirNames: {}}, options);
 
     // zainicjuj interpolatory stringow
     self._strInterp = new Viewtils.Interp();
@@ -106,10 +113,17 @@ function DirBrowser(selector, options) { // {{{
         self.setDisplayMode(self._options.displayMode);
     }
 
-    if (self._options.dir && document.location.hash.substr(0, 2) != '#/') {
-        self.setDir(self._options.dir);
+    if (self._options.dir) {
+        self.setInitDir(self._options.dir);
     }
     return;
+} // }}}
+
+DirBrowser.prototype.setInitDir = function (dir) { // {{{
+    if (document.location.hash.substr(0, 2) != '#/') {
+        this.setDir(dir);
+    }
+    return this;
 } // }}}
 
 DirBrowser.prototype.on = function (type, handler) {
@@ -318,7 +332,8 @@ DirBrowser.prototype._initBreadcrumbs = function() { // {{{
 DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
     var self = this,
         breadcrumbs = self._breadcrumbs,
-        item;
+        item,
+        label;
 
     if (!breadcrumbs) {
         return;
@@ -334,10 +349,11 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
 
     if (dir.parents) {
         dir.parents.forEach(function (parent) {
-            var item = $('<a/>');
+            var item = $('<a/>'),
+                label = self._options.dirNames[parent.dir_id] || parent.name;
 
             item.attr('href', self._dirUrl(parent));
-            item.text(String(parent.name));
+            item.text(String(label));
 
             if (parent.perms.write) {
                 self._addDropTarget(parent, item);
@@ -348,7 +364,7 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
             }
 
             if (breadcrumbs.itemTag) {
-                item = $(item).wrap('<' + breadcrumbs.itemTag + '/>');
+                item = $(item).wrap('<' + breadcrumbs.itemTag + '/>').parent();
             }
 
             breadcrumbs.container.append(item);
@@ -357,9 +373,12 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
 
     // current element, create SPAN, wrap it in itemTag if required,
     // add proper class
-    item = $('<span/>').text(String(dir.name));
+    // .wrap() returns the original set of elements for chaining purposes,
+    // hence call to .parent()
+    label = self._options.dirNames[dir.dir_id] || dir.name;
+    item = $('<span/>').text(String(label));
     if (breadcrumbs.itemTag) {
-        item = item.wrap('<' + breadcrumbs.itemTag + '/>');
+        item = item.wrap('<' + breadcrumbs.itemTag + '/>').parent();
     }
     if (breadcrumbs.currentClass) {
         item.addClass(breadcrumbs.currentClass);
@@ -409,7 +428,7 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.rename) {
+    if (dir.perms.rename && !self._options.dirNames[dir.dir_id]) {
         ops.push({
             op: 'renameDir',
             title: Drive.Util.i18n('DirBrowser.opRenameDir.opname')
@@ -554,12 +573,12 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
 
     // podepnij zmiane nazwy katalogu do tytulu strony
     dirName = self._view.hooks.dirName
-        .text(dir.name)
+        .text(String(self._options.dirNames[dir.dir_id] || dir.name))
         .unbind('click')
         .removeClass('renamable')
         .removeAttr('title');
 
-    if (dir.perms.rename) {
+    if (dir.perms.rename && !self._options.dirNames[dir.dir_id]) {
         dirName
             .addClass('renamable')
             .attr('title', Drive.Util.i18n('DirBrowser.clickToRenameTooltip'))
@@ -1392,7 +1411,7 @@ DirBrowser.prototype._subdirOps = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.rename) {
+    if (dir.perms.rename && !self._options.dirNames[dir.dir_id]) {
         ops.rename = {
             op: 'rename',
             title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
@@ -1490,7 +1509,7 @@ DirBrowser.prototype._addDropTarget = function (dir, element) { // {{{
     var self = this;
 
     element.attr('data-drop-dir', dir.dir_id);
-    element.attr('data-name', dir.name).each(function() {
+    element.attr('data-name', String(self._options.dirNames[dir.dir_id] || dir.name)).each(function() {
         self._dropTargets.push(this);
     });
 }; // }}}

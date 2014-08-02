@@ -17,15 +17,13 @@
 <script type="text/javascript" src="{{ moduleAsset('js/vendor/jquery.grab.min.js', 'maniple-drive') }}"></script>
 <script type="text/javascript">
 $(function() {
-    require(['{{ moduleAsset('js/drive.' ~ locale ~ '.js', 'maniple-drive') }}'], function (Drive) {
-        var dirBrowser = new Drive.DirBrowser('#drive-dir-browser', {{ ({
-            uriTemplates: uri_templates,
-            breadcrumbs: dir_browser_breadcrumbs ? dir_browser_breadcrumbs : '#breadcrumbs',
+    require(['{{ drive().jsLib() }}'], function (Drive) {
+        var dirBrowser = new Drive.DirBrowser('#drive-dir-browser', {{ drive().dirBrowserConfig({
+            breadcrumbs:    dir_browser_breadcrumbs ? dir_browser_breadcrumbs : '#breadcrumbs',
             disableAuxmenu: dir_browser_disable_auxmenu,
-            disableUpdir: dir_browser_disable_updir,
-            userSearchUrl: user_search_url,
-            dir: dir
-        }) | json_encode | raw }});
+            disableUpdir:   dir_browser_disable_updir,
+            dirNames:       dirBrowser_dirNames,
+        }) | raw }});
 
         $('[data-action=set-list-mode]').click(function () {
             dirBrowser.setDisplayMode('list');
@@ -42,6 +40,8 @@ $(function() {
         dirBrowser.on('dirChanged', function () {
             $('#display-mode-switch').show();
         });
+
+        {% if dir %}dirBrowser.setInitDir({{ dir | json_encode | raw }}){% endif %}
     });
 });
 </script>
