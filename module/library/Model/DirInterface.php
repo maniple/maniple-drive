@@ -68,4 +68,12 @@ interface ManipleDrive_Model_DirInterface
     public function getSubDir($dirId);
 
     public function getFiles();
+
+    public function getFile($fileId);
+
+    /**
+     * @param  string $name
+     * @return ManipleDrive_Model_FileInterface|null
+     */
+    public function getFileByName($name);
 }

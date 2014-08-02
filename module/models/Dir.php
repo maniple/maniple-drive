@@ -53,6 +53,24 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         return $this->fetchFiles();
     }
 
+    public function getFile($fileId)
+    {
+        throw new Exception('TODO Not implemented');
+    }
+
+    /**
+     * @param  string $name
+     * @return ManipleDrive_Model_File|null
+     */
+    public function getFileByName($name) // {{{
+    {
+        $file = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->fetchRow(array(
+            'name = ?'   => (string) $name,
+            'dir_id = ?' => (int) $this->dir_id,
+        ));
+        return $file ? $file : null;
+    } // }}}
+
     public function isInternal() // {{{
     {
         return (bool) $this->internal_name;
