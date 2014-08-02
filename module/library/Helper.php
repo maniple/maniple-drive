@@ -13,7 +13,7 @@ class ManipleDrive_Helper
     protected $_view;
 
     /**
-     * @var Zefram_Db_TableProvider
+     * @var Zefram_Db_Table_FactoryInterface
      */
     protected $_tableProvider;
 
@@ -577,7 +577,7 @@ class ManipleDrive_Helper
 
     // resources
 
-    public function setTableProvider(Zefram_Db_TableProvider $tableProvider = null)
+    public function setTableProvider(Zefram_Db_Table_FactoryInterface $tableProvider = null)
     {
         $this->_tableProvider = $tableProvider;
         return $this;
