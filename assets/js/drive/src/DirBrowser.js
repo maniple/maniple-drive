@@ -578,11 +578,10 @@ DirBrowser.prototype.loadDir = function (path, success) { // {{{
     var self = this,
         $ = this.$,
         url = Drive.Util.uri(this._uriTemplates.dir.read, {path: ''}),
-        dirNameHook,
+        dirNameHook = self._view && self._view.hooks.dirName,
         title;
 
-    if (self._view) {
-        dirNameHook = self._view && self._view.hooks.dirName;
+    if (dirNameHook) {
         title = dirNameHook.attr('title');
         dirNameHook
             .addClass('loading')
