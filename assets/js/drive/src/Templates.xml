@@ -65,11 +65,21 @@ Loading directory contents...
         <h1 id="drive-dirbrowser-title" data-hook="dir-name"></h1>
     </div>
     <div id="opnav">
+        <div data-hook="display-mode"></div>
         <div id="drive-loading" data-hook="message-area"></div>
         <div id="drive-dir-menu" data-hook="aux-menu"></div>
     </div>
     <div data-hook="dir-contents"></div>
     <div data-hook="uploader"></div>
+</div>
+]]>
+</template>
+
+<template id="DirBrowser.displayMode">
+<![CDATA[
+<div class="dirbrowser-display-mode">
+    <button type="button" class="dirbrowser-display-mode-icon display-mode-list" data-display-mode="list"></button>
+    <button type="button" class="dirbrowser-display-mode-icon display-mode-media" data-display-mode="media"></button>
 </div>
 ]]>
 </template>

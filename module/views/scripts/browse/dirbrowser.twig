@@ -1,0 +1,21 @@
+{% headLink().appendStylesheet(moduleAsset('css/drive.css', 'maniple-drive')) %}
+<script type="text/javascript">
+$(function() {
+    require([
+        '{{ drive().jsLib() }}',
+        '{{ moduleAsset('js/vendor/jquery.history-1.5.0a.min.js', 'maniple-drive') }}',
+        '{{ moduleAsset('js/vendor/jquery.eip-0.2.0.min.js', 'maniple-drive') }}',
+        '{{ moduleAsset('js/vendor/jquery.grab.min.js', 'maniple-drive') }}'
+    ], function (Drive) {
+        var dirBrowser = new Drive.DirBrowser('{{ dirBrowser_selector ? dirBrowser_selector : '#drive-dir-browser' }}', {{ drive().dirBrowserConfig({
+            breadcrumbs:    dir_browser_breadcrumbs ? dir_browser_breadcrumbs : '#breadcrumbs',
+            disableAuxmenu: dir_browser_disable_auxmenu,
+            disableUpdir:   dir_browser_disable_updir,
+            disableSharing: dirBrowser_disableSharing,
+            dirNames:       dirBrowser_dirNames,
+        }) | raw }});
+
+        {% if dir %}dirBrowser.setInitDir({{ dir | json_encode | raw }}){% endif %}
+    });
+});
+</script>

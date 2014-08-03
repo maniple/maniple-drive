@@ -189,7 +189,9 @@ var Drive = {
             self._events = {};
 
             self._element = $(selector).first();
-            self._options = $.extend({dirNames: {}}, options);
+            self._options = $.extend({}, options);
+
+            self._dirNames = self._options.dirNames || {};
 
             // zainicjuj interpolatory stringow
             self._strInterp = new Viewtils.Interp();
@@ -303,27 +305,29 @@ var Drive = {
         };
 
         DirBrowser.prototype._dirNameOverriden = function (dir) { // {{{
-            return this._options.dirNames && this._options.dirNames[dir.dir_id]
+            return this._dirNames[dir.dir_id];
         } // }}}
 
         DirBrowser.prototype._dirName = function (dir) { // {{{
-            var name;
-            if (this._options.dirNames && this._options.dirNames[dir.dir_id]) {
-                name = this._options.dirNames[dir.dir_id];
-            } else {
-                name = dir.name;
-            }
+            var name = this._dirNames[dir.dir_id] || dir.name;
             return String(name);
         } // }}}
 
         DirBrowser.prototype._initMainView = function (selector) { // {{{
             if (!this._view) {
-                this._element.empty().append(this._renderTemplate('DirBrowser.main'));
+                // try to use element as template, if it fails, fall back to default
+                // template
+                var requiredHooks = ['dirContents', 'uploader'];
+                    // optional: dirName, diskUsage, auxMenu, displayMode
 
-                this._view = new Drive.View(this._element, [
-                    'dirName', 'messageArea', 'auxMenu', 'dirContents',
-                    'uploader', 'diskUsage'
-                ]);
+                try {
+                    this._view = new Drive.View(this._element, requiredHooks);
+                } catch (e) {
+                    this._element.empty().append(this._renderTemplate('DirBrowser.main'));
+                    this._view = new Drive.View(this._element, requiredHooks);
+                }
+
+                this._initDisplayModeView();
 
                 // zainicjuj widget informujacy o stanie zajetosci dysku
                 this._initDiskUsageView();
@@ -333,7 +337,32 @@ var Drive = {
             }
         }; // }}}
 
+        DirBrowser.prototype._initDisplayModeView = function () { // {{{
+            if (!this._view.hooks.displayMode) {
+                return;
+            }
+
+            var self = this,
+                str = Drive.Util.i18n('DirBrowser.displayMode'),
+                element = self._renderTemplate('DirBrowser.displayMode', {str: str}),
+                view = new Drive.View(element);
+
+            // hide displayMode until a directory is loaded
+            element.hide();
+
+            element.on('click', '[data-display-mode]', function () {
+                var el = $(this);
+                self.setDisplayMode(el.attr('data-display-mode'));
+            });
+
+            this._view.inject('displayMode', view);
+        }; // }}}
+
         DirBrowser.prototype._initDiskUsageView = function () { // {{{
+            if (!this._view.hooks.diskUsage) {
+                return;
+            }
+
             var str = Drive.Util.i18n('DirBrowser.diskUsage'),
                 element = this._renderTemplate('DirBrowser.diskUsage', {str: str}),
                 view = new Drive.View(element, [
@@ -359,14 +388,19 @@ var Drive = {
         }; // }}}
 
         DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
+            available = +available > 0 ? +available : Infinity;
             this.emit('diskUsageChanged', {
-                diskSize:  +available > 0 ? +available : Infinity,
-                freeBytes: +available > 0 ? (+available - +used) : Infinity,
+                diskSize:  available,
+                freeBytes: available - +used,
                 usedBytes: +used
             });
 
-            var view = this._view.childViews.diskUsage,
-                element = view.element,
+            var view = this._view.childViews.diskUsage;
+            if (!view) {
+                return;
+            }
+
+            var element = view.element,
                 hooks = view.hooks,
                 noLimitClass = 'no-limit',
                 progressBar = hooks.progressBar,
@@ -616,26 +650,30 @@ var Drive = {
 
             // brak opRemoveDir bo nie mozna usunac biezacego katalogu
 
-            var auxMenu = self._view.hooks.auxMenu.empty();
+            var auxMenu = self._view && self._view.hooks.auxMenu;
 
-            auxMenu.off('click');
-            auxMenu.on('click', '[data-op]', function () {
-                var op = handlers[this.getAttribute('data-op')];
-                if (op) {
-                    op();
-                }
-                return false;
-            });
+            if (auxMenu) {
+                auxMenu.empty();
 
-            auxMenu.append(
-                self._renderTemplate('DirBrowser.auxMenu', {
-                    ops: ops.slice(0, 2),
-                    moreOps: ops.slice(2),
-                    str: {
-                        moreOps: Drive.Util.i18n('DirBrowser.moreOps')
+                auxMenu.off('click');
+                auxMenu.on('click', '[data-op]', function () {
+                    var op = handlers[this.getAttribute('data-op')];
+                    if (op) {
+                        op();
                     }
-                })
-            );
+                    return false;
+                });
+
+                auxMenu.append(
+                    self._renderTemplate('DirBrowser.auxMenu', {
+                        ops: ops.slice(0, 2),
+                        moreOps: ops.slice(2),
+                        str: {
+                            moreOps: Drive.Util.i18n('DirBrowser.moreOps')
+                        }
+                    })
+                );
+            }
         }; // }}}
 
         DirBrowser.prototype._initWidthChecker = function() { // {{{
@@ -692,11 +730,12 @@ var Drive = {
             var self = this,
                 $ = this.$,
                 url = Drive.Util.uri(this._uriTemplates.dir.read, {path: ''}),
-                dirNameHook;
+                dirNameHook,
+                title;
 
             if (self._view) {
-                dirNameHook = self._view.hooks.dirName;
-                var title = dirNameHook.attr('title');
+                dirNameHook = self._view && self._view.hooks.dirName;
+                title = dirNameHook.attr('title');
                 dirNameHook
                     .addClass('loading')
                     .attr('title', String(Drive.Util.i18n('DirBrowser.loadingDirContents')));
@@ -708,15 +747,11 @@ var Drive = {
                 data: {path: path},
                 dataType: 'json',
                 complete: function () {
-                    if (self._view) {
-                        self._view.hooks.dirName.removeClass('loading');
-                    }
+                    dirNameHook && dirNameHook.removeClass('loading');
                 },
                 error: function (response) {
-                    if (self._view) {
-                        self._view.hooks.dirName.attr('title', title);
-                    }
-                    $('#drive-loading').html('<div class="error">' + response.error + '</div>');
+                    dirNameHook && dirNameHook.attr('title', title);
+                    self.emit(error, response.error, response);
                 },
                 success: function (response) {
                     success.call(this, response.data);
@@ -738,20 +773,23 @@ var Drive = {
             self._updateAuxmenu(dir);
 
             // podepnij zmiane nazwy katalogu do tytulu strony
-            dirName = self._view.hooks.dirName
-                .text(self._dirName(dir))
-                .unbind('click')
-                .removeClass('renamable')
-                .removeAttr('title');
+            var dirNameHook = self._view.hooks.dirName;
+            if (dirNameHook) {
+                dirName = dirNameHook
+                    .text(self._dirName(dir))
+                    .unbind('click')
+                    .removeClass('renamable')
+                    .removeAttr('title');
 
-            if (dir.perms.rename && !self._dirNameOverriden(dir)) {
-                dirName
-                    .addClass('renamable')
-                    .attr('title', Drive.Util.i18n('DirBrowser.clickToRenameTooltip'))
-                    .click(function() {
-                        self.opRenameDir(dir);
-                        return false;
-                    });
+                if (dir.perms.rename && !self._dirNameOverriden(dir)) {
+                    dirName
+                        .addClass('renamable')
+                        .attr('title', Drive.Util.i18n('DirBrowser.clickToRenameTooltip'))
+                        .click(function() {
+                            self.opRenameDir(dir);
+                            return false;
+                        });
+                }
             }
 
             // jezeli nie jest dostepny url do uploadu plikow wylacz uploadera
@@ -764,6 +802,8 @@ var Drive = {
 
             // pokaz informacje o zajetosci dysku
             self._updateDiskUsage(dir.disk_usage, dir.quota);
+
+            self._view.hooks.displayMode && self._view.hooks.displayMode.show();
 
             // pokaz zawartosc katalogu
             self._renderDirContents(dir);
@@ -783,26 +823,24 @@ var Drive = {
             return this._displayMode;
         };
 
-        DirBrowser.prototype.setDisplayMode = function (mode) {
-            switch (mode) {
-                case 'grid':
-                case 'list':
-                case 'media':
-                    this._displayMode = mode;
-                    $.cookie && $.cookie('DirBrowser.displayMode', mode);
+        DirBrowser.prototype.setDisplayMode = function (displayMode) {
+            var prevDisplayMode = this._displayMode;
 
-                    if (this._view) {
-                        this._view.hooks.dirContents
-                            .removeClass('display-grid display-list display-media')
-                            .addClass('display-' + mode);
-                    }
+            $.cookie && $.cookie('DirBrowser.displayMode', displayMode);
 
-                    this.emit('displayModeChanged', mode);
-                    break;
+            if (this._view) {
+                this._view.hooks.dirContents
+                    .removeClass('display-' + prevDisplayMode)
+                    .addClass('display-' + displayMode);
 
-                default:
-                    window.console && console.warn('Unsupported display mode: ' + mode);
+                this._view.hooks.displayMode &&
+                    this._view.hooks.displayMode
+                        .find('[data-display-mode]').removeClass('active').end()
+                        .find('[data-display-mode="' + displayMode + '"]').addClass('active');
             }
+
+            this._displayMode = displayMode;
+            this.emit('displayModeChanged', displayMode);
 
             return this;
         };
@@ -965,7 +1003,8 @@ var Drive = {
                     // zaktualizuj nazwe katalogu wyswietlona w naglowku oraz w okruchach,
                     // o ile modyfikowany katalog jest katalogiem biezacym
                     if (self._currentDir && responseDir.dir_id == self._currentDir.dir_id) {
-                        self._view.hooks.dirName.text(dirName);
+                        var dirNameHook = self._view && self._view.hooks.dirName;
+                        dirNameHook && dirNameHook.text(dirName);
                         if (self._breadcrumbs) {
                             self._breadcrumbs.container.find(':last-child').text(dirName);
                         }
@@ -3093,7 +3132,17 @@ var Drive = {
 
 
 
-          return "<div id=\"drive-dirbrowser\">\n<div data-hook=\"disk-usage\"></div>\n<div id=\"drive-dirbrowser-title-outer\">\n<h1 id=\"drive-dirbrowser-title\" data-hook=\"dir-name\"></h1>\n</div>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>\n</div>";
+          return "<div id=\"drive-dirbrowser\">\n<div data-hook=\"disk-usage\"></div>\n<div id=\"drive-dirbrowser-title-outer\">\n<h1 id=\"drive-dirbrowser-title\" data-hook=\"dir-name\"></h1>\n</div>\n<div id=\"opnav\">\n<div data-hook=\"display-mode\"></div>\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>\n</div>";
+          }
+
+        ),
+            "DirBrowser.displayMode": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+          this.compilerInfo = [4,'>= 1.0.0'];
+        helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+
+
+
+          return "<div class=\"dirbrowser-display-mode\">\n<button type=\"button\" class=\"dirbrowser-display-mode-icon display-mode-list\" data-display-mode=\"list\"></button>\n<button type=\"button\" class=\"dirbrowser-display-mode-icon display-mode-media\" data-display-mode=\"media\"></button>\n</div>";
           }
 
         ),
@@ -4830,6 +4879,9 @@ var Drive = {
         } // }}}
 
         /**
+         * Replaces hook element with a given view. New view receives class name
+         * of parent hook element.
+         *
          * @param {string} parentHook
          * @param {View} view
          */
@@ -4837,6 +4889,14 @@ var Drive = {
             if (this.hooks[parentHook]) {
                 if (view.element.length != 1) {
                     throw parentHook + ": Injected view must contain only a single tree of elements";
+                }
+
+                // copy original class
+                view.element.addClass(this.hooks[parentHook].attr('class'));
+
+                // use parent id if no id is present
+                if (!view.element.attr('id')) {
+                    view.element.attr('id', this.hooks[parentHook].attr('id'));
                 }
 
                 this.childViews[parentHook] = view;

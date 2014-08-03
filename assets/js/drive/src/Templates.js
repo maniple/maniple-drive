@@ -47,7 +47,17 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   
 
 
-  return "<div id=\"drive-dirbrowser\">\n<div data-hook=\"disk-usage\"></div>\n<div id=\"drive-dirbrowser-title-outer\">\n<h1 id=\"drive-dirbrowser-title\" data-hook=\"dir-name\"></h1>\n</div>\n<div id=\"opnav\">\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>\n</div>";
+  return "<div id=\"drive-dirbrowser\">\n<div data-hook=\"disk-usage\"></div>\n<div id=\"drive-dirbrowser-title-outer\">\n<h1 id=\"drive-dirbrowser-title\" data-hook=\"dir-name\"></h1>\n</div>\n<div id=\"opnav\">\n<div data-hook=\"display-mode\"></div>\n<div id=\"drive-loading\" data-hook=\"message-area\"></div>\n<div id=\"drive-dir-menu\" data-hook=\"aux-menu\"></div>\n</div>\n<div data-hook=\"dir-contents\"></div>\n<div data-hook=\"uploader\"></div>\n</div>";
+  }
+
+),
+    "DirBrowser.displayMode": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+  this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+  
+
+
+  return "<div class=\"dirbrowser-display-mode\">\n<button type=\"button\" class=\"dirbrowser-display-mode-icon display-mode-list\" data-display-mode=\"list\"></button>\n<button type=\"button\" class=\"dirbrowser-display-mode-icon display-mode-media\" data-display-mode=\"media\"></button>\n</div>";
   }
 
 ),

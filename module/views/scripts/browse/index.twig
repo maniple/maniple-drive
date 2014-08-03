@@ -1,47 +1,4 @@
-{% headLink().appendStylesheet(moduleAsset('css/drive.css', 'maniple-drive')) %}
-<div id="breadcrumbs"></div>
-<style>
-#breadcrumbs .separator:before {
-    content: '/';
-}
-</style>
-<div id="display-mode-switch" style="position:absolute;margin-top:80px;display:none;">
-    <button type="button" class="dir-display-mode-icon display-mode-list" data-action="set-list-mode"></button>
-    <button type="button" class="dir-display-mode-icon display-mode-media" data-action="set-media-mode"></button>
-</div>
-<div id="drive-dir-browser">
+<div id="drive-dir-browser" class="js-loading">
     <p class="text-center" style="padding-top:100px;">Loading directory contents...</p>
 </div>
-<script type="text/javascript" src="{{ moduleAsset('js/vendor/jquery.history-1.5.0a.min.js', 'maniple-drive') }}"></script>
-<script type="text/javascript" src="{{ moduleAsset('js/vendor/jquery.eip-0.2.0.min.js', 'maniple-drive') }}"></script>
-<script type="text/javascript" src="{{ moduleAsset('js/vendor/jquery.grab.min.js', 'maniple-drive') }}"></script>
-<script type="text/javascript">
-$(function() {
-    require(['{{ drive().jsLib() }}'], function (Drive) {
-        var dirBrowser = new Drive.DirBrowser('#drive-dir-browser', {{ drive().dirBrowserConfig({
-            breadcrumbs:    dir_browser_breadcrumbs ? dir_browser_breadcrumbs : '#breadcrumbs',
-            disableAuxmenu: dir_browser_disable_auxmenu,
-            disableUpdir:   dir_browser_disable_updir,
-            dirNames:       dirBrowser_dirNames,
-        }) | raw }});
-
-        $('[data-action=set-list-mode]').click(function () {
-            dirBrowser.setDisplayMode('list');
-            $(this).addClass('active');
-            $('[data-action=set-media-mode]').removeClass('active');
-        }).addClass(dirBrowser.getDisplayMode() === 'list' ? 'active' : '');
-
-        $('[data-action=set-media-mode]').click(function () {
-            dirBrowser.setDisplayMode('media');
-            $(this).addClass('active');
-            $('[data-action=set-list-mode]').removeClass('active');
-        }).addClass(dirBrowser.getDisplayMode() === 'media' ? 'active' : '');
-
-        dirBrowser.on('dirChanged', function () {
-            $('#display-mode-switch').show();
-        });
-
-        {% if dir %}dirBrowser.setInitDir({{ dir | json_encode | raw }}){% endif %}
-    });
-});
-</script>
+{{ renderScript('browse/dirbrowser.twig', 'maniple-drive') | raw }}
