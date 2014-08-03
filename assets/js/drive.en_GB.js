@@ -1577,7 +1577,7 @@ var Drive = {
                 };
             }
 
-            if (dir.perms.rename && !_dirNameOverriden(dir)) {
+            if (dir.perms.rename && !self._dirNameOverriden(dir)) {
                 ops.rename = {
                     op: 'rename',
                     title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
