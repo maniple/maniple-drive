@@ -24,7 +24,10 @@ class ManipleDrive_Validate_FileName extends Zend_Validate_Abstract
     {
         $valid = true;
 
-        if (preg_match('/[' . preg_quote($this->_invalidChars, '/') . ']/e', $value)) {
+        // remove spaces from invalid chars list, so that they won't match
+        $invalidChars = str_replace(' ', '', $this->_invalidChars);
+
+        if (preg_match('/[' . preg_quote($invalidChars, '/') . ']/i', $value)) {
             $this->_error(self::INVALID_CHARS);
             $valid = false;
         }
