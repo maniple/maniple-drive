@@ -62,10 +62,21 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog
     drive_id        INTEGER NOT NULL,
 
-    -- identyfikator nadrzednego katalogu
+    -- parent directory id
     parent_id       INTEGER,
 
-    -- liczba plikow i podkatalogow umieszczonych bezposrednio w tym katalogu
+    -- directory flags
+    is_system       SMALLINT NOT NULL DEFAULT 0,
+
+    is_readonly     SMALLINT NOT NULL DEFAULT 0,
+
+    is_hidden       SMALLINT NOT NULL DEFAULT 0,
+
+    -- number of system subdirs and files in this directory
+    system_count    INTEGER NOT NULL DEFAULT 0,
+                    CHECK (system_count >= 0),
+
+    -- number of subdirs, files and file bytes in this directory
     dir_count       INTEGER NOT NULL DEFAULT 0,
                     CHECK (dir_count >= 0),
 

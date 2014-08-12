@@ -125,16 +125,17 @@ class ManipleDrive_Helper
             //   katalogu jedynie poprzez zmiane nazwy dysku)
 
             if ($this->getSecurityContext()->isSuperUser()) {
+                // superuser ignores readonly flag
                 $perms = array(
                     self::READ   => true,
                     self::WRITE  => true,
                     self::RENAME => (bool) $dir->parent_id,
-                    self::REMOVE => !$dir->isInternal() && $dir->parent_id,
+                    self::REMOVE => !$dir->is_system && !$dir->system_count && !$dir->isInternal() && $dir->parent_id,
                     self::SHARE  => true,
                     self::CHOWN  => true,
                 );
             } else {
-                $write  = $this->getSecurityContext()->isAllowed(self::PERM_EDIT_ANY) || $dir->isWritable($user_id);
+                $write  = !$dir->is_readonly && ($this->getSecurityContext()->isAllowed(self::PERM_EDIT_ANY) || $dir->isWritable($user_id));
                 $read   = $this->getSecurityContext()->isAllowed(self::PERM_READ_ANY) || $dir->isReadable($user_id);
                 $rename = false;
                 $remove = false;
@@ -143,8 +144,8 @@ class ManipleDrive_Helper
                 // zapisu tego katalogu, oraz miec uprawnienia do zapisu
                 // w katalogu nadrzednym (ten ostatni musi istniec)
                 if ($write && ($parent = $dir->fetchParent()) && $this->isDirWritable($parent)) {
-                    $remove = !$dir->isInternal();
-                    $rename = true;
+                    $remove = !$dir->is_system && !$dir->is_readonly && !$dir->system_count && !$dir->isInternal();
+                    $rename = !$dir->is_readonly;
                 }
 
                 $perms = array(

@@ -345,9 +345,12 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             $this->visibility = 'inherited';
         }
 
+        // ensure is_system is 0 or 1 only
+        $this->is_system = self::_01($this->is_system);
+
         $result = parent::_insert();
 
-        self::_updateCounters($this->ParentDir, 1, 0, 0);
+        self::_updateCounters($this->ParentDir, 1, 0, 0, self::_01($this->is_system));
 
         return $result;
     } // }}}
@@ -357,17 +360,39 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      */
     public function _update() // {{{
     {
-        if ($this->_cleanData['parent_id'] != $this->parent_id) {
-            // fetch previous parent dir
-            $dir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($this->_cleanData['parent_id']);
-            if ($dir) {
-                self::_updateCounters($dir, -1, -$this->file_count, -$this->byte_count);
+        // remember original values for later use
+        $prev = $this->_cleanData;
+
+        // ensure is_system is 0 or 1 only
+        $this->is_system = self::_01($this->is_system);
+        $this->mtime = time();
+
+        $result = parent::_update();
+
+        if ($this->parent_id != $prev['parent_id']) {
+            // fetch previous parent dir, decrement its counters using previous
+            // counter values
+            if ($prev['parent_id']) {
+                $prevParentDir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($prev['parent_id']);
+                if ($prevParentDir) {
+                    self::_updateCounters(
+                        $prevParentDir, -1, -$prev['file_count'], -$prev['byte_count'], -($prev['system_count'] + self::_01($prev['is_system']))
+                    );
+                }
             }
-            self::_updateCounters($this->ParentDir, 1, $this->file_count, $this->byte_count);
+            // update counters in new parent dirs using current counter values
+            self::_updateCounters(
+                $this->ParentDir, 1, $this->file_count, $this->byte_count, $this->system_count + self::_01($this->is_system)
+            );
+
+        } elseif (($isSystem = self::_01($this->is_system)) !== self::_01($prev['is_system'])) {
+            // parent dir was not changed, is_system flag was changed -
+            // increment by 1 (if flag was gained) or decrement by 1 (if flag
+            // was taken) system_count counter in all parent dirs
+            self::_updateCounters($this->ParentDir, 0, 0, 0, $isSystem ? 1 : -1);
         }
 
-        $this->mtime = time();
-        return parent::_update();
+        return $result;
     } // }}}
 
     public function delete($_updateCounters = true) // {{{
@@ -384,7 +409,9 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
 
         if ($_updateCounters) {
             $this->_refresh();
-            self::_updateCounters($this->ParentDir, -1, -$this->file_count, -$this->byte_count);
+            self::_updateCounters(
+                $this->ParentDir, -($this->dir_count + 1), -$this->file_count, -$this->byte_count, -($this->system_count + self::_01($this->is_system))
+            );
         }
 
         // usun udostepnienia
@@ -400,6 +427,12 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      */
     public function getContentSummary() // {{{
     {
+        return array(
+            'size'      => $this->byte_count,
+            'fileCount' => $this->file_count,
+            'dirCount'  => $this->dir_count,
+        );
+
         $db = $this->getAdapter();
 
         // liczba podkatalogow, biezacy katalog nie jest liczony
@@ -459,9 +492,10 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      * @param  int $dir_count
      * @param  int $file_count
      * @param  int $byte_count
+     * @param  int $system_count
      * @internal
      */
-    public static function _updateCounters(ManipleDrive_Model_Dir $dir = null, $dir_count = 0, $file_count = 0, $byte_count = 0) // {{{
+    public static function _updateCounters(ManipleDrive_Model_Dir $dir = null, $dir_count = 0, $file_count = 0, $byte_count = 0, $system_count = 0) // {{{
     {
         while ($dir) {
             if ($dir_count > 0) {
@@ -497,10 +531,26 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
                 ));
             }
 
+            if ($system_count > 0) {
+                $dir->system_count = new Zend_Db_Expr(sprintf(
+                    'system_count + %d', $system_count
+                ));
+            } elseif ($system_count < 0) {
+                $dir->system_count = new Zend_Db_Expr(sprintf(
+                    'CASE WHEN system_count >= %d THEN system_count - %d ELSE 0 END',
+                    -$system_count, -$system_count
+                ));
+            }
+
             $dir->save();
             $dir = $dir->ParentDir;
         }
     } // }}}
+
+    protected static function _01($value)
+    {
+        return ((int) $value) ? 1 : 0;
+    }
 
     /**
      * {@inheritdoc}

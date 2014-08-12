@@ -26,7 +26,7 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
 
         $result = parent::_insert();
 
-        $this->Dir->_updateCounters($this->Dir, 0, 1, $this->size);
+        ManipleDrive_Model_Dir::_updateCounters($this->Dir, 0, 1, $this->size);
 
         return $result;
     } // }}}
