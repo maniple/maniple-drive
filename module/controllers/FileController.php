@@ -7,6 +7,11 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         $file_id = (string) $this->getScalarParam('file_id');
         $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
 
+        if (!$this->getResource('drive.helper')->isFileReadable($file)) {
+            echo '403 Forbidden';
+            exit;
+        }
+
         $this->getResource('core.file_helper')->sendFile(
             $this->_request,
             $this->_response,

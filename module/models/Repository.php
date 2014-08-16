@@ -4,7 +4,7 @@ class ManipleDrive_Model_Repository
 {
     protected $_tableProvider;
 
-    public function __construct(Zefram_Db_TableProvider $tableProvider)
+    public function __construct(Zefram_Db_Table_FactoryInterface $tableProvider)
     {
         $this->_tableProvider = $tableProvider;
     }

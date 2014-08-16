@@ -19,6 +19,18 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
     public function getResourcesConfig()
     {
         return array(
+            'drive.manager' => array(
+                'class' => 'ManipleDrive_DriveManager',
+                'args' => array(
+                    'repository' => array(
+                        'class' => 'ManipleDrive_Model_Repository',
+                        'args' => array(
+                            'tableProvider' => 'resource:db.table_provider',
+                        ),
+                    ),
+                    'securityContext' => null,
+                ),
+            ),
             'drive.helper' => array(
                 'class' => 'ManipleDrive_Helper',
                 'options' => array(
