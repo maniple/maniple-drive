@@ -241,6 +241,7 @@ class ManipleDrive_Helper
             case $row instanceof ManipleDrive_Model_File:
                 $data = array(
                     'file_id' => (int) $row->file_id,
+                    'dir_id'  => (int) $row->dir_id, // a must-have, to know if uploaded file belongs to current dir
                     'name'  => $row->name,
                     'owner' => (int) $row->owner,
                     'size'  => (int) $row->size,
