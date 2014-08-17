@@ -73,7 +73,7 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
             (string) $bootstrap->getResource('drive.helper')->getUserSearchRoute()
         );
 
-        $config = array_merge_recursive($default, $config);
+        $config = array_replace_recursive($default, $config);
 
         return Zefram_Json::encode($config);
     }

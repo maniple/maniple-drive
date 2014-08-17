@@ -18,11 +18,7 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
         $this->ctime = $now;
         $this->mtime = $now;
 
-        // jezeli nie podano jawnie wlasciciela, zostaje nim osoba zapisujaca
-        // ten rekord do bazy
-        if (empty($this->owner)) {
-            $this->owner = $this->created_by;
-        }
+        // no implicit owner
 
         $result = parent::_insert();
 

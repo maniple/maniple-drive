@@ -152,7 +152,6 @@ class ManipleDrive_DriveManager
             // TODO dir must be writable
         }
 
-        $key = (string) $key;
         $filename = $transfer->getFileName($key, false);
 
         // generate temporary file name for preliminary processing
@@ -171,7 +170,7 @@ class ManipleDrive_DriveManager
             $fileinfo = reset($fileinfo);
             $fileinfo['name'] = basename($filename);
         } else {
-            throw new Exception('Unable to receive file contents');
+            throw new Exception('Unable to receive file contents: ' . $key);
         }
         return $this->_saveFileInfo($dir, $fileinfo);
     } // }}}
