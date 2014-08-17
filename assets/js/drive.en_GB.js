@@ -323,6 +323,7 @@ var Drive = {
                 try {
                     this._view = new Drive.View(this._element, requiredHooks);
                 } catch (e) {
+                    window.console && window.console.warn(e.message + ', using default main template');
                     this._element.empty().append(this._renderTemplate('DirBrowser.main'));
                     this._view = new Drive.View(this._element, requiredHooks);
                 }
@@ -469,8 +470,12 @@ var Drive = {
                 });
 
             uploader.bind('uploadsuccess', function (response) {
-                self.addFile(response);
-                self._currentDir.files.push(response);
+                // dodaj przeslany plik do listy, ale tylko jezeli docelowy katalog
+                // jest ten sam co biezacy
+                if (response.dir_id == self._currentDir.dir_id) {
+                    self.addFile(response);
+                    self._currentDir.files.push(response);
+                }
 
                 // zaktualizuj informacje o zajmowanym miejscu na dysku:
                 // odpowiedz musi zawierac pola disk_usage i quota
@@ -555,7 +560,7 @@ var Drive = {
                     item.attr('href', self._dirUrl(parent));
                     item.text(String(label));
 
-                    if (parent.perms.write) {
+                    if (parent.perms && parent.perms.write) {
                         self._addDropTarget(parent, item);
                     }
 
@@ -590,7 +595,8 @@ var Drive = {
             var $ = this.$,
                 self = this,
                 ops,
-                handlers;
+                handlers,
+                perms;
 
             if (self._options.disableAuxmenu) {
                 return;
@@ -598,8 +604,9 @@ var Drive = {
 
             ops = [];
             handlers = {};
+            perms = dir.perms || {};
 
-            if (dir.perms.write) {
+            if (perms.write) {
                 ops.push({
                     op: 'uploadFiles',
                     title: Drive.Util.i18n('DirBrowser.uploadFiles')
@@ -617,7 +624,7 @@ var Drive = {
                 };
             }
 
-            if (dir.perms.share && !self._options.disableSharing) {
+            if (perms.share && !self._options.disableSharing) {
                 ops.push({
                     op: 'shareDir',
                     title: Drive.Util.i18n('DirBrowser.opShareDir.opname')
@@ -628,7 +635,7 @@ var Drive = {
                 };
             }
 
-            if (dir.perms.rename && !self._dirNameOverriden(dir)) {
+            if (perms.rename && !self._dirNameOverriden(dir)) {
                 ops.push({
                     op: 'renameDir',
                     title: Drive.Util.i18n('DirBrowser.opRenameDir.opname')
@@ -760,7 +767,13 @@ var Drive = {
 
         DirBrowser.prototype.setDir = function (dir) { // {{{
             var self = this,
-                dirName, url;
+                dirName,
+                url;
+
+            dir.perms = dir.perms || {};
+            dir.files = dir.files || [];
+            dir.subdirs = dir.subdirs || [];
+            dir.parents = dir.parents || [];
 
             self._currentDir = dir;
             self._dropTargets = [];
@@ -927,7 +940,7 @@ var Drive = {
         };
 
         DirBrowser.prototype.showUploader = function () {
-            if (this._currentDir.perms.write) {
+            if (this.isWritable()) {
                 this._uploader.showDropZone();
             }
         };
@@ -1270,7 +1283,7 @@ var Drive = {
                     str: str
                 });
 
-            if (dir.perms.chown) {
+            if (dir.perms && dir.perms.chown) {
                 var url = Drive.Util.uri(self._uriTemplates.dir.chown);
                 self._eip(content.find('.owner'), url, {
                     name: 'owner',
@@ -1492,7 +1505,7 @@ var Drive = {
                     str: str
                 });
 
-            if (file.perms.chown) {
+            if (file.perms && file.perms.chown) {
                 var url = Drive.Util.uri(self._uriTemplates.file.chown);
 
                 self._eip(content.find('.owner'), url, {
@@ -1582,6 +1595,7 @@ var Drive = {
 
         DirBrowser.prototype._subdirOps = function (dir) { // {{{
             var self = this,
+                perms = dir.perms || {},
                 ops = {};
 
             ops.open = {
@@ -1603,7 +1617,7 @@ var Drive = {
                 }
             };
 
-            if (dir.perms.share && !self._options.disableSharing) {
+            if (perms.share && !self._options.disableSharing) {
                 ops.share = {
                     op: 'share',
                     title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
@@ -1615,7 +1629,7 @@ var Drive = {
                 };
             }
 
-            if (dir.perms.rename && !self._dirNameOverriden(dir)) {
+            if (perms.rename && !self._dirNameOverriden(dir)) {
                 ops.rename = {
                     op: 'rename',
                     title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
@@ -1627,7 +1641,7 @@ var Drive = {
                 };
             }
 
-            if (dir.perms.remove) {
+            if (perms.remove) {
                 ops.remove = {
                     op: 'remove',
                     title: Drive.Util.i18n('DirBrowser.opRemoveDir.opname'),
@@ -1644,6 +1658,7 @@ var Drive = {
 
         DirBrowser.prototype._fileOps = function (file) { // {{{
             var self = this,
+                perms = file.perms || {},
                 ops = {};
 
             ops.open = {
@@ -1670,7 +1685,7 @@ var Drive = {
                 }
             };
 
-            if (file.perms.write) {
+            if (perms.write) {
                 ops.edit = {
                     op: 'edit',
                     title: Drive.Util.i18n('DirBrowser.opEditFile.opname'),
@@ -1682,7 +1697,7 @@ var Drive = {
                 };
             }
 
-            if (file.perms.rename) {
+            if (perms.rename) {
                 ops.rename = {
                     op: 'rename',
                     title: Drive.Util.i18n('DirBrowser.opRenameFile.opname'),
@@ -1694,7 +1709,7 @@ var Drive = {
                 };
             }
 
-            if (file.perms.remove) {
+            if (perms.remove) {
                 ops.remove = {
                     op: 'remove',
                     title: Drive.Util.i18n('DirBrowser.opRemoveFile.opname'),
@@ -1865,9 +1880,10 @@ var Drive = {
                 hooks = Viewtils.hooks(element, {
                     required: ['name'],
                     wrapper: self.$
-                });
+                }),
+                perms = dir.perms || {};
 
-            if (dir.perms.read) {
+            if (perms.read) {
                 // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
                 element.attr('data-goto-url', '');
                 element.attr('data-url', self._dirUrl(dir));
@@ -1878,7 +1894,7 @@ var Drive = {
 
             // jezeli katalog jest dostepny do zapisu, zezwol na upuszczanie
             // na niego plikow lub katalogow.
-            if (dir.perms.write) {
+            if (perms.write) {
                 // hooks.name.
                 self._addDropTarget(dir, element);
             }
@@ -1894,9 +1910,10 @@ var Drive = {
                 hooks = Viewtils.hooks(element, {
                     required: ['grab', 'icon', 'name'],
                     wrapper: self.$
-                });
+                }),
+                perms = dir.perms || {};
 
-            if (dir.perms.read) {
+            if (perms.read) {
                 // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
                 element.attr('data-url', self._dirUrl(dir));
 
@@ -1905,7 +1922,7 @@ var Drive = {
                 });
             }
 
-            if (dir.perms.write) {
+            if (perms.write) {
                 // ustaw atrybut data-drop-dir wskazujacy, ze na ten katalog mozna
                 // upuscic plik lub inny katalog
                 self._addDropTarget(dir, element);
@@ -1978,7 +1995,7 @@ var Drive = {
             }
 
             // TODO isFileMovable? file.perms.move?
-            if (self._currentDir.perms.write) {
+            if (self.isWritable()) {
                 self._addGrab(file, false, hooks.grab, function (targetDirId) {
                     self.opMoveFile(file, targetDirId);
                 });

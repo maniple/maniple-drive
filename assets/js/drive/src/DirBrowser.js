@@ -171,6 +171,7 @@ DirBrowser.prototype._initMainView = function (selector) { // {{{
         try {
             this._view = new Drive.View(this._element, requiredHooks);
         } catch (e) {
+            window.console && window.console.warn(e.message + ', using default main template');
             this._element.empty().append(this._renderTemplate('DirBrowser.main'));
             this._view = new Drive.View(this._element, requiredHooks);
         }
@@ -317,8 +318,12 @@ DirBrowser.prototype._initUploader = function () { // {{{
         });
 
     uploader.bind('uploadsuccess', function (response) {
-        self.addFile(response);
-        self._currentDir.files.push(response);
+        // dodaj przeslany plik do listy, ale tylko jezeli docelowy katalog
+        // jest ten sam co biezacy
+        if (response.dir_id == self._currentDir.dir_id) {
+            self.addFile(response);
+            self._currentDir.files.push(response);
+        }
 
         // zaktualizuj informacje o zajmowanym miejscu na dysku:
         // odpowiedz musi zawierac pola disk_usage i quota
@@ -403,7 +408,7 @@ DirBrowser.prototype._updateBreadcrumbs = function(dir) { // {{{
             item.attr('href', self._dirUrl(parent));
             item.text(String(label));
 
-            if (parent.perms.write) {
+            if (parent.perms && parent.perms.write) {
                 self._addDropTarget(parent, item);
             }
 
@@ -438,7 +443,8 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
     var $ = this.$,
         self = this,
         ops,
-        handlers;
+        handlers,
+        perms;
 
     if (self._options.disableAuxmenu) {
         return;
@@ -446,8 +452,9 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
 
     ops = [];
     handlers = {};
+    perms = dir.perms || {};
 
-    if (dir.perms.write) {
+    if (perms.write) {
         ops.push({
             op: 'uploadFiles',
             title: Drive.Util.i18n('DirBrowser.uploadFiles')
@@ -465,7 +472,7 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.share && !self._options.disableSharing) {
+    if (perms.share && !self._options.disableSharing) {
         ops.push({
             op: 'shareDir',
             title: Drive.Util.i18n('DirBrowser.opShareDir.opname')
@@ -476,7 +483,7 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.rename && !self._dirNameOverriden(dir)) {
+    if (perms.rename && !self._dirNameOverriden(dir)) {
         ops.push({
             op: 'renameDir',
             title: Drive.Util.i18n('DirBrowser.opRenameDir.opname')
@@ -608,7 +615,13 @@ DirBrowser.prototype.loadDir = function (path, success) { // {{{
 
 DirBrowser.prototype.setDir = function (dir) { // {{{
     var self = this,
-        dirName, url;
+        dirName,
+        url;
+
+    dir.perms = dir.perms || {};
+    dir.files = dir.files || [];
+    dir.subdirs = dir.subdirs || [];
+    dir.parents = dir.parents || [];
 
     self._currentDir = dir;
     self._dropTargets = [];
@@ -775,7 +788,7 @@ DirBrowser.prototype.isWritable = function () {
 };
 
 DirBrowser.prototype.showUploader = function () {
-    if (this._currentDir.perms.write) {
+    if (this.isWritable()) {
         this._uploader.showDropZone();
     }
 };
@@ -1118,7 +1131,7 @@ DirBrowser.prototype.opDirDetails = function(dir) { // {{{
             str: str
         });
 
-    if (dir.perms.chown) {
+    if (dir.perms && dir.perms.chown) {
         var url = Drive.Util.uri(self._uriTemplates.dir.chown);
         self._eip(content.find('.owner'), url, {
             name: 'owner',
@@ -1340,7 +1353,7 @@ DirBrowser.prototype.opFileDetails = function(file) { // {{{
             str: str
         });
 
-    if (file.perms.chown) {
+    if (file.perms && file.perms.chown) {
         var url = Drive.Util.uri(self._uriTemplates.file.chown);
 
         self._eip(content.find('.owner'), url, {
@@ -1430,6 +1443,7 @@ DirBrowser.prototype._closeOpdd = function() { // {{{
 
 DirBrowser.prototype._subdirOps = function (dir) { // {{{
     var self = this,
+        perms = dir.perms || {},
         ops = {};
 
     ops.open = {
@@ -1451,7 +1465,7 @@ DirBrowser.prototype._subdirOps = function (dir) { // {{{
         }
     };
 
-    if (dir.perms.share && !self._options.disableSharing) {
+    if (perms.share && !self._options.disableSharing) {
         ops.share = {
             op: 'share',
             title: Drive.Util.i18n('DirBrowser.opShareDir.opname'),
@@ -1463,7 +1477,7 @@ DirBrowser.prototype._subdirOps = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.rename && !self._dirNameOverriden(dir)) {
+    if (perms.rename && !self._dirNameOverriden(dir)) {
         ops.rename = {
             op: 'rename',
             title: Drive.Util.i18n('DirBrowser.opRenameDir.opname'),
@@ -1475,7 +1489,7 @@ DirBrowser.prototype._subdirOps = function (dir) { // {{{
         };
     }
 
-    if (dir.perms.remove) {
+    if (perms.remove) {
         ops.remove = {
             op: 'remove',
             title: Drive.Util.i18n('DirBrowser.opRemoveDir.opname'),
@@ -1492,6 +1506,7 @@ DirBrowser.prototype._subdirOps = function (dir) { // {{{
 
 DirBrowser.prototype._fileOps = function (file) { // {{{
     var self = this,
+        perms = file.perms || {},
         ops = {};
 
     ops.open = {
@@ -1518,7 +1533,7 @@ DirBrowser.prototype._fileOps = function (file) { // {{{
         }
     };
 
-    if (file.perms.write) {
+    if (perms.write) {
         ops.edit = {
             op: 'edit',
             title: Drive.Util.i18n('DirBrowser.opEditFile.opname'),
@@ -1530,7 +1545,7 @@ DirBrowser.prototype._fileOps = function (file) { // {{{
         };
     }
 
-    if (file.perms.rename) {
+    if (perms.rename) {
         ops.rename = {
             op: 'rename',
             title: Drive.Util.i18n('DirBrowser.opRenameFile.opname'),
@@ -1542,7 +1557,7 @@ DirBrowser.prototype._fileOps = function (file) { // {{{
         };
     }
 
-    if (file.perms.remove) {
+    if (perms.remove) {
         ops.remove = {
             op: 'remove',
             title: Drive.Util.i18n('DirBrowser.opRemoveFile.opname'),
@@ -1713,9 +1728,10 @@ DirBrowser.prototype._renderUpdir = function (dir) { // {{{
         hooks = Viewtils.hooks(element, {
             required: ['name'],
             wrapper: self.$
-        });
+        }),
+        perms = dir.perms || {};
 
-    if (dir.perms.read) {
+    if (perms.read) {
         // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
         element.attr('data-goto-url', '');
         element.attr('data-url', self._dirUrl(dir));
@@ -1726,7 +1742,7 @@ DirBrowser.prototype._renderUpdir = function (dir) { // {{{
 
     // jezeli katalog jest dostepny do zapisu, zezwol na upuszczanie
     // na niego plikow lub katalogow.
-    if (dir.perms.write) {
+    if (perms.write) {
         // hooks.name.
         self._addDropTarget(dir, element);
     }
@@ -1742,9 +1758,10 @@ DirBrowser.prototype._renderSubdir = function (dir, replace) { // {{{
         hooks = Viewtils.hooks(element, {
             required: ['grab', 'icon', 'name'],
             wrapper: self.$
-        });
+        }),
+        perms = dir.perms || {};
 
-    if (dir.perms.read) {
+    if (perms.read) {
         // klikniecie w katalog laduje zawarte w nim pliki i podkatalogi
         element.attr('data-url', self._dirUrl(dir));
 
@@ -1753,7 +1770,7 @@ DirBrowser.prototype._renderSubdir = function (dir, replace) { // {{{
         });
     }
 
-    if (dir.perms.write) {
+    if (perms.write) {
         // ustaw atrybut data-drop-dir wskazujacy, ze na ten katalog mozna
         // upuscic plik lub inny katalog
         self._addDropTarget(dir, element);
@@ -1826,7 +1843,7 @@ DirBrowser.prototype._renderFile = function (file, replace) { // {{{
     }
 
     // TODO isFileMovable? file.perms.move?
-    if (self._currentDir.perms.write) {
+    if (self.isWritable()) {
         self._addGrab(file, false, hooks.grab, function (targetDirId) {
             self.opMoveFile(file, targetDirId);
         });
