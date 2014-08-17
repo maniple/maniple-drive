@@ -29,6 +29,72 @@ class ManipleDrive_DriveManager
     } // }}}
 
     /**
+     * Create drive with given name and optional properties.
+     *
+     * @param  string $name
+     * @param  array $data OPTIONAL
+     * @return ManipleDrive_Model_Drive
+     */
+    public function createDrive($name, array $data = null) // {{{
+    {
+        $drive = $this->_getDrivesTable()->createRow();
+        $drive->setFromArray((array) $data);
+        $drive->setName($name);
+        $drive->save();
+
+        if ($data) {
+            $special = array_intersect_key($data, array('internal_name' => null, 'is_system' => null));
+            if ($special) {
+                $dir = $drive->RootDir;
+                $dir->setFromArray($special);
+                $dir->save();
+            }
+        }
+
+        return $drive;
+    } // }}}
+
+    /**
+     * @param  ManipleDrive_Model_Dir $parentDir
+     * @param  string $name
+     * @param  array $data OPTIONAL
+     * @param  bool $systemContext OPTIONAL
+     * @return ManipleDrive_Model_Dir
+     */
+    public function createDir(ManipleDrive_Model_Dir $parentDir, $name, array $data = null, $systemContext = false) // {{{
+    {
+        if (!$systemContext) {
+            // TODO parentDir must be writable, otherwise throw
+        }
+        $dir = $this->_getDirsTable()->createRow((array) $data);
+        $dir->dir_id = null; // ensure auto incrementation
+        $dir->name = (string) $name;
+        $dir->ParentDir = $parentDir;
+        $dir->Drive = $parentDir->Drive;
+        $dir->save();
+        return $dir;
+    } // }}}
+
+    /**
+     * @param  string $internalName
+     * @param  bool $systemContext OPTIONAL
+     * @return ManipleDrive_Model_Dir|null
+     */
+    public function getDirByInternalName($internalName, $systemContext = false) // {{{
+    {
+        $dir = $this->_getDirsTable()->fetchRow(array(
+            'internal_name = ?' => (string) $internalName,
+        ));
+        if (!$systemContext) {
+            // TODO dir must be readable
+        }
+        if ($dir) {
+            return $dir;
+        }
+        return null;
+    } // }}}
+
+    /**
      * @param  ManipleDrive_Model_DirInterface|ManipleDrive_Model_File $dirEntry
      * @param  bool $systemContext OPTIONAL
      * @return bool
@@ -67,6 +133,11 @@ class ManipleDrive_DriveManager
 
         return $file;
     } // }}}
+
+    public function createFileFromString(ManipleDrive_Model_Dir $dir, $name, $contents)
+    {
+        throw new Exception(__METHOD__ . ' is not yet implemented');
+    }
 
     /**
      * @param  ManipleDrive_Model_Dir $dir
@@ -158,4 +229,19 @@ class ManipleDrive_DriveManager
         $prefix = sprintf('%08d.', Zefram_Math_Rand::getInteger());
         return Zefram_Os::getTempDir() . '/' . uniqid($prefix, true);
     } // }}}
+
+    protected function _getDrivesTable()
+    {
+        return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Drives');
+    }
+
+    protected function _getDirsTable()
+    {
+        return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Dirs');
+    }
+
+    protected function _getFilesTable()
+    {
+        return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Files');
+    }
 }

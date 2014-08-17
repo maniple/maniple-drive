@@ -2,11 +2,16 @@
 
 class ManipleDrive_Model_Repository
 {
-    protected $_tableProvider;
+    protected $_tableFactory;
 
-    public function __construct(Zefram_Db_Table_FactoryInterface $tableProvider)
+    public function __construct(Zefram_Db_Table_FactoryInterface $tableFactory)
     {
-        $this->_tableProvider = $tableProvider;
+        $this->_tableFactory = $tableFactory;
+    }
+
+    public function getTableFactory()
+    {
+        return $this->_tableFactory;
     }
 
     /**
@@ -18,7 +23,7 @@ class ManipleDrive_Model_Repository
     public function getDir($dir_id) // {{{
     {
         $dir_id = (int) $dir_id;
-        $dir = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')->findRow($dir_id);
+        $dir = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs')->findRow($dir_id);
 
         return $dir ? $dir : null;
     } // }}}
@@ -53,16 +58,16 @@ class ManipleDrive_Model_Repository
 
         $select = $this->_createSelect();
         $select->from(
-            array('dirs' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS))
+            array('dirs' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS))
         );
         $select->join(
-            array('drives' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DRIVES)),
+            array('drives' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DRIVES)),
             'drives.root_dir = dirs.dir_id',
             array()
         );
         $select->where('dir_id = ?', $dir_id);
 
-        $dir = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow($select);
+        $dir = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow($select);
 
         return $dir ? $dir : null;
     } // }}}
@@ -77,7 +82,7 @@ class ManipleDrive_Model_Repository
 
         $select = $this->_createSelect();
         $select->from(
-            $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS),
+            $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS),
             new Zend_Db_Expr('COUNT(1)')
         );
         $select->where('drive_id = ?', $drive_id);
@@ -88,7 +93,7 @@ class ManipleDrive_Model_Repository
 
         $select = $this->_createSelect();
         $select->from(
-            array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES)),
+            array('files' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_FILES)),
             array(
                 'type' => 'filter',
                 'num_files' => new Zend_Db_Expr('COUNT(1)'),
@@ -96,7 +101,7 @@ class ManipleDrive_Model_Repository
             )
         );
         $select->join(
-            array('dirs' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS)),
+            array('dirs' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS)),
             'dirs.dir_id = files.dir_id',
             array()
         );
@@ -144,8 +149,8 @@ class ManipleDrive_Model_Repository
 
         // create drive and its root dir in one go
 
-        $drives_table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Drives');
-        $dirs_table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $drives_table = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Drives');
+        $dirs_table = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs');
 
         $select = $this->_createSelect();
         $select->from(
@@ -180,11 +185,11 @@ class ManipleDrive_Model_Repository
     {
         $select = $this->_createSelect();
         $select->from(
-            array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
+            array('files' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
         );
         if ($drive_id) {
             $select->join(
-                array('dirs' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS)),
+                array('dirs' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS)),
                 'dirs.dir_id = files.dir_id',
                 array()
             );
@@ -193,7 +198,7 @@ class ManipleDrive_Model_Repository
         $select->order('ctime DESC');
         $select->limit($limit);
 
-        return $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
+        return $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
     } // }}}
 
     public function getLastPublishedFiles($drive_id = null, $limit = 10) // {{{
@@ -203,13 +208,13 @@ class ManipleDrive_Model_Repository
         if ($dir_ids) {
             $select = $this->_createSelect();
             $select->from(
-                array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
+                array('files' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
             );
             $select->where('dir_id IN (?)', $dir_ids);
             $select->order('ctime DESC');
             $select->limit($limit);
 
-            return $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
+            return $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
         }
 
         return array();
@@ -222,13 +227,13 @@ class ManipleDrive_Model_Repository
         if ($dir_ids) {
             $select = $this->_createSelect();
             $select->from(
-                array('files' => $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
+                array('files' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_FILES))
             );
             $select->where('dir_id IN (?)', $dir_ids);
             $select->order('ctime DESC');
             $select->limit($limit);
 
-            return $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);            
+            return $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
         }
 
         return array();
@@ -243,7 +248,7 @@ class ManipleDrive_Model_Repository
      */
     public function getPublicDirIds($drive_id = null, $inherited = true) // {{{
     {
-        $dirs_table = $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS);
+        $dirs_table = $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS);
         $dir_ids = array();
 
         $select = $this->_createSelect();
@@ -300,8 +305,8 @@ class ManipleDrive_Model_Repository
         $user_id = (int) $user_id;
         $dir_ids = array();
 
-        $dirs_table = $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS);
-        $dir_shares_table = $this->_tableProvider->tableName(ManipleDrive_Model_TableNames::TABLE_DIR_SHARES);
+        $dirs_table = $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS);
+        $dir_shares_table = $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIR_SHARES);
 
         $select = $this->_createSelect();
         $select->from(
@@ -357,7 +362,7 @@ class ManipleDrive_Model_Repository
     public function getFile($file_id) // {{{
     {
         $file_id = (int) $file_id;
-        $file = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Files')->findRow($file_id);
+        $file = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->findRow($file_id);
 
         return $file ? $file : null;
     } // }}}
@@ -387,7 +392,7 @@ class ManipleDrive_Model_Repository
     public function getDirByInternalName($internal_name) // {{{
     {
         $internal_name = (string) $internal_name;
-        $dir = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow(array(
+        $dir = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow(array(
             'internal_name = ?' => $internal_name,
         ));
         if ($dir) {
@@ -398,6 +403,6 @@ class ManipleDrive_Model_Repository
 
     protected function _createSelect() // {{{
     {
-        return Zefram_Db_Select::factory($this->_tableProvider->getAdapter());
+        return Zefram_Db_Select::factory($this->_tableFactory->getAdapter());
     } // }}}
 }

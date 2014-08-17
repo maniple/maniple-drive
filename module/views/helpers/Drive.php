@@ -46,7 +46,8 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 
     public function dirBrowserConfig(array $config)
     {
-        $config['uriTemplates'] = array(
+        $default = array();
+        $default['uriTemplates'] = array(
             'dir' => array(
                 'read'   => $this->view->urlTemplate('drive.browse'),
                 'create' => $this->view->urlTemplate('drive.dir', array('action' => 'create')),
@@ -68,9 +69,11 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
         );
 
         $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
-        $config['userSearchUrl'] = $this->view->url(
+        $default['userSearchUrl'] = $this->view->url(
             (string) $bootstrap->getResource('drive.helper')->getUserSearchRoute()
         );
+
+        $config = array_merge_recursive($default, $config);
 
         return Zefram_Json::encode($config);
     }

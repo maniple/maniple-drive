@@ -571,6 +571,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
      * @param  string $name
      * @param  array $data OPTIONAL
      * @return ManipleDrive_Model_Dir
+     * @deprecated
      */
     public function createDir($name, array $data = null) // {{{
     {
