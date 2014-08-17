@@ -605,7 +605,7 @@ DirBrowser.prototype.loadDir = function (path, success) { // {{{
         },
         error: function (response) {
             dirNameHook && dirNameHook.attr('title', title);
-            self.emit(error, response.error, response);
+            self.emit('error', response.error, response);
         },
         success: function (response) {
             success.call(this, response.data);
