@@ -5,7 +5,7 @@
  * and files) which have 'public' visibility and are located within a given
  * drive.
  *
- * @version 2014-06-17
+ * @version 2014-08-22
  * @author xemlock
  */
 class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Model_PseudoDir
@@ -116,5 +116,15 @@ class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Mod
     public function getFiles() // {{{
     {
         return array(); // TODO
+    } // }}}
+
+    public function getFile($fileId) // {{{
+    {
+        return null;
+    } // }}}
+
+    public function getFileByName($name) // {{{
+    {
+        return null;
     } // }}}
 }

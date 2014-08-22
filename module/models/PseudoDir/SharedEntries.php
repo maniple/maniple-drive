@@ -5,7 +5,7 @@
  * and files) which are shared with the user of given ID either explicitly
  * or via 'usersonly' visibility.
  *
- * @version 2014-06-17
+ * @version 2014-08-22
  * @author xemlock
  */
 class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_PseudoDir
@@ -109,4 +109,14 @@ class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_Pseu
     {
         return array();
     }
+
+    public function getFile($fileId) // {{{
+    {
+        return null;
+    } // }}}
+
+    public function getFileByName($name) // {{{
+    {
+        return null;
+    } // }}}
 }

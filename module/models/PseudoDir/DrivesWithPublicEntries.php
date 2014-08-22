@@ -4,7 +4,7 @@
  * A directory containing root directories of drives that contain
  * public entries (directories or files).
  *
- * @version 2014-06-17
+ * @version 2014-08-22
  * @author xemlock
  */
 class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_Model_PseudoDir
@@ -142,8 +142,39 @@ class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_
         return $select;
     } // }}}
 
+    /**
+     * An empty file list is returned by this method, as the pseudo-directory
+     * contains only root directories of drives that contain public entries.
+     *
+     * @param  int $fileId
+     * @return null
+     */
     public function getFiles() // {{{
     {
-        return array(); // TODO
+        return array();
+    } // }}}
+
+    /**
+     * No file is returned by this method, as the pseudo-directory contains
+     * only root directories of drives that contain public entries.
+     *
+     * @param  int $fileId
+     * @return null
+     */
+    public function getFile($fileId) // {{{
+    {
+        return null;
+    } // }}}
+
+    /**
+     * No file is returned by this method, as the pseudo-directory contains
+     * only root directories of drives that contain public entries.
+     *
+     * @param  string $name
+     * @return null
+     */
+    public function getFileByName($name) // {{{
+    {
+        return null;
     } // }}}
 }
