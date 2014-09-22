@@ -1,7 +1,15 @@
 <?php
 
+/**
+ * @version 2014-09-22
+ */
 class ManipleDrive_DriveManager
 {
+    /**
+     * @var Zefram_Db
+     */
+    protected $_db;
+
     /**
      * @var ManipleDrive_Model_Repository
      */
@@ -13,19 +21,14 @@ class ManipleDrive_DriveManager
     protected $_securityContext;
 
     /**
-     * @param  ManipleDrive_Model_Repository|Zefram_Db_Table_FactoryInterface $repository
+     * @param  Zefram_Db $db
      * @return void
      */
-    public function __construct($repository, $securityContext) // {{{
+    public function __construct(Zefram_Db $db, $securityContext) // {{{
     {
-        if ($repository instanceof Zefram_Db_Table_FactoryInterface) {
-            $repository = new ManipleDrive_Model_Repository($repository);
-        }
-        if (!$repository instanceof ManipleDrive_Model_Repository) {
-            throw new InvalidArgumentException('Repository must be an instance of ManipleDrive_Model_Repository or a Zefram_Db_Table_FactoryInterface');
-        }
-        $this->_repository = $repository;
+        $this->_db = $db;
         $this->_securityContext = $securityContext;
+        $this->_repository = new ManipleDrive_Model_Repository($db->getTableFactory());
     } // }}}
 
     /**
@@ -37,18 +40,28 @@ class ManipleDrive_DriveManager
      */
     public function createDrive($name, array $data = null) // {{{
     {
-        $drive = $this->_getDrivesTable()->createRow();
-        $drive->setFromArray((array) $data);
-        $drive->setName($name);
-        $drive->save();
+        $this->_db->beginTransaction();
 
-        if ($data) {
-            $special = array_intersect_key($data, array('internal_name' => null, 'is_system' => null));
-            if ($special) {
-                $dir = $drive->RootDir;
-                $dir->setFromArray($special);
-                $dir->save();
+        try {
+            $drive = $this->_getDrivesTable()->createRow();
+            $drive->setFromArray((array) $data);
+            $drive->setName($name);
+            $drive->save();
+
+            if ($data) {
+                $special = array_intersect_key($data, array('internal_name' => null, 'is_system' => null));
+                if ($special) {
+                    $dir = $drive->RootDir;
+                    $dir->setFromArray($special);
+                    $dir->save();
+                }
             }
+
+            $this->_db->commit();
+
+        } catch (Exception $e) {
+            $this->_db->rollBack();
+            throw $e;
         }
 
         return $drive;
@@ -58,20 +71,51 @@ class ManipleDrive_DriveManager
      * @param  ManipleDrive_Model_Dir $parentDir
      * @param  string $name
      * @param  array $data OPTIONAL
-     * @param  bool $systemContext OPTIONAL
      * @return ManipleDrive_Model_Dir
      */
-    public function createDir(ManipleDrive_Model_Dir $parentDir, $name, array $data = null, $systemContext = false) // {{{
+    public function createDir(ManipleDrive_Model_Dir $parentDir, $name, array $data = null) // {{{
     {
-        if (!$systemContext) {
-            // TODO parentDir must be writable, otherwise throw
+        $this->_db->beginTransaction();
+
+        try {
+            $dir = $this->_getDirsTable()->createRow((array) $data);
+            $dir->dir_id = null; // ensure auto incrementation
+            $dir->name = (string) $name;
+            $dir->ParentDir = $parentDir;
+            $dir->Drive = $parentDir->Drive;
+            $dir->save();
+
+            $this->_db->commit();
+
+        } catch (Exception $e) {
+            $this->_db->rollBack();
+            throw $e;
         }
-        $dir = $this->_getDirsTable()->createRow((array) $data);
-        $dir->dir_id = null; // ensure auto incrementation
-        $dir->name = (string) $name;
-        $dir->ParentDir = $parentDir;
-        $dir->Drive = $parentDir->Drive;
-        $dir->save();
+
+        return $dir;
+    } // }}}
+
+    /**
+     * @param  ManipleDrive_Model_Dir $dir
+     * @param  array $data OPTIONAL
+     * @return ManipleDrive_Model_Dir
+     */
+    public function saveDir(ManipleDrive_Model_Dir $dir, array $data = null) // {{{
+    {
+        $this->_db->beginTransaction();
+
+        try {
+            if ($data) {
+                $dir->setFromArray($data);
+            }
+            $dir->save();
+            $this->_db->commit();
+
+        } catch (Exception $e) {
+            $this->_db->rollBack();
+            throw $e;
+        }
+
         return $dir;
     } // }}}
 

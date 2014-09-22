@@ -22,12 +22,7 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
             'drive.manager' => array(
                 'class' => 'ManipleDrive_DriveManager',
                 'args' => array(
-                    'repository' => array(
-                        'class' => 'ManipleDrive_Model_Repository',
-                        'args' => array(
-                            'tableProvider' => 'resource:db.table_provider',
-                        ),
-                    ),
+                    'db' => null,
                     'securityContext' => null,
                 ),
             ),
