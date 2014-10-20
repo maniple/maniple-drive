@@ -368,6 +368,10 @@ class ManipleDrive_Helper
      */
     public function browseDir2(ManipleDrive_Model_DirInterface $dir, array $parents = null, $options = null) // {{{
     {
+        if (!$this->isDirReadable($dir)) {
+            throw new Exception('You cannot read this directory');
+        }
+
         $user_ids = array();
 
         if ($owner = $dir->getOwner()) {
