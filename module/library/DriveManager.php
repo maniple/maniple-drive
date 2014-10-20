@@ -67,6 +67,48 @@ class ManipleDrive_DriveManager
         return $drive;
     } // }}}
 
+    public function getDrives()
+    {
+        $dirs_table = $this->_getDirsTable();
+        $drives_table = $this->_getDrivesTable();
+
+        // fetch drives and their root dirs in one go
+        $rows = Zefram_Db_Select::factory($this->_db->getAdapter())
+            ->from(
+                array('drives' => $drives_table->getName()),
+                $drives_table->getColsForSelect('drive__')
+            )
+            ->joinLeft(
+                array('dirs' => $dirs_table),
+                'dirs.dir_id = drives.root_dir',
+                $dirs_table->getColsForSelect('dir__')
+            )
+            ->order('dirs.name')
+            ->query()
+            ->fetchAll();
+
+        foreach ($rows as $row) {
+            $data = array();
+            foreach ($row as $col => $value) {
+                list($model, $prop) = explode('__', $col, 2);
+                $data[$model][$prop] = $value;
+            }
+            $drive = $drives_table->_createStoredRow($data['drive']);
+            $drive->RootDir = $dirs_table->_createStoredRow($data['dir']);
+
+            $drives[$drive->drive_id] = $drive;
+        }
+
+        if ($drives) {
+            $usages = $drives_table->getDiskUsageReport(array_keys($drives));
+            foreach ($usages as $drive_id => $usage) {
+                $drives[$drive_id]->setDiskUsage($usage);
+            }
+        }
+
+        return $drives;
+    }
+
     /**
      * @param  ManipleDrive_Model_Dir $parentDir
      * @param  string $name

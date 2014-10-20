@@ -49,7 +49,7 @@ class ManipleDrive_Form_Drive extends Zefram_Form
                     'type' => 'text',
                         'options' => array(
                             'label' => 'Wybierz właściciela dysku',
-                            'required' => true,
+                            // 'required' => true,
                             'validators' => array(
                                 array(
                                     new ManipleCore_Validate_UserExists(array(

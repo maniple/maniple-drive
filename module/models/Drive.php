@@ -102,7 +102,9 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
         if ($columnName === 'name') {
             return $this->getName();
         }
-
+        if ($columnName === 'disk_usage') {
+            return $this->getDiskUsage();
+        }
         return parent::__get($columnName);
     } // }}}
 
@@ -112,8 +114,18 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
             $this->setName($value);
             return;
         }
-
+        if ($columnName === 'disk_usage') {
+            $this->setDiskUsage($value);
+            return;
+        }
         parent::__set($columnName, $value);
+    } // }}}
+
+    public function __isset($columnName) // {{{
+    {
+        return ($columnName === 'name')
+            || ($columnName === 'disk_usage')
+            || parent::__isset($columnName);
     } // }}}
 
     /**
@@ -169,6 +181,16 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
     public function refreshDiskUsage() // {{{
     {
         $this->_diskUsage = null;
+        return $this;
+    } // }}}
+
+    /**
+     * @param  float $diskUsage
+     * @return ManipleDrive_Model_Drive
+     */
+    public function setDiskUsage($diskUsage) // {{{
+    {
+        $this->_diskUsage = round($diskUsage);
         return $this;
     } // }}}
 }
