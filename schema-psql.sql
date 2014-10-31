@@ -112,6 +112,11 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- typ zawartosci katalogu, np. obrazy, dokumenty, muzyka
     dir_type        VARCHAR(32),
 
+    -- identyfikator handlera odpowiadajacego za zarzadzanie tym katalogiem
+    -- katalogi z niepusta wartoscia sa powiazane z rekordami innych tabel
+    -- i nie moga byc usuwane z poziomu browsera
+    handler         VARCHAR(32),
+
     -- unikatowy identyfikator dla katalogow zarzadzanych przez moduly
     -- aplikacji, NULL dla katalogow zarzadzanych przez uzytkownika
     internal_name   VARCHAR(64),

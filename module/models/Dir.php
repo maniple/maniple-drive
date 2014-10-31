@@ -73,7 +73,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
 
     public function isInternal() // {{{
     {
-        return (bool) $this->internal_name;
+        return $this->handler || $this->internal_name;
     } // }}}
 
     /**
