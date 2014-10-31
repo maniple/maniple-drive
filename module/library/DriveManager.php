@@ -99,13 +99,6 @@ class ManipleDrive_DriveManager
             $drives[$drive->drive_id] = $drive;
         }
 
-        if ($drives) {
-            $usages = $drives_table->getDiskUsageReport(array_keys($drives));
-            foreach ($usages as $drive_id => $usage) {
-                $drives[$drive_id]->setDiskUsage($usage);
-            }
-        }
-
         return $drives;
     }
 
@@ -124,7 +117,6 @@ class ManipleDrive_DriveManager
             $dir->dir_id = null; // ensure auto incrementation
             $dir->name = (string) $name;
             $dir->ParentDir = $parentDir;
-            $dir->Drive = $parentDir->Drive;
             $dir->save();
 
             $this->_db->commit();

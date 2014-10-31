@@ -69,7 +69,7 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
     // odbywa sie przez odpowiedni skrypt crona
     public function delete($_updateCounters = true) // {{{
     {
-        $drive = $this->Dir->Drive;
+        $drive = $file->Dir->getDrive();
 
         if ($_updateCounters) {
             ManipleDrive_Model_Dir::_updateCounters($this->Dir, 0, -1, -$this->size);

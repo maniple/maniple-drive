@@ -90,7 +90,7 @@ class ManipleDrive_FileIndexer
         $doc = new Maniple_Search_Document();
 
         $doc->addField(Maniple_Search_Field::Id('file_id',       $file->file_id));
-        $doc->addField(Maniple_Search_Field::Meta('drive_id',    $file->Dir->drive_id));
+        // $doc->addField(Maniple_Search_Field::Meta('drive_id',    $file->Dir->drive_id));
         $doc->addField(Maniple_Search_Field::Text('name',        $file->name));
         $doc->addField(Maniple_Search_Field::Text('title',       $file->title));
         $doc->addField(Maniple_Search_Field::Text('author',      $file->author));
@@ -120,6 +120,6 @@ class ManipleDrive_FileIndexer
 
     public function searchInDrive($query, $drive_id)
     {
-        return $this->getIndex()->search($query . $this->getIndex()->getFieldQuery('drive_id', $drive_id));
+        return $this->getIndex()->search($query); // . $this->getIndex()->getFieldQuery('drive_id', $drive_id));
     }
 }

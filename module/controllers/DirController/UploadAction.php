@@ -181,7 +181,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
         // do zwracanych danych dolacz jeszcze informacje o zajetym
         // miejscu na dysku
-        $drive = $dir->Drive;
+        $drive = $dir->getDrive();
 
         // zwroc te wartosci jako floaty, zeby uniknac przekroczenia zakresu
         // liczb calkowitych na 32-bitowych maszynach

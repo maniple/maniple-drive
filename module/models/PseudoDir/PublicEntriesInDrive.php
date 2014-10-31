@@ -107,7 +107,8 @@ class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Mod
         $select->from(array(
             'dirs' => $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')
         ));
-        $select->where('drive_id = ?', (int) $this->_drive->drive_id);
+
+        $select->where('dir_id IN (?)', $this->_drive->RootDir->getSubdirIdentifiers());
         $select->where('visibility = ?', ManipleDrive_DirVisibility::VIS_PUBLIC);
         $select->order('name_normalized');
         return $select;

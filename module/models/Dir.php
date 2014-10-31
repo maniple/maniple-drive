@@ -138,6 +138,19 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->update($data, $where);
     } // }}}
 
+    public function getDrive()
+    {
+        $rootDir = $this;
+        while ($rootDir->ParentDir) {
+            $rootDir = $rootDir->ParentDir;
+        }
+        $drive = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives')->fetchRow(array('root_dir = ?' => $rootDir->dir_id));
+        if (empty($drive)) {
+            throw new Exception('Drive not found');
+        }
+        return $drive;
+    }
+
     /**
      * W tablicy $data musi być podana ścieżka do pliku w kluczu tmp_name.
      * Ponieważ funkcja przejmuje na własność ten plik, po wyjściu z niej
@@ -159,7 +172,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         $del_path = $isTempFile ? $path : null;
 
         try {
-            $drive = $this->Drive;
+            $drive = $this->getDrive();
             $size = (int) filesize($path);
 
             if ($drive->quota && $drive->getDiskUsage() + $size > $drive->quota) {
@@ -443,9 +456,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         $select = Zefram_Db_Select::factory($db);
         $select->from($this->_getTable(), 'dir_id');
 
-        $where = array(
-            'drive_id = ?' => $this->drive_id,
-        );
+        $where = array();
 
         $dir_ids = array(
             // dodaj biezacy katalog do listy przeszukiwanych katalogow
@@ -482,6 +493,28 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             'fileCount' => $row['file_count'],
             'dirCount'  => $dir_count,
         );
+    } // }}}
+
+    public function getSubdirIdentifiers() // {{{
+    {
+        $queue = array($this->dir_id);
+
+        $select = Zefram_Db_Select::factory($this->_getTable()->getAdapter());
+        $select->from($this->_getTable(), 'dir_id');
+
+        $dir_ids = array();
+
+        while ($dir_id = array_shift($queue)) {
+            $where['parent_id = ?'] = (int) $dir_id;
+            $select->reset(Zend_Db_Select::WHERE)->where($where);
+
+            foreach ($select->query()->fetchAll() as $row) {
+                $dir_ids[$row['dir_id']] = true;
+                $queue[] = $row['dir_id'];
+            }
+        }
+
+        return array_keys($dir_ids);
     } // }}}
 
     /**
@@ -553,19 +586,6 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function __set($key, $value) // {{{
-    {
-        parent::__set($key, $value);
-
-        // if a parent directory was (un)set, update drive_id accordingly
-        if ($key === 'ParentDir') {
-            $this->drive_id = $value ? $value->drive_id : null;
-        }
-    } // }}}
-
-    /**
      * Creates a subdirectory of this directory.
      *
      * @param  string $name
@@ -577,8 +597,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
     {
         $dir = $this->_getTable()->createRow((array) $data);
         $dir->name = (string) $name;
-        $dir->drive_id = $this->drive_id;
-        $dir->parent_id = $this->dir_id;
+        $dir->ParentDir = $this;
         $dir->save();
         return $dir;
     } // }}}

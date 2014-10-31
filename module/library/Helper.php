@@ -514,7 +514,7 @@ class ManipleDrive_Helper
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         if ($dir instanceof ManipleDrive_Model_Dir) {
-            $drive = $dir->Drive;
+            $drive = $dir->getDrive();
             if ($drive) {
                 $result['disk_usage'] = $drive->getDiskUsage();
                 $result['quota'] = (float) $drive->quota;

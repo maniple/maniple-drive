@@ -165,12 +165,8 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
     public function getDiskUsage() // {{{
     {
         if (null === $this->_diskUsage) {
-            $report = $this->getTable()->getDiskUsageReport($this->drive_id);
-            if (isset($report[$this->drive_id])) {
-                $this->_diskUsage = $report[$this->drive_id]['disk_usage'];
-            } else {
-                $this->_diskUsage = 0;
-            }
+            $usage = $this->RootDir->getContentSummary();
+            $this->_diskUsage = (int) $usage['size'];
         }
         return $this->_diskUsage;
     } // }}}

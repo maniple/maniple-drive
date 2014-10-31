@@ -60,7 +60,7 @@ CREATE TABLE {PREFIX}drive_dirs (
     dir_id          SERIAL PRIMARY KEY,
 
     -- identyfikator dysku, w obrebie ktorego znajduje sie ten katalog
-    drive_id        INTEGER NOT NULL,
+    -- drive_id        INTEGER NOT NULL,
 
     -- parent directory id
     parent_id       INTEGER,
@@ -126,8 +126,8 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- znormalizowana nazwa uzywana do sortowania
     name_normalized VARCHAR(1023) NOT NULL,
 
-    CONSTRAINT {PREFIX}drive_dirs_drive_id_fkey
-        FOREIGN KEY (drive_id) REFERENCES {PREFIX}drives (drive_id),
+    -- CONSTRAINT {PREFIX}drive_dirs_drive_id_fkey
+    --    FOREIGN KEY (drive_id) REFERENCES {PREFIX}drives (drive_id),
 
     CONSTRAINT {PREFIX}drive_dirs_owner_fkey
         FOREIGN KEY (owner) REFERENCES {PREFIX}users (user_id),
@@ -149,12 +149,12 @@ CREATE TABLE {PREFIX}drive_dirs (
     -- dysku,
     -- drive_id jest w pierwszej kolumnie, zeby latwo wylawiac katalogi
     -- znajdujace sie w obrebie tego samego dysku
-    CONSTRAINT {PREFIX}drive_dirs_drive_id_dir_id_idx
-        UNIQUE (drive_id, dir_id),
+    -- CONSTRAINT {PREFIX}drive_dirs_drive_id_dir_id_idx
+    --    UNIQUE (drive_id, dir_id),
 
-    CONSTRAINT {PREFIX}drive_dirs_drive_id_parent_id_fkey
-        FOREIGN KEY (drive_id, parent_id)
-        REFERENCES {PREFIX}drive_dirs (drive_id, dir_id),
+    -- CONSTRAINT {PREFIX}drive_dirs_drive_id_parent_id_fkey
+    --    FOREIGN KEY (drive_id, parent_id)
+    --    REFERENCES {PREFIX}drive_dirs (drive_id, dir_id),
 
     -- indeks zapewniajacy unikatowosc internal_name
     CONSTRAINT {PREFIX}drive_dirs_internal_name_idx

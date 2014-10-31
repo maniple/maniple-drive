@@ -22,11 +22,6 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
             'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
             'refColumns'    => 'dir_id',
         ),
-        'Drive' => array(
-            'columns'       => 'drive_id',
-            'refTableClass' => 'ManipleDrive_Model_DbTable_Drives',
-            'refColumns'    => 'drive_id',
-        ),
     );
 
     protected static $_dirAccessCache = array();
@@ -127,7 +122,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         // wlasciciel dysku ma zawsze dostep do wszystkich plikow w jego
         // obrebie
-        $drive = $dir->Drive;
+        $drive = $dir->getDrive();
         if ($drive->owner && $drive->owner == $user_id) {
             $access = self::ACCESS_READABLE | self::ACCESS_WRITABLE;
 

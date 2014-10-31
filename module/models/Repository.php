@@ -79,18 +79,19 @@ class ManipleDrive_Model_Repository
     public function getDriveSummary($drive_id) // {{{
     {
         $drive_id = (int) $drive_id;
+        $drive = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Drives')->findRow($drive_id);
+        if (empty($drive)) {
+            throw new Exception('Invalid drive ID');
+        }
 
-        $select = $this->_createSelect();
-        $select->from(
-            $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_DIRS),
-            new Zend_Db_Expr('COUNT(1)')
+        $dir_ids = array_merge(
+            (array) $drive->RootDir->dir_id,
+            $drive->RootDir->getSubdirIdentifiers()
         );
-        $select->where('drive_id = ?', $drive_id);
 
-        $num_dirs = (int) $select->query()->fetchColumn();
+        $num_dirs = count($dir_ids);
 
         // count files by type (filter)
-
         $select = $this->_createSelect();
         $select->from(
             array('files' => $this->_tableFactory->tableName(ManipleDrive_Model_TableNames::TABLE_FILES)),
@@ -105,7 +106,7 @@ class ManipleDrive_Model_Repository
             'dirs.dir_id = files.dir_id',
             array()
         );
-        $select->where('dirs.drive_id = ?', $drive_id);
+        $select->where('dirs.dir_id IN (?)', $dir_ids);
         $select->group('filter');
 
         $disk_usage = 0;

@@ -28,7 +28,7 @@ class ManipleDrive_FileController_RemoveAction extends Zefram_Controller_Action_
     protected function _process() // {{{
     {
         $file = $this->_file;
-        $drive = $file->Dir->Drive;
+        $drive = $file->Dir->getDrive();
 
         // pobierz teraz identyfikator pliku, poniewaz po usunieciu pliku
         // nie bedzie on dostepny

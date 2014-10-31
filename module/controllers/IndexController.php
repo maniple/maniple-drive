@@ -16,7 +16,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         if ($dir) {
             $file = $this->getTable('ManipleDrive_Model_DbTable_Drives')->fetchByPath(
-                $dir->Drive, implode('/', $path)
+                $dir->getDrive(), implode('/', $path)
             );
             if ($file) {
                 if ($this->getDriveHelper()->isFileReadable($file)) {

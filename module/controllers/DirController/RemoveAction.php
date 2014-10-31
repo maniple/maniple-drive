@@ -29,7 +29,7 @@ class ManipleDrive_DirController_RemoveAction extends Zefram_Controller_Action_S
     protected function _process() // {{{
     {
         $dir = $this->_dir;
-        $drive = $dir->Drive;
+        $drive = $dir->getDrive();
 
         // pobierz teraz identyfikator katalogu, poniewaz po usunieciu
         // katalogu nie bedzie on dostepny
