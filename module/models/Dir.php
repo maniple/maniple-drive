@@ -71,6 +71,89 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         return $file ? $file : null;
     } // }}}
 
+    /**
+     * @param  string $path
+     * @return ManipleDrive_Model_Dir|null
+     */
+    public function getDirByPath($path)
+    {
+        $db = $this->_getTable()->getAdapter();
+
+        $parts  = explode('/', trim(str_replace('\\', '/', $path), '/'));
+
+        $block_size = 5;
+
+        if (count($parts)) {
+            $dirs = $this->_getTable()->getQuotedName();
+
+            // lista identyfikatorow napotkanych katalogow
+            $id_path = array();
+
+            // ostatni element sciezki moze byc plikiem, wiec analizujemy
+            // wszystkie elementy sciezki z wyjatkiem ostatniego
+            $last_part = $db->quote(array_pop($parts));
+
+            // analizujemy blokami robiac INNER JOINa - tak najszybciej
+            // wylapiemy niepoprawne nazwy katalogow
+            // d0 jest startowym katalogiem sciezki w bloku, katalog startowy
+            // w pierwszym bloku ma byc korzeniem dysku
+            $d0_parent_id = $db->quote((int) $this->dir_id);
+
+            while (count($parts)) {
+                $block  = array_splice($parts, 0, $block_size);
+                $nblock = count($block);
+
+                // przygotuj poczatek zapytania i liste kolumn do pobrania - 
+                // identyfikatorow kolejnych katalogow
+                $query = '';
+                for ($i = 0; $i < $nblock; ++$i) {
+                    $query .= (empty($query) ? 'SELECT' : ',') . " d$i.dir_id AS id_$i";
+                }
+                $query .= " FROM $dirs d0";
+
+                // alias poprzedniej tabeli, warunki dla pierwszej tabeli beda
+                // w klauzuli WHERE na koncu zapytania
+                $prev = 'd0';
+                for ($i = 1; $i < $nblock; ++$i) {
+                    // alias aktualnej tabeli
+                    $curr = 'd' . $i;
+                    $query .= " JOIN $dirs $curr ON $curr.parent_id = $prev.dir_id"
+                            . " AND $curr.name = {$db->quote($block[$i])}";
+                    $prev = $curr;
+                }
+
+                $query .= " WHERE d0.name = {$db->quote($block[0])}"
+                        . " AND d0.parent_id = $d0_parent_id";
+
+                // spodziewany jest co najwyzej jeden wiersz, ze wzgledu na
+                // UNIQUE (parent_id, name)
+                if (!($row = $db->fetchRow($query))) {
+                    // podano niepoprawna sciezke
+                    return null;
+                }
+
+                // zapisz identyfikatory kolejnych katalogow w sciezce
+                for ($i = 0; $i < $nblock; ++$i) {
+                    $id_path[] = $row['id_' . $i];
+                }
+
+                // zapamietaj id ostatniego katalogu sciezki, bedzie on uzyty
+                // jako id katalogu nadrzednego (parent_id) w pierwszym
+                // katalogu nastepnego bloku. Od razu zapamietana jest wartosc
+                // w postaci nadajacej sie do bezposredniego umieszczenia
+                // w zapytaniu.
+                $d0_parent_id = $db->quote($id_path[count($id_path) - 1]);
+            }
+
+            // po przetworzeniu tablicy parts d0_parent_id zawiera
+            // identyfikator katalogu, w ktorym znajduje sie ostatni element
+            // podanej sciezki (plik lub katalog).
+            return $this->_getTable()->fetchRow("name = $last_part AND parent_id = $d0_parent_id");
+        }
+
+        return null;
+    }
+
     public function isInternal() // {{{
     {
         return $this->handler || $this->internal_name;

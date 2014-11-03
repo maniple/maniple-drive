@@ -129,7 +129,7 @@ class ManipleDrive_Helper
                 $perms = array(
                     self::READ   => true,
                     self::WRITE  => true,
-                    self::RENAME => (bool) $dir->parent_id,
+                    self::RENAME => !$dir->isInternal() && $dir->parent_id,
                     self::REMOVE => !$dir->is_system && !$dir->system_count && !$dir->isInternal() && $dir->parent_id,
                     self::SHARE  => true,
                     self::CHOWN  => true,
