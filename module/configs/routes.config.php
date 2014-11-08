@@ -153,5 +153,6 @@ defaults.d          =
         'map' => array(
             'path'  => 1,
         ),
+        'reverse' => '!%s',
     ),
 );

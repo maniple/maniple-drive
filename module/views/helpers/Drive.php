@@ -77,4 +77,21 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 
         return Zefram_Json::encode($config);
     }
+
+    /**
+     * @param  ManipleDrive_Model_File $file
+     * @return string
+     */
+    public function fileUrl(ManipleDrive_Model_File $file)
+    {
+        $parts = array($file->name);
+        $dir = $file->Dir;
+        while ($dir) {
+            array_unshift($parts, $dir->name);
+            $dir = $dir->ParentDir;
+        }
+        $path = implode('/', array_map('urlencode', $parts));
+        $url = rtrim($this->view->baseUrl(), '/') . '/!' . $path;
+        return $url;
+    }
 }
