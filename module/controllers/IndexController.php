@@ -20,15 +20,19 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             );
             if ($file) {
                 if ($this->getDriveHelper()->isFileReadable($file)) {
+                    $options = array(
+                        'type' => $file->mimetype,
+                        'etag' => $file->md5sum,
+                        'cache' => true,
+                    );
+                    if ($this->getScalarParam('download')) {
+                        $options['name'] = $file->name; // this will force file download
+                    }
                     $this->getResource('core.file_helper')->sendFile(
                         $this->_request,
                         $this->_response,
                         $file->getPath(),
-                        array(
-                            'type' => $file->mimetype,
-                            'etag' => $file->md5sum,
-                            'cache' => true,
-                        )
+                        $options
                     );
                 } else {
                     if ($this->getSecurityContext()->isAuthenticated()) {

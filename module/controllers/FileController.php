@@ -147,14 +147,19 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
             )
         );
 
+        $options = array(
+            'type' => $file->mimetype,
+            'cache' => true,
+        );
+        if ($this->getScalarParam('download')) {
+            $options['name'] = $file->name;
+        }
+
         $this->getResource('core.file_helper')->sendFile(
             $this->_request,
             $this->_response,
             $image_path,
-            array(
-                'type' => $file->mimetype,
-                'cache' => true,
-            )
+            $options
         );
     } // }}}
 
