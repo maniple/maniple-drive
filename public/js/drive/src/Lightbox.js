@@ -5,29 +5,10 @@ function Lightbox(selector, options) {
 Lightbox.prototype = {
     _init: function (selector, options) {
         var self = this,
-            el = $(selector).first();
+            el = $(selector).first(),
+            str = Drive.Util.i18n('Lightbox');
 
         options = $.extend(true, {}, options);
-
-        var str = {
-            saveImage: 'Zapisz obraz',
-            loadingImage: 'Wczytuję obraz...',
-            imageFailedToLoad: 'Wczytywanie obrazu nie powiodło się.',
-            next: 'Następny',
-            prev: 'Poprzedni',
-            close: 'Zamknij',
-            counter: '%curr% z %total%'
-        };
-
-        str = {
-            saveImage: 'Save image',
-            loadingImage: 'Loading image...',
-            imageFailedToLoad: 'Failed to load image.',
-            next: 'Next',
-            prev: 'Previous',
-            close: 'Close',
-            counter: '%curr% of %total%'
-        };
 
         el.magnificPopup({
             delegate: options.delegate || 'a',
@@ -48,30 +29,39 @@ Lightbox.prototype = {
                     });
                 }
             },
-            disableOn: function () {
+            disableOn: function disableOn() {
                 // contrary to this function's name lightbox will be disabled
                 // when false is returned
                 return self.disabled ? false : true;
             },
-            tClose: str.close,
-            tLoading: str.loadingImage,
+            tClose: String(str.close),
+            tLoading: String(str.loadingImage),
             gallery: {
                 enabled: true,
-                tPrev: str.prev,
-                tNext: str.next,
-                tCounter: str.counter
+                tPrev: String(str.prev),
+                tNext: String(str.next),
+                tCounter: String(str.counter)
             },
             image: {
                 verticalFit: false,
                 verticalGap: 0,
-                tError: str.imageFailedToLoad,
-                titleSrc: function (item) {
-                    var title = '<div class="actions"><a class="btn btn-primary" href="#!" onclick="(event||window.event).stopPropagation();document.location.href=\'' + Viewtils.esc(item.el.attr('data-download-url')) + '\'" >' + str.saveImage + '</a></div>' + '<h4 class="title">' + Viewtils.esc(item.el.attr('title')) + '</h4>',
-                    caption = item.el.attr('data-caption');
+                tError: String(str.imageFailedToLoad),
+                titleSrc: function titleSrc(item) {
+                    var title = item.el.data('title') || item.el.attr('title'),
+                        caption = item.el.data('caption'),
+                        downloadUrl = item.el.data('downloadUrl') || item.el.attr('href'),
+                        html;
+
+                    // append download=1 URL parameter to force file download
+                    downloadUrl += (downloadUrl.indexOf('?') === -1 ? '?' : '&') + 'download=1';
+
+                    html = '<div class="actions"><a class="btn btn-primary" href="#!" onclick="(event||window.event).stopPropagation();document.location.href=\'' + Viewtils.esc(downloadUrl) + '\'" >' + str.saveImage + '</a></div>' + '<h4 class="title">' + Viewtils.esc(title) + '</h4>';
+
                     if (caption && (caption = Viewtils.esc(caption)).length) {
-                        title += '<div class="caption">' + caption + '</div>';
+                        html += '<div class="caption">' + caption + '</div>';
                     }
-                    return title;
+
+                    return html;
                 },
                 markup: '<div class="drive-viewer-figure">' +
                             '<div class="mfp-img"></div>' +
@@ -83,7 +73,7 @@ Lightbox.prototype = {
                             '</div>' +
                         '</div>'
             }
-        });        
+        });
     },
     disable: function disable(flag) {
         if (typeof flag === 'undefined') {

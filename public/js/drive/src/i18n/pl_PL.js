@@ -140,6 +140,15 @@ var I18n = {
             md5sum:             'Suma kontrolna MD5',
             url:                'URL pliku'
         }
+    },
+    Lightbox: {
+        saveImage: 'Zapisz obraz',
+        loadingImage: 'Wczytuję obraz...',
+        imageFailedToLoad: 'Wczytywanie obrazu nie powiodło się.',
+        next: 'Następny',
+        prev: 'Poprzedni',
+        close: 'Zamknij',
+        counter: '%curr% z %total%'
     }
 }
 

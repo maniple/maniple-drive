@@ -140,6 +140,15 @@ var I18n = {
             md5sum:             'MD5 checksum',
             url:                'File URL'
         }
+    },
+    Lightbox: {
+        saveImage: 'Save image',
+        loadingImage: 'Loading image...',
+        imageFailedToLoad: 'Failed to load image.',
+        next: 'Next',
+        prev: 'Previous',
+        close: 'Close',
+        counter: '%curr% of %total%'
     }
 }
 
