@@ -7,6 +7,9 @@
  * History handling triggered by start() method, disabled by default.
  *
  * Version: 1.5.0a (2012-12-28, Xemlock)
+ *                 (2014-12-01, Xemlock)
+ *                      - eliminated browser sniffing when detecting native
+ *                        support, as it was not compatible with jQuery 1.9+
  *
  * Copyright (c) 2008-2010 Benjamin Arthur Lupton - released under MIT License
  */
@@ -33,47 +36,6 @@
 	 */
 	// Check our class exists
 	if ( !($.History||false) ) {
-        // jQuery.browser is removed since 1.9, this code is taked from
-        // jquery-migrate-1.1.1 script
-        if (!$.browser) {
-            var jQuery = $;
-            jQuery.uaMatch = function( ua ) {
-                ua = ua.toLowerCase();
-
-                var match = /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
-                    /(webkit)[ \/]([\w.]+)/.exec( ua ) ||
-                    /(opera)(?:.*version|)[ \/]([\w.]+)/.exec( ua ) ||
-                    /(msie) ([\w.]+)/.exec( ua ) ||
-                    ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec( ua ) ||
-                    [];
-
-                return {
-                    browser: match[ 1 ] || "",
-                    version: match[ 2 ] || "0"
-                };
-            };
-
-            // Don't clobber any existing jQuery.browser in case it's different
-            if ( !jQuery.browser ) {
-                matched = jQuery.uaMatch( navigator.userAgent );
-                browser = {};
-
-                if ( matched.browser ) {
-                    browser[ matched.browser ] = true;
-                    browser.version = matched.version;
-                }
-
-                // Chrome is Webkit, but Webkit is also Safari.
-                if ( browser.chrome ) {
-                    browser.webkit = true;
-                } else if ( browser.webkit ) {
-                    browser.safari = true;
-                }
-
-                jQuery.browser = browser;
-            }
-        }
-
 		// Declare our class
 		$.History = {
 			// Our Plugin definition
@@ -353,6 +315,8 @@
 			 * @param {Object} browser [optional]
 			 */
 			nativeSupport: function ( browser ) {
+                // jQuery.browser is removed since 1.9
+                return 'onhashchange' in window;
 				// Prepare
 				browser = browser||$.browser;
 				var	browserVersion = browser.version,
@@ -430,7 +394,8 @@
 					var checker;
 
 					// Handle depending on the browser
-					if ( $.browser.msie ) {
+                    var msie = (navigator.userAgent.toLowerCase().indexOf('msie') !== -1) && !window.opera;
+					if ( msie ) {
 						// We are still IE
 						// IE6, IE7, etc
 
