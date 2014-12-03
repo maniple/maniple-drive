@@ -104,6 +104,16 @@
             'dims'       => null,
         ),
     ),
+    'drive.file.image' => array(
+        'route' => 'drive/file/:file_id/image/:scale',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'index',
+            'action'     => 'image',
+            'scale'      => null,
+        ),
+    ),
+
 /*
 [drive_dir]
 route = "drive/dir/:id"
