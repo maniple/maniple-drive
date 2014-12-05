@@ -91,7 +91,11 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
             $dir = $dir->ParentDir;
         }
         $path = implode('/', array_map('urlencode', $parts));
+
+        // + (encoded space) is not properly handled when saving file to disk
+        $path = str_replace('+', '%20', $path);
+
         $url = rtrim($this->view->baseUrl(), '/') . '/!' . $path;
-        return $url;
+        return $this->view->serverUrl() . $url;
     }
 }
