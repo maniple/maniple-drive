@@ -176,7 +176,7 @@ class ManipleDrive_Helper
         $perms = $this->getDirPermissions($file->Dir);
 
         if ($user) {
-            if ($file->owner == $user->getId()) {
+            if ($file->owner == $user->getId() || $this->getSecurityContext()->isSuperUser()) {
                 $perms[self::READ]   = true;
                 $perms[self::WRITE]  = true;
                 $perms[self::RENAME] = true;
