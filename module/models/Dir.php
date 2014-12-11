@@ -276,6 +276,50 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
                         $mimetype = constant('Zefram_File_MimeType_Data::' . $ext);
                         break;
                 }
+            } elseif ($mimetype === Zefram_File_MimeType_Data::PDF) {
+                $filter = new Zefram_Filter_Utf8();
+                try {
+                    $pdf = Zend_Pdf::load($path);
+
+                    if (empty($data['title'])) {
+                        $title = $pdf->properties['Title'];
+                        $encoding = mb_detect_encoding($title);
+                        $data['title'] = mb_convert_encoding($title, 'UTF-8', $encoding);
+                    }
+                    if (empty($data['author'])) {
+                        $author = $pdf->properties['Author'];
+                        $encoding = mb_detect_encoding($author);
+                        $data['author'] = mb_convert_encoding($author, 'UTF-8', $encoding);
+                    }
+
+                    if (empty($data['title']) || empty($data['author'])) {
+                        // since PDF 1.6
+                        $metadata = $pdf->getMetadata();
+                        $metadataDOM = new DOMDocument();
+                        $metadataDOM->loadXML($metadata);
+     
+                        $xpath = new DOMXPath($metadataDOM);
+                        $n = @$xpath->query('/rdf:RDF/rdf:Description');
+
+                        if ($n) {
+                            $n = $n->item(0);
+                            $pdfPreffixNamespaceURI = $n->lookupNamespaceURI('pdf');
+                            $xpath->registerNamespace('pdf', $pdfPreffixNamespaceURI);
+
+                            if (empty($data['title'])) {
+                                $node = $xpath->query('/rdf:RDF/rdf:Description/pdf:Title')->item(0);
+                                $data['title'] = $filter->filter($node->nodeValue);
+                            }
+
+                            if (empty($data['author'])) {
+                                $node = $xpath->query('/rdf:RDF/rdf:Description/pdf:Author')->item(0);
+                                $data['author'] = $filter->filter($node->nodeValue);
+                            }
+                        }
+                    }
+
+                } catch (Exception $e) {
+                }
             }
 
             // jezeli plik o takiej samej sumie MD5 juz istnieje, usuwamy plik
