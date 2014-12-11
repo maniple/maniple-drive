@@ -267,6 +267,7 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
 
             // be more specific about ZIP archives
             if ($mimetype === Zefram_File_MimeType_Data::ZIP) {
+                $filename = basename(isset($data['name']) ? $data['name'] : $path);
                 $ext = strtoupper(substr(strrchr($filename, '.'), 1));
 
                 switch ($ext) {
