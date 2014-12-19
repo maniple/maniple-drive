@@ -153,6 +153,15 @@ class ManipleDrive_DriveManager
         return $dir;
     } // }}}
 
+    public function getDir($dirId)
+    {
+        $dir = $this->_getDirsTable()->findRow((int) $dirId);
+        if ($dir) {
+            return $dir;
+        }
+        return null;
+    }
+
     /**
      * @param  string $internalName
      * @param  bool $systemContext OPTIONAL

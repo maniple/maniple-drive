@@ -113,7 +113,14 @@
             'scale'      => null,
         ),
     ),
-
+    'drive.dir.zipped' => array(
+        'route' => 'drive/dir/:dir_id/zipped',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'index',
+            'action'     => 'dir-zipped',
+        ),
+    ),
 /*
 [drive_dir]
 route = "drive/dir/:id"

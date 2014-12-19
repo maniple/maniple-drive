@@ -42,9 +42,9 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             $image_path,
             $options
         );
-    }
+    } // }}}
 
-    public function fileAction()
+    public function fileAction() // {{{
     {
         $path = explode('/', $this->getScalarParam('path'));
 
@@ -97,7 +97,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         echo '404 Not Found';
         exit;
-    }
+    } // }}}
 
     public function dashboardAction()
     {
@@ -153,5 +153,44 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         $this->view->shared_files = $shared_files;
         $this->view->public_files = $public_files;
+    }
+
+    public function dirZippedAction()
+    {
+        set_time_limit(0);
+        $dir_id = (int) $this->getScalarParam('dir_id');
+        $dir = $this->getResource('drive.manager')->getDir($dir_id);
+        if (!$dir) {
+            throw new Exception('Directory not found');
+        }
+
+        // TODO store somewhere this file for later use
+
+        $path = Zefram_Os::getTempDir() . '/' . md5(mt_rand());
+        $zip = new Zefram_File_Archive_ZipWriter();
+        $zip->open($path);
+        $dirs = array($dir);
+
+        while ($d = array_shift($dirs)) {
+            foreach ($d->getSubDirs() as $dd) {
+                $dirs[] = $dd;
+            }
+            foreach ($d->getFiles() as $file) {
+                // full path
+                $zip->addFile($file->getPath(), $this->view->drive()->filePath($file));
+            }
+        }
+        $zip->close();
+
+        $filter = new Zefram_Filter_Slug();
+        $this->getResource('core.file_helper')->sendFile(
+            $this->_request,
+            $this->_response,
+            $path,
+            array(
+                'type' => Zefram_File_MimeType_Data::ZIP,
+                'name' => $filter->filter($dir->name) . '.zip',
+            )
+        );
     }
 }

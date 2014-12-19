@@ -82,7 +82,7 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
      * @param  ManipleDrive_Model_File $file
      * @return string
      */
-    public function fileUrl(ManipleDrive_Model_File $file)
+    public function filePath(ManipleDrive_Model_File $file)
     {
         $parts = array($file->name);
         $dir = $file->Dir;
@@ -90,7 +90,18 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
             array_unshift($parts, $dir->name);
             $dir = $dir->ParentDir;
         }
-        $path = implode('/', array_map('urlencode', $parts));
+        $path = implode('/', $path);
+        return $path;
+    }
+
+    /**
+     * @param  ManipleDrive_Model_File $file
+     * @return string
+     */
+    public function fileUrl(ManipleDrive_Model_File $file)
+    {
+        $path = $this->filePath($file);
+        $path = implode('/', array_map('urlencode', explode('/', $path)));
 
         // + (encoded space) is not properly handled when saving file to disk
         $path = str_replace('+', '%20', $path);
