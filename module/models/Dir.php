@@ -296,24 +296,24 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
                         // since PDF 1.6
                         $metadata = $pdf->getMetadata();
                         $metadataDOM = new DOMDocument();
-                        $metadataDOM->loadXML($metadata);
-     
-                        $xpath = new DOMXPath($metadataDOM);
-                        $n = @$xpath->query('/rdf:RDF/rdf:Description');
+                        if (strlen($metadata) && @$metadataDOM->loadXML($metadata)) {
+                            $xpath = new DOMXPath($metadataDOM);
+                            $n = @$xpath->query('/rdf:RDF/rdf:Description');
 
-                        if ($n) {
-                            $n = $n->item(0);
-                            $pdfPreffixNamespaceURI = $n->lookupNamespaceURI('pdf');
-                            $xpath->registerNamespace('pdf', $pdfPreffixNamespaceURI);
+                            if ($n) {
+                                $n = $n->item(0);
+                                $pdfPreffixNamespaceURI = $n->lookupNamespaceURI('pdf');
+                                $xpath->registerNamespace('pdf', $pdfPreffixNamespaceURI);
 
-                            if (empty($data['title'])) {
-                                $node = $xpath->query('/rdf:RDF/rdf:Description/pdf:Title')->item(0);
-                                $data['title'] = $filter->filter($node->nodeValue);
-                            }
+                                if (empty($data['title'])) {
+                                    $node = $xpath->query('/rdf:RDF/rdf:Description/pdf:Title')->item(0);
+                                    $data['title'] = $filter->filter($node->nodeValue);
+                                }
 
-                            if (empty($data['author'])) {
-                                $node = $xpath->query('/rdf:RDF/rdf:Description/pdf:Author')->item(0);
-                                $data['author'] = $filter->filter($node->nodeValue);
+                                if (empty($data['author'])) {
+                                    $node = $xpath->query('/rdf:RDF/rdf:Description/pdf:Author')->item(0);
+                                    $data['author'] = $filter->filter($node->nodeValue);
+                                }
                             }
                         }
                     }
