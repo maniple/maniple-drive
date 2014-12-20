@@ -226,6 +226,11 @@ class ManipleDrive_DriveManager
         throw new Exception(__METHOD__ . ' is not yet implemented');
     }
 
+    public function getFile($fileId)
+    {
+        return $this->_getFilesTable()->findRow((int) $fileId);
+    }
+
     /**
      * @param  ManipleDrive_Model_Dir $dir
      * @param  Zend_File_Transfer_Adapter_Abstract $transfer
