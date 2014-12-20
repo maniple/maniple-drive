@@ -379,7 +379,7 @@ class ManipleDrive_Model_Repository
 
         if (empty($file)) {
             throw new Maniple_Model_Exception_EntityNotFoundException(sprintf(
-                'Invalid file ID (%d)', $dir_id
+                'Invalid file ID (%d)', $file_id
             ));
         }
 
