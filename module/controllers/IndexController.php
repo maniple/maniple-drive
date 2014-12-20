@@ -177,7 +177,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             }
             foreach ($d->getFiles() as $file) {
                 // full path
-                $zip->addFile($file->getPath(), $this->view->drive()->filePath($file));
+                $zip->addFile($file->getPath(), $this->view->drive()->filePath($file, $dir));
             }
         }
         $zip->close();

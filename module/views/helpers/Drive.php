@@ -82,15 +82,18 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
      * @param  ManipleDrive_Model_File $file
      * @return string
      */
-    public function filePath(ManipleDrive_Model_File $file)
+    public function filePath(ManipleDrive_Model_File $file, $stopAtDir = null)
     {
         $parts = array($file->name);
         $dir = $file->Dir;
         while ($dir) {
+            if ($stopAtDir && $dir->dir_id == $stopAtDir->dir_id) {
+                break;
+            }
             array_unshift($parts, $dir->name);
             $dir = $dir->ParentDir;
         }
-        $path = implode('/', $path);
+        $path = implode('/', $parts);
         return $path;
     }
 
