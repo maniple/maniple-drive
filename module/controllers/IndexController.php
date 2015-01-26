@@ -123,15 +123,20 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         $shared_files = array();
         foreach ($drive_helper->getRepository()->getLastSharedWithUserFiles($user_id, 5) as $file) {
-            $shared_files[] = $drive_helper->getViewableData($file, false);
+            $data = $drive_helper->getViewableData($file, false);
+            $data['dirname'] = $this->dirname($file);
+            $shared_files[] = $data;
+
             $user_ids[$file->created_by] = true;
         }
 
         $public_files = array();
+        /*
         foreach ($drive_helper->getRepository()->getLastPublishedFiles(null, 5) as $file) {
             $public_files[] = $drive_helper->getViewableData($file, false);
+
             $user_ids[$file->created_by] = true;
-        }
+        }*/
 
         $users = array();
         foreach ($drive_helper->getUserMapper()->getUsers(array_keys($user_ids)) as $user) {
@@ -152,7 +157,18 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         $this->view->drive_files = $drive_files;
 
         $this->view->shared_files = $shared_files;
-        $this->view->public_files = $public_files;
+        $this->view->public_files = null; // $public_files;
+    }
+
+    public function dirname(ManipleDrive_Model_File $file)
+    {
+        $parts = array();
+        $dir = $file->Dir;
+        while ($dir) {
+            array_unshift($parts, $dir->name);
+            $dir = $dir->ParentDir;
+        }
+        return implode('/', $parts);
     }
 
     public function dirZippedAction()

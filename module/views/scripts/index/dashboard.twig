@@ -89,6 +89,7 @@
                 {{ fileSize(file.size) }}
                 {{ fullName(file.creator) }}
             </small>
+            <div>in <a class="text-muted" href="{{ drive().browseUrl(file.dir_id) }}">{{ file.dirname }}</a></div>
             </li>
         {% endfor %}
         </ul>
@@ -98,6 +99,7 @@
     </div>
 </div>
 
+{#
 <div class="panel">
     <div class="panel-heading">
 
@@ -124,4 +126,4 @@
     {% endif %}
     </div>
 </div>
-
+#}
