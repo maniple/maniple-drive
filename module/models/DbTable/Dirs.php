@@ -132,16 +132,9 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
             // systemowym.
             $access = self::ACCESS_READABLE | self::ACCESS_WRITABLE;
         } else {
-            $access = self::ACCESS_NONE;
-
             switch ($dir->visibility) {
-                case self::VISIBILITY_INHERITED:
-                    if ($dir->parent_id) {
-                        // dostep dziedziczony z katalogu nadrzednego,
-                        // uwzglednij rowniez wpis ze wspoldzielenia (moze dac
-                        // dostep w trybie do zapisu)
-                        $access = $this->getDirAccess($dir->parent_id, $user_id);
-                    }
+                case self::VISIBILITY_PRIVATE:
+                    $access = self::ACCESS_NONE;
                     break;
 
                 case self::VISIBILITY_USERSONLY:
@@ -153,6 +146,16 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
                 case self::VISIBILITY_PUBLIC:
                     $access = self::ACCESS_READABLE;
+                    break;
+
+                case self::VISIBILITY_INHERITED:
+                default:
+                    if ($dir->parent_id) {
+                        // dostep dziedziczony z katalogu nadrzednego,
+                        // uwzglednij rowniez wpis ze wspoldzielenia (moze dac
+                        // dostep w trybie do zapisu)
+                        $access = $this->getDirAccess($dir->parent_id, $user_id);
+                    }
                     break;
             }
 
