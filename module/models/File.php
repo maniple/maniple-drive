@@ -4,6 +4,11 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
 {
     protected $_tableClass = 'ManipleDrive_Model_DbTable_Files';
 
+    public function getId()
+    {
+        return $this->file_id;
+    }
+
     public function save() // {{{
     {
         $filter = new ManipleDrive_Filter_NameNormalize;
