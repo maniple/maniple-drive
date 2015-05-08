@@ -108,7 +108,7 @@ class ManipleDrive_DriveManager
      * @param  array $data OPTIONAL
      * @return ManipleDrive_Model_Dir
      */
-    public function createDir(ManipleDrive_Model_Dir $parentDir, $name, array $data = null) // {{{
+    public function createDir(ManipleDrive_Model_Dir $parentDir = null, $name = null, array $data = null) // {{{
     {
         $this->_db->beginTransaction();
 
