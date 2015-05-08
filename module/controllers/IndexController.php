@@ -6,14 +6,19 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
      * Return file as optionally scaled image.
      *
      * Action parameters:
-     *   - file_id  (required)
+     *   - file     (internal usage)
+     *   - file_id  (required, if no file was supplied)
      *   - scale    (optional)
      *   - download (optional)
      */
     public function imageAction() // {{{
     {
-        $file_id = (int) $this->getScalarParam('file_id');
-        $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
+        $file = $this->getParam('file');
+
+        if (!$file instanceof ManipleDrive_Model_File) {
+            $file_id = (int) $this->getScalarParam('file_id');
+            $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
+        }
 
         if (!$this->getDriveHelper()->isFileReadable($file)) {
             throw new Maniple_Controller_NotAllowedException('You are not allowed to access this file');
