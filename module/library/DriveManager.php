@@ -107,15 +107,40 @@ class ManipleDrive_DriveManager
      * @param  string $name
      * @param  array $data OPTIONAL
      * @return ManipleDrive_Model_Dir
+     * @throws InvalidArgumentException
      */
-    public function createDir(ManipleDrive_Model_Dir $parentDir = null, $name = null, array $data = null) // {{{
+    public function createDir(ManipleDrive_Model_Dir $parentDir = null, $name = 'New folder', array $data = null) // {{{
     {
-        $this->_db->beginTransaction();
+        $data = (array) $data;
+        $name = (string) $name;
 
+        $nameValidator = new ManipleDrive_Validate_FileName();
+        if (!$nameValidator->isValid($name)) {
+            throw new InvalidArgumentException($nameValidator->getMessage());
+        }
+
+        $this->_db->beginTransaction();
         try {
-            $dir = $this->_getDirsTable()->createRow((array) $data);
+            $testName = $name;
+            $counter = 1;
+            $validName = null;
+
+            while ($counter <= 16) {
+                $row = $this->_getDirsTable()->fetchRow(array('LOWER(name) = LOWER(?)' => $testName));
+                if ($row) {
+                    $testName = sprintf('%s (%d)', $name, ++$counter);
+                } else {
+                    $validName = $testName;
+                    break;
+                }
+            }
+            if ($validName === null) {
+                throw new InvalidArgumentException(sprintf('Directory with that name already exists (%s)', $name));
+            }
+
+            $dir = $this->_getDirsTable()->createRow($data);
             $dir->dir_id = null; // ensure auto incrementation
-            $dir->name = (string) $name;
+            $dir->name = $validName;
             $dir->ParentDir = $parentDir;
             $dir->save();
 
