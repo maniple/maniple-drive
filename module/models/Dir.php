@@ -256,9 +256,16 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
 
         try {
             $drive = $this->getDrive();
+        } catch (Exception $e) {
+            $drive = null;
+        }
+
+        try {
             $size = (int) filesize($path);
 
-            if ($drive->quota && $drive->getDiskUsage() + $size > $drive->quota) {
+            if ($drive &&
+                $drive->quota && $drive->getDiskUsage() + $size > $drive->quota
+            ) {
                 throw new Exception('Brak miejsca na dysku aby zapisać plik');
             }
 
@@ -325,14 +332,17 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             // jezeli plik o takiej samej sumie MD5 juz istnieje, usuwamy plik
             // tymczasowy. Jezeli nie istnieje przenies go do docelowej
             // lokalizacji.
-            if ($drive->getFilePath($md5)) {
+            /** @var ManipleDrive_Model_DbTable_Drives $drivesTable */
+            $drivesTable = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives');
+            if ($drivesTable->getFilePath($md5)) {
+                // plik o pasujacej sumie kontrolnej juz istnieje w podanej lokalizacji,
                 // usun plik tymczasowy (o ile jest on tymczasowy)
                 if ($isTempFile) {
                     @unlink($path);
                 }
 
             } else {
-                $dest = $drive->prepareFilePath($md5);
+                $dest = $drivesTable->prepareFilePath($md5);
                 if ($isTempFile) {
                     $success = @rename($path, $dest);
                 } else {
@@ -397,7 +407,9 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
             $file->save();
 
             // zaktualizuj zajmowane miejsce na dysku
-            $drive->refreshDiskUsage();
+            if ($drive) {
+                $drive->refreshDiskUsage();
+            }
 
         } catch (Exception $e) {
             if ($del_path) {

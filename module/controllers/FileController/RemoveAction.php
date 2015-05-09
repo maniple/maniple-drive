@@ -28,7 +28,12 @@ class ManipleDrive_FileController_RemoveAction extends Zefram_Controller_Action_
     protected function _process() // {{{
     {
         $file = $this->_file;
-        $drive = $file->Dir->getDrive();
+
+        try {
+            $drive = $file->Dir->getDrive();
+        } catch (Exception $e) {
+            $drive = null;
+        }
 
         // pobierz teraz identyfikator pliku, poniewaz po usunieciu pliku
         // nie bedzie on dostepny
@@ -53,8 +58,8 @@ class ManipleDrive_FileController_RemoveAction extends Zefram_Controller_Action_
             'data' => array(
                 'file_id' => $file_id,
                 'name' => $name,
-                'disk_usage' => $drive->getDiskUsage(),
-                'quota' => (float) $drive->quota,
+                'disk_usage' => $drive ? $drive->getDiskUsage() : null,
+                'quota' => (float) $drive ? $drive->quota : null,
             ),
         ));
 

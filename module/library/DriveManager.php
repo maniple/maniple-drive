@@ -260,15 +260,11 @@ class ManipleDrive_DriveManager
      * @param  ManipleDrive_Model_Dir $dir
      * @param  Zend_File_Transfer_Adapter_Abstract $transfer
      * @param  string $key
-     * @param  bool $systemContext OPTIONAL
+     * @param  array $options OPTIONAL
      * @return ManipleDrive_Model_File
      */
-    public function saveFileFromTransfer(ManipleDrive_Model_Dir $dir, Zend_File_Transfer_Adapter_Abstract $transfer, $key, $systemContext = false) // {{{
+    public function saveFileFromTransfer(ManipleDrive_Model_Dir $dir, Zend_File_Transfer_Adapter_Abstract $transfer, $key, $options = null) // {{{
     {
-        if (!$systemContext) {
-            // TODO dir must be writable
-        }
-
         $filename = $transfer->getFileName($key, false);
 
         // generate temporary file name for preliminary processing
@@ -286,6 +282,10 @@ class ManipleDrive_DriveManager
             $fileinfo = $transfer->getFileInfo($key);
             $fileinfo = reset($fileinfo);
             $fileinfo['name'] = basename($filename);
+
+            if (isset($options['name'])) {
+                $fileinfo['name'] = $options['name'];
+            }
         } else {
             throw new Exception('Unable to receive file contents: ' . $key);
         }

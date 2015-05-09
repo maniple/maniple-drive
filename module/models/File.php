@@ -74,7 +74,11 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
     // odbywa sie przez odpowiedni skrypt crona
     public function delete($_updateCounters = true) // {{{
     {
-        $drive = $this->Dir->getDrive();
+        try {
+            $drive = $this->Dir->getDrive();
+        } catch (Exception $e) {
+            $drive = null;
+        }
 
         if ($_updateCounters) {
             ManipleDrive_Model_Dir::_updateCounters($this->Dir, 0, -1, -$this->size);
@@ -82,7 +86,9 @@ class ManipleDrive_Model_File extends Zefram_Db_Table_Row
 
         // TODO co z usuwaniem pliku z dysku?
         $result = parent::delete();
-        $drive->refreshDiskUsage();
+        if ($drive) {
+            $drive->refreshDiskUsage();
+        }
 
         return $result;
     } // }}}
