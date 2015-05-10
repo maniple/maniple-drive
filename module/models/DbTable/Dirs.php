@@ -122,8 +122,12 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
         // wlasciciel dysku ma zawsze dostep do wszystkich plikow w jego
         // obrebie
-        $drive = $dir->getDrive();
-        if ($drive->owner && $drive->owner == $user_id) {
+        try {
+            $drive = $dir->getDrive();
+        } catch (Exception $e) {
+            $drive = null;
+        }
+        if ($drive && $drive->owner && $drive->owner == $user_id) {
             $access = self::ACCESS_READABLE | self::ACCESS_WRITABLE;
 
         } elseif ($dir->owner && $dir->owner == $user_id) {
