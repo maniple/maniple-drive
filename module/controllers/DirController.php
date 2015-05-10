@@ -46,12 +46,15 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
 
             $shares = $dir->fetchShares();
             if ($shares) {
+                $userShares = array();
                 foreach ($drive_helper->getUserMapper()->getUsers(array_keys($shares)) as $user) {
-                    $shares[$user->getId()] = array_merge(
+                    $userShares[$user->getId()] = array_merge(
                         $user->toArray(Maniple_Model::UNDERSCORE),
                         array('can_write' => $shares[$user->getId()])
                     );
+                    unset($shares[$user->getId()]);
                 }
+                $shares = $userShares; // sorted by user
             } else {
                 $shares = array();
             }
@@ -70,14 +73,20 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
             }
             // wczytaj wszystkie potrzebne rekordy uzytkownikow
             if ($user_ids) {
-                $users = $this->getDriveHelper()->getUserMapper()->getUsers(array_keys($user_ids));
-                foreach ($shares as &$share) {
+                $users = array();
+                foreach ($this->getDriveHelper()->getUserMapper()->getUsers(array_keys($user_ids)) as $user) {
+                    $users[$user->getId()] = $user->toArray(Maniple_Model::UNDERSCORE);
+                }
+                foreach ($shares as $share) {
                     $user_id = $share['user_id'];
                     if (isset($users[$user_id])) {
-                        $share = array_merge($share, $users[$user_id]->toArray(Maniple_Model::UNDERSCORE));
+                        $users[$user_id] = array_merge(
+                            $users[$user_id],
+                            $share
+                        );
                     }
                 }
-                unset($share);
+                $shares = $users;
             }
         }
 
@@ -86,7 +95,7 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
             'dir_id'     => $dir->dir_id,
             'visibility' => $dir->visibility,
             'can_inherit_visibility' => (bool) $dir->parent_id,
-            'shares'     => $shares,
+            'shares'     => array_values($shares), // force JSON array to maintain ordering
         ));
         $ajaxResponse->sendAndExit();
     } // }}}
