@@ -126,7 +126,15 @@ class ManipleDrive_DriveManager
             $validName = null;
 
             while ($counter <= 16) {
-                $row = $this->_getDirsTable()->fetchRow(array('LOWER(name) = LOWER(?)' => $testName));
+                $where = array(
+                    'LOWER(name) = LOWER(?)' => $testName,
+                );
+                if ($parentDir === null) {
+                    $where[] = 'parent_id IS NULL';
+                } else {
+                    $where['parent_id = ?'] = (int) $parentDir->getId();
+                }
+                $row = $this->_getDirsTable()->fetchRow($where);
                 if ($row) {
                     $testName = sprintf('%s (%d)', $name, ++$counter);
                 } else {
