@@ -360,4 +360,31 @@ class ManipleDrive_DriveManager
     {
         return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Files');
     }
+
+    public function getSharedDirs()
+    {
+        $user = $this->_securityContext->getUser();
+        if (!$user) {
+            return array();
+        }
+
+        $select = new Zefram_Db_Select($this->_db->getAdapter());
+        $select->from(
+            $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_DirShares'),
+            'user_id'
+        );
+        $select->where(array(
+            'user_id = ?' => (int) $user->getId(),
+        ));
+        $table = $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $rows = $table->fetchAll(array(
+            'dir_id IN (?)' => $select,
+        ), 'name');
+
+        $dirs = array();
+        foreach ($rows as $dir) {
+            $dirs[] = $dir;
+        }
+        return $dirs;
+    }
 }

@@ -71,6 +71,7 @@
 </div>
 {% endif %}
 
+{#
 <div class="panel">
     <div class="panel-heading">
 
@@ -96,6 +97,32 @@
     {% else %}
         <p class="muted">{{ translate('No files are currently shared with you') }}</p>
     {% endif %}
+    </div>
+</div>
+#}
+
+<div class="panel">
+    <div class="panel-heading">
+
+        <a class="btn btn-primary btn-small pull-right" style="position:relative;top:-3px;" href="{{ drive().browseUrl('shared') }}">Browse files</a>
+
+        <h3 class="panel-title">Shared with me</h3>
+    </div>
+    <div class="panel-body">
+        {% if shared_dirs %}
+            <ul class="file-list">
+                {% for dir in shared_dirs %}
+                    <li>
+                        <a href="{{ drive().browseUrl(dir.dir_id) }}">
+                            <i class="drive-icon drive-icon-folder"></i>
+                            {{- dir.name -}}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">{{ translate('No drive contents are currently shared with you') }}</p>
+        {% endif %}
     </div>
 </div>
 

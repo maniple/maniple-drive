@@ -163,6 +163,11 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         $this->view->shared_files = $shared_files;
         $this->view->public_files = null; // $public_files;
+
+        // shared dirs - dirs I have explicit access to
+        $this->view->shared_dirs = $this->getResource('drive.manager')->getSharedDirs();
+
+        $this->view->title = 'Drive dashboard';
     }
 
     public function dirname(ManipleDrive_Model_File $file)
