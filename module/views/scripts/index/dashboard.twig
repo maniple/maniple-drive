@@ -113,8 +113,11 @@
             <ul class="file-list">
                 {% for dir in shared_dirs %}
                     <li>
+                        <i class="drive-icon drive-icon-folder"></i>
+                        {% if dir.ParentDir %}
+                            {{ dir.ParentDir.name }} /
+                        {% endif %}
                         <a href="{{ drive().browseUrl(dir.dir_id) }}">
-                            <i class="drive-icon drive-icon-folder"></i>
                             {{- dir.name -}}
                         </a>
                     </li>
