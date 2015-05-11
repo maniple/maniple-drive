@@ -386,7 +386,7 @@ class ManipleDrive_DriveManager
         ));
         $table = $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Dirs');
         $rows = $table->fetchAll(array(
-            'dir_id IN (?)' => $select,
+            'dir_id IN (?) OR visibility = \'usersonly\'' => $select,
         ), 'name');
 
         $dirs = array();
