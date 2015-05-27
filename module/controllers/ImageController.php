@@ -23,6 +23,7 @@ class ManipleDrive_ImageController extends ManipleDrive_Controller_Action
                         'url'      => $this->view->drive()->fileUrl($file),
                         'tileUrl'  => $this->view->url('drive.file.image', array('file_id' => $file->file_id, 'scale' => '200x200')),
                         'thumbUrl' => $this->view->url('drive.file.image', array('file_id' => $file->file_id, 'scale' => 'max:200')),
+                        'thumbUrlTemplate' => $this->view->urlTemplate('drive.file.image', array('file_id' => $file->file_id)),
                     );
                 }
             }
