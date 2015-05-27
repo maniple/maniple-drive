@@ -81,10 +81,14 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
      */
     public function fetchByPath($drive, $path, $block_size = 5)
     {
-        if (!$drive instanceof ManipleDrive_Model_Drive) {
+        if ($drive instanceof ManipleDrive_Model_Dir) {
+            $dir = $drive;
+        } elseif (!$drive instanceof ManipleDrive_Model_Drive) {
             if (!($drive = $this->findRow((int) $drive))) {
                 return false;
             }
+
+            $dir = $drive->RootDir;
         }
 
         $db = $this->getAdapter();
@@ -106,7 +110,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
             // wylapiemy niepoprawne nazwy katalogow
             // d0 jest startowym katalogiem sciezki w bloku, katalog startowy
             // w pierwszym bloku ma byc korzeniem dysku
-            $d0_parent_id = $db->quote($drive->root_dir);
+            $d0_parent_id = $db->quote($dir->getId());
 
             while (count($parts)) {
                 $block  = array_splice($parts, 0, $block_size);

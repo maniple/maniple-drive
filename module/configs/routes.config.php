@@ -172,4 +172,13 @@ defaults.d          =
         ),
         'reverse' => '!%s',
     ),
+
+    'drive.images.browse' => array(
+        'route' => 'drive/images/browse/:dir_id',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'image',
+            'action'     => 'browse',
+        ),
+    ),
 );

@@ -181,12 +181,17 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
         // do zwracanych danych dolacz jeszcze informacje o zajetym
         // miejscu na dysku
-        $drive = $dir->getDrive();
+        try {
+            $drive = $dir->getDrive();
 
-        // zwroc te wartosci jako floaty, zeby uniknac przekroczenia zakresu
-        // liczb calkowitych na 32-bitowych maszynach
-        $result['disk_usage'] = $drive->getDiskUsage();
-        $result['quota'] = (float) $drive->quota;
+            // zwroc te wartosci jako floaty, zeby uniknac przekroczenia zakresu
+            // liczb calkowitych na 32-bitowych maszynach
+            $result['disk_usage'] = $drive->getDiskUsage();
+            $result['quota'] = (float) $drive->quota;
+        } catch (Exception $e) {
+            $result['disk_usage'] = '';
+            $result['quota'] = '';
+        }
         $result['file'] = $file;
 
         return $result;
@@ -236,7 +241,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
             try {
                 $this->getResource('drive.file_indexer')->insert($file);
             } catch (Exception $e) {
-                echo $e->getMessage();
+                // echo $e->getMessage();
                 // TODO log exception
             }
         }
