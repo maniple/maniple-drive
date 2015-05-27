@@ -126,7 +126,15 @@ class ManipleDrive_DriveManager
             $validName = null;
 
             while ($counter <= 16) {
-                $row = $this->_getDirsTable()->fetchRow(array('LOWER(name) = LOWER(?)' => $testName));
+                $where = array(
+                    'LOWER(name) = LOWER(?)' => $testName,
+                );
+                if ($parentDir === null) {
+                    $where[] = 'parent_id IS NULL';
+                } else {
+                    $where['parent_id = ?'] = (int) $parentDir->getId();
+                }
+                $row = $this->_getDirsTable()->fetchRow($where);
                 if ($row) {
                     $testName = sprintf('%s (%d)', $name, ++$counter);
                 } else {
@@ -371,14 +379,14 @@ class ManipleDrive_DriveManager
         $select = new Zefram_Db_Select($this->_db->getAdapter());
         $select->from(
             $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_DirShares'),
-            'user_id'
+            'dir_id'
         );
         $select->where(array(
             'user_id = ?' => (int) $user->getId(),
         ));
         $table = $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Dirs');
         $rows = $table->fetchAll(array(
-            'dir_id IN (?)' => $select,
+            'dir_id IN (?) OR visibility = \'usersonly\'' => $select,
         ), 'name');
 
         $dirs = array();
