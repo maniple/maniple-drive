@@ -1,12 +1,36 @@
 <?php
 
-class ManipleDrive_Model_File extends Zefram_Db_Table_Row
+class ManipleDrive_Model_File extends Zefram_Db_Table_Row implements ManipleDrive_FileInterface
 {
     protected $_tableClass = 'ManipleDrive_Model_DbTable_Files';
 
+    /**
+     * @return int
+     */
     public function getId()
     {
-        return $this->file_id;
+        return (int) $this->file_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSize()
+    {
+        return +$this->size;
+    }
+
+    public function getMimeType()
+    {
+        return $this->mimetype;
     }
 
     public function save() // {{{
