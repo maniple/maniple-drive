@@ -225,13 +225,33 @@ class ManipleDrive_DriveManager
     }
 
     /**
-     * @param  ManipleDrive_Model_DirInterface|ManipleDrive_Model_File $dirEntry
-     * @param  bool $recursive OPTIONAL
-     * @return ManipleDrive_Model_DirInterface|ManipleDrive_Model_File
+     * @param  ManipleDrive_Model_File $file
+     * @param  ManipleDrive_Model_DirInterface $targetDir OPTIONAL
+     * @return ManipleDrive_Model_File
      */
-    public function copy($dirEntry, ManipleDrive_Model_DirInterface $targetDir, $recursive = true)
+    public function copyFile(ManipleDrive_Model_File $file, ManipleDrive_Model_DirInterface $targetDir = null)
     {
-        
+        $this->_db->beginTransaction();
+
+        try {
+            $copy = $this->_getFilesTable()->createRow($file->toArray());
+            $copy->file_id = null;
+
+            if ($targetDir) {
+                $copy->Dir = $targetDir;
+            }
+
+            // TODO handle name duplicates
+
+            $copy->save();
+            $this->_db->commit();
+
+        } catch (Exception $e) {
+            $this->_db->rollBack();
+            throw $e;
+        }
+
+        return $copy;
     }
 
     /**
@@ -262,6 +282,11 @@ class ManipleDrive_DriveManager
     public function getFile($fileId)
     {
         return $this->_getFilesTable()->findRow((int) $fileId);
+    }
+
+    public function deleteFile(ManipleDrive_Model_File $file)
+    {
+        $file->delete();
     }
 
     /**
