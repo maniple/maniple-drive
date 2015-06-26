@@ -127,6 +127,9 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
         } catch (Exception $e) {
             $drive = null;
         }
+
+        $access = self::ACCESS_NONE;
+
         if ($drive && $drive->owner && $drive->owner == $user_id) {
             $access = self::ACCESS_READABLE | self::ACCESS_WRITABLE;
 
