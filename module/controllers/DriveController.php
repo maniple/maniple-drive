@@ -42,7 +42,7 @@ class ManipleDrive_DriveController extends ManipleDrive_Controller_Action
         foreach ($drives as $drive) {
             // uzupelnij rekord dysku adresami akcji
             $drive->setExtras(array(
-                'url_edit' => $this->view->routeUrl('drive.drive', array('action' => 'edit', 'drive_id' => $drive->drive_id)),
+                'url_edit' => $this->view->url('drive.drive', array('action' => 'edit', 'drive_id' => $drive->drive_id)),
                 'url_browse' => $this->view->drive()->browseUrl($drive->root_dir),
             ));
 

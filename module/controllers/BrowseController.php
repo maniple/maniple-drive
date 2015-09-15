@@ -30,7 +30,7 @@ class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
             $locale = 'en_GB';
         }
         $this->view->locale = $locale;
-        $this->view->user_search_url = $this->view->routeUrl(
+        $this->view->user_search_url = $this->view->url(
             (string) $this->getDriveHelper()->getUserSearchRoute()
         );
 
