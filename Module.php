@@ -26,6 +26,11 @@ class Module
         return array_merge(
             require __DIR__ . '/module/configs/resources.config.php',
             array(
+                'front_controller' => array(
+                    'controllerDirectory' => array(
+                        'maniple-drive' => __DIR__ . '/module/controllers',
+                    ),
+                ),
                 'router' => array(
                     'routes' => require __DIR__ . '/module/configs/routes.config.php',
                 ),
@@ -39,11 +44,6 @@ class Module
                 ),
             )
         );
-    }
-
-    public function getControllerDirectory()
-    {
-        return __DIR__ . '/module/controllers';
     }
 
     public function getAssetsBaseDir()
