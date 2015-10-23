@@ -87,7 +87,7 @@
     'drive.file' => array(
         'route' => 'drive/file/:file_id/:action',
         'reqs' => array(
-            'file_id' => '\\d+',
+            'file_id' => '(\\d+)|([0-9A-Za-z]{32})',
         ),
         'defaults' => array(
             'module'     => 'maniple-drive',

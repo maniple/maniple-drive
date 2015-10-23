@@ -1,0 +1,15 @@
+{
+    "name": "maniple/maniple-drive",
+    "type": "zefram-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "xemlock",
+            "email": "xemlock@gmail.com"
+        }
+    ],
+    "require": {
+        "xemlock/zefram-composer-installer": "*",
+        "maniple/maniple-core": "*"
+    }
+}
