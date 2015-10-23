@@ -50,4 +50,10 @@ class Module
     {
         return 'drive';
     }
+
+    public function onBootstrap($e)
+    {
+        $sm = $e->getApplication()->getServiceManager();
+        // echo '<pre>';print_r($sm->get('Config'));exit;
+    }
 }
