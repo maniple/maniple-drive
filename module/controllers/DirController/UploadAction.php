@@ -9,6 +9,65 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
     } // }}}
 
     /**
+     * @param ManipleDrive_Options_FileUpload $options
+     * @return Zend_File_Transfer_Adapter_Http
+     */
+    public function getFileTransfer(ManipleDrive_Options_FileUpload $options = null)
+    {
+        if ($options === null) {
+            $options = new ManipleDrive_Options_FileUpload();
+        }
+
+        $upload = new Zend_File_Transfer_Adapter_Http();
+
+        $file_validator_upload_messages = array(
+            Zend_Validate_File_Upload::INI_SIZE       => 'File exceeds the defined ini size',
+            Zend_Validate_File_Upload::FORM_SIZE      => 'File exceeds the defined form size',
+            Zend_Validate_File_Upload::PARTIAL        => 'File was only partially uploaded',
+            Zend_Validate_File_Upload::NO_FILE        => 'File was not uploaded',
+            Zend_Validate_File_Upload::NO_TMP_DIR     => 'No temporary directory was found',
+            Zend_Validate_File_Upload::CANT_WRITE     => "File can't be written",
+            Zend_Validate_File_Upload::EXTENSION      => 'A PHP extension returned an error while uploading the file',
+            Zend_Validate_File_Upload::ATTACK         => 'File was illegally uploaded. This could be a possible attack',
+            Zend_Validate_File_Upload::FILE_NOT_FOUND => 'File was not uploaded',
+            Zend_Validate_File_Upload::UNKNOWN        => 'Unknown error while uploading file',
+        );
+
+        $file_validator_mimetype_messages = array(
+            Zend_Validate_File_MimeType::FALSE_TYPE   => 'File is of invalid type',
+            Zend_Validate_File_MimeType::NOT_DETECTED => 'MIME type of this file could not be detected',
+            Zend_Validate_File_MimeType::NOT_READABLE => 'File is not readable',
+        );
+
+        $file_validator_size_messages = array(
+            Zend_Validate_File_Size::TOO_BIG   => 'Size of this file exceeds %max%',
+            Zend_Validate_File_Size::TOO_SMALL => 'Minimum expected size for file is %min%',
+            Zend_Validate_File_Size::NOT_FOUND => 'File was not found',
+        );
+
+        $upload->getValidator('upload')->setMessages($file_validator_upload_messages);
+
+        $validatorChain = new Zefram_Validate();
+        $validatorChain->addValidator('File_Size', true, array(
+            'min' => $options->getMinSize(),
+            'max' => $options->getMaxSize(),
+            'bytestring' => true,
+            'messages' => $file_validator_size_messages,
+        ));
+
+        if ($options->getAllowedMimeTypes()) {
+            $validatorChain->addValidator('File_MimeType', true, array(
+                $options->getAllowedMimeTypes(),
+                'messages' => $file_validator_mimetype_messages,
+            ));
+        }
+
+        $upload->addValidator($validatorChain);
+
+        return $upload;
+    }
+
+    /**
      * Pobiera treść pliku przesłanego metodą POST.
      *
      * @param string $key
@@ -17,7 +76,14 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
      */
     protected function _handlePostUpload($key = 'file') // {{{
     {
-        $upload = new Zend_File_Transfer_Adapter_Http();
+        // if uploadOptions request param is passed as an object, it means that
+        // it is provided internally via _forward)
+        $uploadOptions = $this->_request->get('uploadOptions');
+        if (!$uploadOptions instanceof ManipleDrive_Options_FileUpload) {
+            $uploadOptions = null;
+        }
+
+        $upload = $this->getFileTransfer($uploadOptions);
 
         // zapamietaj oryginalna nazwe pliku
         $name = $upload->getFileName($key, false);
@@ -40,6 +106,11 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
             $info['name'] = $name;
 
             return $info;
+        }
+
+        if (!$upload->isValid($key)) {
+            $messages = $upload->getMessages();
+            throw new Zend_File_Transfer_Exception(reset($messages));
         }
 
         throw new Zend_File_Transfer_Exception('Unable to receive file contents');
