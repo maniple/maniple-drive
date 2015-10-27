@@ -274,12 +274,16 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
             // katalog, w ktorym umieszczony ma zostac plik
-            $dir_id = $this->getScalarParam('dir_id');
-            $dir = $this->getDriveHelper()->fetchDir($dir_id);
+            $dir = $this->getParam('dir');
+
+            if (!$dir instanceof ManipleDrive_Model_Dir) {
+                $dir_id = (int) $this->getScalarParam('dir_id');
+                $dir = $this->getDriveHelper()->fetchDir($dir_id);
+            }
 
             // TODO uprawnienia zapisu do dysku
             if (!$this->getDriveHelper()->isDirWritable($dir)) {
-                throw new Exception('Brak uprawnień do zapisu do tego katalogu');
+                throw new Exception($this->view->translate('This directory is not writable'));
             }
 
             $fileinfo = $this->_handlePostUpload();
