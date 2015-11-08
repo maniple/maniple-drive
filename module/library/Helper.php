@@ -32,6 +32,33 @@ class ManipleDrive_Helper
      */
     protected $_eventManager;
 
+    /**
+     * @var ManipleDrive_Access_Manager
+     */
+    protected $_security;
+
+    /**
+     * @param ManipleDrive_Access_Manager $security
+     * @return $this
+     */
+    public function setSecurity(ManipleDrive_Access_Manager $security)
+    {
+        $this->_security = $security;
+        return $this;
+    }
+
+    /**
+     * @return ManipleDrive_Access_Manager
+     * @throws Exception
+     */
+    public function getSecurity()
+    {
+        if (empty($this->_security)) {
+            throw new Exception('Security manager has not been provided');
+        }
+        return $this->_security;
+    }
+
     public function setEventManager(Zend_EventManager_EventManager $eventManager)
     {
         $this->_eventManager = $eventManager;
@@ -109,7 +136,20 @@ class ManipleDrive_Helper
             );
         }
 
-        assert($dir instanceof ManipleDrive_Model_Dir);
+        $access = $this->getSecurity()->getAccess($dir);
+
+        $perms = array(
+            '_value'     => $access,
+            self::READ   => ManipleDrive_Access_Access::canRead($access),
+            self::WRITE  => ManipleDrive_Access_Access::canWrite($access),
+            self::RENAME => ManipleDrive_Access_Access::canRename($access),
+            self::REMOVE => ManipleDrive_Access_Access::canDelete($access),
+            self::SHARE  => ManipleDrive_Access_Access::canShare($access),
+            self::CHOWN  => $this->getSecurityContext()->isAllowed(self::PERM_CHANGE_OWNER),
+        );
+
+        $this->_dirPermissions[$dir->getId()] = $perms;
+        return $perms;
 
         $dir_id = $dir->dir_id;
 

@@ -4,7 +4,7 @@
  * A class representing file uploaded by user
  */
 class ManipleDrive_FileUpload
-    implements ManipleDrive_FileTransferInterface, ManipleDrive_FileInterface
+    implements ManipleDrive_FileTransferInterface, ManipleDrive_Model_FileInterface
 {
     /**
      * @var ManipleDrive_Model_File

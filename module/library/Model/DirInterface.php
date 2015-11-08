@@ -1,36 +1,14 @@
 <?php
 
 interface ManipleDrive_Model_DirInterface
+    extends ManipleDrive_Model_EntryInterface
 {
-    // NOPE! Dir ID is not required
-    /**
-     * Gets directory ID.
-     *
-     * @return int|string
-     */
-    public function getId();
-
-    /**
-     * Gets directory name
-     *
-     * @return string
-     */
-    public function getName();
-
     /**
      * Returns the visibility of this directory
      *
      * @return string|null
      */
     public function getVisibility();
-
-    // I'm starting to think that owner is not necessary
-    /**
-     * Returns user ID of the owner of this directory
-     *
-     * @return int|null
-     */
-    public function getOwner();
 
     // public function getCreatedAt();
 

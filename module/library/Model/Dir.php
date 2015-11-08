@@ -1,6 +1,8 @@
 <?php
 
-class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implements ManipleDrive_Model_DirInterface
+class ManipleDrive_Model_Dir
+    extends ManipleDrive_Model_HierarchicalRow
+    implements ManipleDrive_Model_DirInterface
 {
     protected $_idColumn = 'dir_id';
 
@@ -19,9 +21,19 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
         return $this->visibility;
     }
 
+    public function getSharing()
+    {
+        return $this->visibility;
+    }
+
     public function getOwner()
     {
-        return $this->owner;
+        return (int) $this->owner;
+    }
+
+    public function getAccessType()
+    {
+        return isset($this->access_type) ? $this->access_type : null;
     }
 
     public function isPseudo()
@@ -30,6 +42,11 @@ class ManipleDrive_Model_Dir extends ManipleDrive_Model_HierarchicalRow implemen
     }
 
     public function getParentDir()
+    {
+        return $this->fetchParent();
+    }
+
+    public function getParent()
     {
         return $this->fetchParent();
     }
