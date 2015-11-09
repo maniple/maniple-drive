@@ -26,6 +26,11 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     protected static $_dirAccessCache = array();
 
+    /**
+     * @param $visibility
+     * @return bool
+     * @deprecated
+     */
     public static function isValidVisibility($visibility) // {{{
     {
         return in_array($visibility, array(
@@ -67,6 +72,9 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
         return self::$_dirAccessCache[$user_id];
     } // }}}
 
+    /**
+     * @deprecated
+     */
     public static function clearDirAccessCache() // {{{
     {
         self::$_dirAccessCache = null;
@@ -78,6 +86,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     /**
      * @return bool
+     * @deprecated
      */
     public function isDirReadable($dir_id, $user_id) // {{{
     {
@@ -86,6 +95,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     /**
      * @return bool
+     * @deprecated
      */
     public function isDirWritable($dir_id, $user_id) // {{{
     {
@@ -96,7 +106,9 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
      * Wynik działania tej funkcji jest przechowywany w pamięci podręcznej.
      *
      * @param int|ManipleDrive_Model_Dir
+     * @param int $user_id
      * @return int
+     * @deprecated
      */
     // TODO wlasciciel dysku ma dostep do wszystkich katalogow w poddrzewie!
     public function getDirAccess($dir_id, $user_id) // {{{
@@ -235,6 +247,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     /**
      * @param  int|array $dir_id
+     * @return array
      */
     public function fetchDirShares($dir_id)
     {

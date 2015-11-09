@@ -3,11 +3,6 @@
 class ManipleDrive_Helper
 {
     /**
-     * @var Maniple_Security_ContextInterface
-     */
-    protected $_securityContext;
-
-    /**
      * @var Zend_View_Abstract
      */
     protected $_view;
@@ -125,31 +120,35 @@ class ManipleDrive_Helper
 
     public function getDirPermissions(ManipleDrive_Model_DirInterface $dir, $property = null) // {{{
     {
-        if ($dir->isPseudo()) {
-            return array(
-                self::READ   => true,
-                self::WRITE  => false,
-                self::RENAME => false,
-                self::REMOVE => false,
-                self::SHARE  => false,
-                self::CHOWN  => false,
+        $id = $dir->getId();
+
+        if (empty($this->_dirPermissions[$id])) {
+            $access = $this->getSecurity()->getAccess($dir);
+
+            $perms = array(
+                '_value'     => $access,
+                self::READ   => ManipleDrive_Access_Access::canRead($access),
+                self::WRITE  => ManipleDrive_Access_Access::canWrite($access),
+                self::RENAME => ManipleDrive_Access_Access::canRename($access),
+                self::REMOVE => ManipleDrive_Access_Access::canDelete($access),
+                self::SHARE  => ManipleDrive_Access_Access::canShare($access),
+                self::CHOWN  => $this->getSecurityContext()->isAllowed(self::PERM_CHANGE_OWNER),
             );
+
+            $this->_dirPermissions[$id] = $perms;
         }
 
-        $access = $this->getSecurity()->getAccess($dir);
+        if (null === $property) {
+            return $this->_dirPermissions[$id];
+        }
 
-        $perms = array(
-            '_value'     => $access,
-            self::READ   => ManipleDrive_Access_Access::canRead($access),
-            self::WRITE  => ManipleDrive_Access_Access::canWrite($access),
-            self::RENAME => ManipleDrive_Access_Access::canRename($access),
-            self::REMOVE => ManipleDrive_Access_Access::canDelete($access),
-            self::SHARE  => ManipleDrive_Access_Access::canShare($access),
-            self::CHOWN  => $this->getSecurityContext()->isAllowed(self::PERM_CHANGE_OWNER),
-        );
+        return isset($this->_dirPermissions[$id][$property])
+            ? $this->_dirPermissions[$id][$property]
+            : false;
 
-        $this->_dirPermissions[$dir->getId()] = $perms;
-        return $perms;
+        // deprecated code
+
+
 
         $dir_id = $dir->dir_id;
 
@@ -403,8 +402,10 @@ class ManipleDrive_Helper
      * rekordami uzytkownikow.
      *
      * @param ManipleDrive_Model_DirInterface $dir
+     * @param array $parents OPTIONAL
      * @param array $options OPTIONAL
      * @return array
+     * @throws Exception
      */
     public function browseDir2(ManipleDrive_Model_DirInterface $dir, array $parents = null, $options = null) // {{{
     {
@@ -650,15 +651,12 @@ class ManipleDrive_Helper
         return $this->_view;
     } // }}}
 
-    public function setSecurityContext(Maniple_Security_ContextInterface $security = null)
-    {
-        $this->_securityContext = $security;
-        return $this;
-    }
-
+    /**
+     * @return Maniple_Security_ContextAbstract
+     */
     public function getSecurityContext()
     {
-        return $this->_securityContext;
+        return $this->getSecurity()->getSecurityContext();
     }
 
     public function setUserRepository(ManipleCore_Model_UserRepositoryInterface $userRepository = null)

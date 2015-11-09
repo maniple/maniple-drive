@@ -4,10 +4,10 @@ interface ManipleDrive_Access_HandlerInterface
 {
     /**
      * Is provided access type supported by this handler
-     * @param $type
+     * @param ManipleDrive_Model_EntryInterface $entry
      * @return mixed
      */
-    public function canHandleType($type);
+    public function canHandle(ManipleDrive_Model_EntryInterface $entry);
 
     /**
      * Get access value

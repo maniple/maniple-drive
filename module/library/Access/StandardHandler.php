@@ -15,28 +15,34 @@ class ManipleDrive_Access_StandardHandler implements ManipleDrive_Access_Handler
         $this->_accessManager = $accessManager;
     }
 
-    public function canHandleType($type)
+    public function canHandle(ManipleDrive_Model_EntryInterface $entry)
     {
         return true;
     }
 
     public function getAccess(ManipleDrive_Model_EntryInterface $entry, $user)
     {
-        if ($this->_accessManager->isSuperUser($user)) {
-            // super user has the same access level as owner
-            $owner = true;
+        if ($entry instanceof ManipleDrive_Model_DirInterface && $entry->isPseudo()) {
+            return ManipleDrive_Access_Access::ACCESS_READ;
+        }
+
+        $isSuperUser = $this->_accessManager->getSecurityContext()->isSuperUser($user);
+
+        if ($isSuperUser) {
+            // super user has at least the same access level as owner
+            $isOwner = true;
 
         } else {
             // directory owner has read/write access
             // ownership is recursive, it means that child directory is owned
             // by all owners of parent directories on the path to the root dir
-            $owner = false;
+            $isOwner = false;
 
             if ($user) {
                 $dirs = array($entry);
                 while ($d = array_shift($dirs)) {
                     if ($d->getOwner() && (int) $d->getOwner() === (int) $user) {
-                        $owner = true;
+                        $isOwner = true;
                         break;
                     }
                     $parent = $d->getParent();
@@ -48,18 +54,18 @@ class ManipleDrive_Access_StandardHandler implements ManipleDrive_Access_Handler
         }
 
         // owner has all permissions
-        if ($owner) {
+        if ($isOwner) {
             $access = ManipleDrive_Access_Access::ACCESS_READ
                     | ManipleDrive_Access_Access::ACCESS_WRITE
                     | ManipleDrive_Access_Access::ACCESS_SHARE;
 
             // root-level directories can be renamed and deleted only by super users
-            if ($entry->getParent() || $this->_accessManager->isSuperUser($user)) {
+            if ($entry->getParent() || $isSuperUser) {
                 $access |= ManipleDrive_Access_Access::ACCESS_RENAME
                         | ManipleDrive_Access_Access::ACCESS_DELETE;
             }
 
-            // BC
+            // Backward Compatibility - not sure if this features were used anywhere
             if (@$entry->is_system ||
                 @$entry->system_count ||
                 (method_exists($entry, 'isInternal') && $entry->isInternal())

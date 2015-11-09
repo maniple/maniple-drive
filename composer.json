@@ -10,6 +10,7 @@
     ],
     "require": {
         "xemlock/zefram-composer-installer": "*",
-        "maniple/maniple-core": "*"
+        "maniple/maniple-core": "*",
+        "zendframework/zend-eventmanager": "~2.2"
     }
 }
