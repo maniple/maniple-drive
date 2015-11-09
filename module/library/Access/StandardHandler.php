@@ -118,4 +118,13 @@ class ManipleDrive_Access_StandardHandler implements ManipleDrive_Access_Handler
 
         return $access;
     }
+
+    /**
+     * This method returns this handler, it can be used as event handler
+     * @return ManipleDrive_Access_StandardHandler
+     */
+    public function __invoke()
+    {
+        return $this;
+    }
 }

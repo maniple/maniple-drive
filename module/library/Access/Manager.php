@@ -18,11 +18,14 @@ class ManipleDrive_Access_Manager
     protected $_eventManager;
 
     /**
-     * @var ManipleDrive_Access_HandlerRegistry
+     * @var array
      */
-    protected $_handlerManager;
+    protected $_handlerCache;
 
-    protected $_collectHandlers = true;
+    /**
+     * @var ManipleDrive_Model_EntryInterface
+     */
+    protected $_defaultHandler;
 
     /**
      * Entry access cache
@@ -32,10 +35,8 @@ class ManipleDrive_Access_Manager
 
     public function __construct(Maniple_Security_ContextAbstract $securityContext, Zefram_Db $db, \Zend\EventManager\EventManager $events = null)
     {
-        $this->_handlerManager = new ManipleDrive_Access_HandlerRegistry();
-        $this->_handlerManager->registerHandler(new ManipleDrive_Access_StandardHandler($this));
-
         $this->_securityContext = $securityContext;
+        $this->_defaultHandler = new ManipleDrive_Access_StandardHandler($this);
 
         // FIXME access to shares, should by via repository
         $this->_db = $db;
@@ -48,37 +49,18 @@ class ManipleDrive_Access_Manager
     }
 
     /**
-     * Register access handler
-     *
-     * @param ManipleDrive_Access_HandlerInterface $handler
-     * @return $this
-     */
-    public function registerHandler(ManipleDrive_Access_HandlerInterface $handler)
-    {
-        $this->_handlerManager->registerHandler($handler);
-        return $this;
-    }
-
-    /**
      * @param ManipleDrive_Model_EntryInterface $entry
      * @param int $user
      * @return int
      */
     public function getAccess(ManipleDrive_Model_EntryInterface $entry, $user = null)
     {
-        // collect handlers before first use of getAccess(). This is to allow lazy
-        // initialization of handlers before this class is instantiated
-        if ($this->_collectHandlers) {
-            $this->_collectHandlers = false;
-            $this->_trigger(self::EVENT_COLLECT_HANDLERS);
-        }
-
         if ($user === null) {
             $user = ($u = $this->_securityContext->getUser()) ? $u->getId() : null;
         }
         $key = sprintf('%d.%s', $user, $entry->getId());
         if (!isset($this->_access[$key])) {
-            $handler = $this->_handlerManager->getHandlerForEntry($entry);
+            $handler = $this->getHandlerForEntry($entry);
             $this->_access[$key] = $handler->getAccess($entry, $user);
         }
         return $this->_access[$key];
@@ -107,6 +89,44 @@ class ManipleDrive_Access_Manager
     }
 
     /**
+     * Retrieve handler for a given entry
+     *
+     * @param ManipleDrive_Model_EntryInterface $entry
+     * @return ManipleDrive_Access_HandlerInterface
+     * @throws ManipleDrive_Access_Exception_HandlerNotFoundException
+     */
+    public function getHandlerForEntry(ManipleDrive_Model_EntryInterface $entry)
+    {
+        $key = $this->_generateHandlerCacheKey($entry);
+        if (!isset($this->_handlerCache[$key])) {
+            $results = $this->_trigger(self::EVENT_COLLECT_HANDLERS, array(), function ($result) use ($entry) {
+                return $result instanceof ManipleDrive_Access_HandlerInterface
+                    && $result->canHandle($entry);
+            });
+            $handler = $results->last();
+            if ($handler instanceof ManipleDrive_Access_HandlerInterface) {
+                $this->_handlerCache[$key] = $handler;
+            } else {
+                throw new ManipleDrive_Access_Exception_HandlerNotFoundException(
+                    sprintf('No handler found for entry %s:%s', get_class($entry), $entry->getId())
+                );
+            }
+        }
+        return $this->_handlerCache[$key];
+    }
+
+    /**
+     * Generate handler cache key for given entry
+     *
+     * @param ManipleDrive_Model_EntryInterface $entry
+     * @return string
+     */
+    protected function _generateHandlerCacheKey(ManipleDrive_Model_EntryInterface $entry)
+    {
+        return sprintf('%s.%d', get_class($entry), $entry->getId());
+    }
+
+    /**
      * Get security context
      * @return Maniple_Security_ContextAbstract
      */
@@ -123,6 +143,10 @@ class ManipleDrive_Access_Manager
             get_class($this),
             self::SHARED_EVENT_ID,
         ));
+
+        // default handler must have low priority
+        $events->attach(self::EVENT_COLLECT_HANDLERS, $this->_defaultHandler, -1000);
+
         $this->_eventManager = $events;
         return $this;
     }
@@ -132,7 +156,12 @@ class ManipleDrive_Access_Manager
         return $this->_eventManager;
     }
 
-    protected function _trigger($name, array $params = array())
+    /**
+     * @param string $name
+     * @param array $params
+     * @return \Zend\EventManager\ResponseCollection
+     */
+    protected function _trigger($name, array $params = array(), $callback = null)
     {
         $event = new \Zend\EventManager\Event();
         $event->setName($name);
@@ -140,6 +169,45 @@ class ManipleDrive_Access_Manager
         if ($params) {
             $event->setParams($params);
         }
-        $this->_eventManager->trigger($event);
+        return $this->_eventManager->trigger($event, $callback);
+    }
+
+    /**
+     * Register access handler
+     *
+     * Use this method to register handler even when access manager is not
+     * yet instantiated.
+     *
+     * Handler can be provided either as an instance, or as a callable, that
+     * will be invoked to instantiate a handler. Callable will be invoked
+     * with active AccessManager instance as the first (and only) parameter.
+     * The result of the invocation will be stored for later use.
+     *
+     * @param \Zend\EventManager\SharedEventManager $shareEvents
+     * @param ManipleDrive_Access_HandlerInterface|callable $handler
+     * @param int $priority OPTIONAL
+     * @throws ManipleDrive_Access_Exception_InvalidArgumentException
+     */
+    public static function registerHandler(\Zend\EventManager\SharedEventManager $sharedEvents, $handler, $priority = 1)
+    {
+        if ($handler instanceof ManipleDrive_Access_HandlerInterface) {
+            $callback = function () use ($handler) {
+                return $handler;
+            };
+        } elseif (is_callable($handler)) {
+            $callback = function (\Zend\EventManager\Event $event) use ($handler) {
+                static $result = null;
+                if ($result === null) {
+                    $result = call_user_func($handler, $event->getParam('security'));
+                    if (!$result instanceof ManipleDrive_Access_HandlerInterface) {
+                        $result = false;
+                    }
+                }
+                return $result;
+            };
+        } else {
+            throw new ManipleDrive_Access_Exception_InvalidArgumentException('Handler must be an instanceof HandlerInterface or a callable');
+        }
+        $sharedEvents->attach(self::SHARED_EVENT_ID, self::EVENT_COLLECT_HANDLERS, $callback, $priority);
     }
 }
