@@ -1,5 +1,6 @@
 {
     "name": "maniple/maniple-drive",
+    "description": "File storage for maniple",
     "type": "zefram-module",
     "license": "MIT",
     "authors": [
@@ -9,6 +10,7 @@
         }
     ],
     "require": {
+        "php": ">=5.3.3",
         "xemlock/zefram-composer-installer": "*",
         "maniple/maniple-core": "*",
         "zendframework/zend-eventmanager": "~2.2"
