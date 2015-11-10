@@ -20,8 +20,14 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
 
         $upload = new Zend_File_Transfer_Adapter_Http();
 
+        $filter = new Zefram_Filter_FileSizeToInteger();
+        $iniSize = min(
+            $filter->filter(ini_get('post_max_size')),
+            $filter->filter(ini_get('upload_max_filesize'))
+        );
+
         $file_validator_upload_messages = array(
-            Zend_Validate_File_Upload::INI_SIZE       => 'File exceeds the defined ini size',
+            Zend_Validate_File_Upload::INI_SIZE       => 'File exceeds the defined ini size (' . $this->view->fileSize($iniSize) . ')',
             Zend_Validate_File_Upload::FORM_SIZE      => 'File exceeds the defined form size',
             Zend_Validate_File_Upload::PARTIAL        => 'File was only partially uploaded',
             Zend_Validate_File_Upload::NO_FILE        => 'File was not uploaded',
