@@ -120,7 +120,10 @@ class ManipleDrive_Access_StandardHandler implements ManipleDrive_Access_Handler
     }
 
     /**
-     * This method returns this handler, it can be used as event handler
+     * Returns this handler
+     *
+     * This method can be used to register this handler as event listener.
+     *
      * @return ManipleDrive_Access_StandardHandler
      */
     public function __invoke()

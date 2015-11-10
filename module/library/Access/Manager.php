@@ -18,14 +18,19 @@ class ManipleDrive_Access_Manager
     protected $_eventManager;
 
     /**
+     * @var ManipleDrive_Access_StandardHandler
+     */
+    protected $_defaultHandler;
+
+    /**
+     * @var ManipleDrive_Access_SecurityEvent
+     */
+    protected $_event;
+
+    /**
      * @var array
      */
     protected $_handlerCache;
-
-    /**
-     * @var ManipleDrive_Model_EntryInterface
-     */
-    protected $_defaultHandler;
 
     /**
      * Entry access cache
@@ -46,9 +51,17 @@ class ManipleDrive_Access_Manager
         }
 
         $this->setEventManager($events);
+
+        $event = new ManipleDrive_Access_SecurityEvent();
+        $event->setSecurity($this);
+        $event->setTarget($this);
+
+        $this->_event = $event;
     }
 
     /**
+     * Get access for given entry
+     *
      * @param ManipleDrive_Model_EntryInterface $entry
      * @param int $user
      * @return int
@@ -68,6 +81,7 @@ class ManipleDrive_Access_Manager
 
     /**
      * Get user shares for given entry
+     *
      * @param $user
      * @param ManipleDrive_Model_DirInterface $dir
      * @return int
@@ -81,7 +95,7 @@ class ManipleDrive_Access_Manager
         $access = ManipleDrive_Access_Access::ACCESS_NONE;
         if ($row) {
             $access |= ManipleDrive_Access_Access::ACCESS_READ;
-            if (@$row->can_write) {
+            if ($row['can_write']) {
                 $access |= ManipleDrive_Access_Access::ACCESS_WRITE;
             }
         }
@@ -89,7 +103,7 @@ class ManipleDrive_Access_Manager
     }
 
     /**
-     * Retrieve handler for a given entry
+     * Retrieve access handler for a given entry
      *
      * @param ManipleDrive_Model_EntryInterface $entry
      * @return ManipleDrive_Access_HandlerInterface
@@ -99,10 +113,15 @@ class ManipleDrive_Access_Manager
     {
         $key = $this->_generateHandlerCacheKey($entry);
         if (!isset($this->_handlerCache[$key])) {
-            $results = $this->_trigger(self::EVENT_COLLECT_HANDLERS, array(), function ($result) use ($entry) {
-                return $result instanceof ManipleDrive_Access_HandlerInterface
-                    && $result->canHandle($entry);
-            });
+            $results = $this->getEventManager()->trigger(
+                self::EVENT_COLLECT_HANDLERS,
+                $this->_event,
+                // callback used to stop event propagation when handler is found
+                function ($result) use ($entry) {
+                    return $result instanceof ManipleDrive_Access_HandlerInterface
+                        && $result->canHandle($entry);
+                }
+            );
             $handler = $results->last();
             if ($handler instanceof ManipleDrive_Access_HandlerInterface) {
                 $this->_handlerCache[$key] = $handler;
@@ -127,7 +146,8 @@ class ManipleDrive_Access_Manager
     }
 
     /**
-     * Get security context
+     * Retrieve the security context
+     *
      * @return Maniple_Security_ContextAbstract
      */
     public function getSecurityContext()
@@ -157,22 +177,6 @@ class ManipleDrive_Access_Manager
     }
 
     /**
-     * @param string $name
-     * @param array $params
-     * @return \Zend\EventManager\ResponseCollection
-     */
-    protected function _trigger($name, array $params = array(), $callback = null)
-    {
-        $event = new \Zend\EventManager\Event();
-        $event->setName($name);
-        $event->setParam('security', $this);
-        if ($params) {
-            $event->setParams($params);
-        }
-        return $this->_eventManager->trigger($event, $callback);
-    }
-
-    /**
      * Register access handler
      *
      * Use this method to register handler even when access manager is not
@@ -183,7 +187,7 @@ class ManipleDrive_Access_Manager
      * with active AccessManager instance as the first (and only) parameter.
      * The result of the invocation will be stored for later use.
      *
-     * @param \Zend\EventManager\SharedEventManager $shareEvents
+     * @param \Zend\EventManager\SharedEventManager $sharedEvents
      * @param ManipleDrive_Access_HandlerInterface|callable $handler
      * @param int $priority OPTIONAL
      * @throws ManipleDrive_Access_Exception_InvalidArgumentException
@@ -195,10 +199,10 @@ class ManipleDrive_Access_Manager
                 return $handler;
             };
         } elseif (is_callable($handler)) {
-            $callback = function (\Zend\EventManager\Event $event) use ($handler) {
+            $callback = function (ManipleDrive_Access_SecurityEvent $event) use ($handler) {
                 static $result = null;
                 if ($result === null) {
-                    $result = call_user_func($handler, $event->getParam('security'));
+                    $result = call_user_func($handler, $event->getSecurity());
                     if (!$result instanceof ManipleDrive_Access_HandlerInterface) {
                         $result = false;
                     }
