@@ -26,20 +26,22 @@ class Module
         return array_merge(
             require __DIR__ . '/module/configs/resources.config.php',
             array(
-                'front_controller' => array(
-                    'controllerDirectory' => array(
-                        'maniple-drive' => __DIR__ . '/module/controllers',
+                'resources' => array(
+                    'frontController' => array(
+                        'controllerDirectory' => array(
+                            'maniple-drive' => __DIR__ . '/module/controllers',
+                        ),
                     ),
-                ),
-                'router' => array(
-                    'routes' => require __DIR__ . '/module/configs/routes.config.php',
-                ),
-                'view' => array(
-                    'helperPath' => array(
-                        'ManipleDrive_View_Helper_' => __DIR__ . '/module/library/View/Helper',
+                    'router' => array(
+                        'routes' => require __DIR__ . '/module/configs/routes.config.php',
                     ),
-                    'scriptPath' => array(
-                        __DIR__ . '/module/views/scripts',
+                    'view' => array(
+                        'helperPath' => array(
+                            'ManipleDrive_View_Helper_' => __DIR__ . '/module/library/View/Helper',
+                        ),
+                        'scriptPath' => array(
+                            __DIR__ . '/module/views/scripts',
+                        ),
                     ),
                 ),
             )
