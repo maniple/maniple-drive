@@ -279,9 +279,23 @@ class ManipleDrive_DriveManager
         throw new Exception(__METHOD__ . ' is not yet implemented');
     }
 
+    /**
+     * @var ManipleDrive_Model_File[]
+     */
+    protected $_fileIdentityMap;
+
+    /**
+     * @param int $fileId
+     * @return ManipleDrive_Model_File|null
+     */
     public function getFile($fileId)
     {
-        return $this->_getFilesTable()->findRow((int) $fileId);
+        $fileId = (int) $fileId;
+        if (!isset($this->_fileIdentityMap[$fileId])) {
+            $file = $this->_getFilesTable()->findRow($fileId);
+            $this->_fileIdentityMap[$fileId] = $file ? $file : false;
+        }
+        return ($file = $this->_fileIdentityMap[$fileId]) ? $file : null;
     }
 
     public function deleteFile(ManipleDrive_Model_File $file)
@@ -337,7 +351,7 @@ class ManipleDrive_DriveManager
             // TODO dir must be writable
         }
 
-        if ($file->download()) {
+        if ($download->download()) {
             $fileinfo = $download->getFileInfo();
         } else {
             throw new Exception('Unable to receive file contents');
