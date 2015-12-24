@@ -1,11 +1,11 @@
 <?php
 
 class ManipleDrive_Access_Manager
-    implements \Zend\EventManager\EventManagerAwareInterface
 {
-    const SHARED_EVENT_ID = 'drive.security';
-
-    const EVENT_COLLECT_HANDLERS = 'collectHandlers';
+    /**
+     * @var Zend_Stdlib_PriorityQueue
+     */
+    protected static $_sharedHandlers;
 
     /**
      * @var Maniple_Security_ContextAbstract
@@ -13,19 +13,9 @@ class ManipleDrive_Access_Manager
     protected $_securityContext;
 
     /**
-     * @var \Zend\EventManager\EventManagerInterface
-     */
-    protected $_eventManager;
-
-    /**
      * @var ManipleDrive_Access_StandardHandler
      */
     protected $_defaultHandler;
-
-    /**
-     * @var ManipleDrive_Access_SecurityEvent
-     */
-    protected $_event;
 
     /**
      * @var array
@@ -38,25 +28,13 @@ class ManipleDrive_Access_Manager
      */
     protected $_access;
 
-    public function __construct(Maniple_Security_ContextAbstract $securityContext, Zefram_Db $db, \Zend\EventManager\EventManager $events = null)
+    public function __construct(Maniple_Security_ContextAbstract $securityContext, Zefram_Db $db)
     {
         $this->_securityContext = $securityContext;
         $this->_defaultHandler = new ManipleDrive_Access_StandardHandler($this);
 
         // FIXME access to shares, should by via repository
         $this->_db = $db;
-
-        if ($events === null) {
-            $events = new \Zend\EventManager\EventManager();
-        }
-
-        $this->setEventManager($events);
-
-        $event = new ManipleDrive_Access_SecurityEvent();
-        $event->setSecurity($this);
-        $event->setTarget($this);
-
-        $this->_event = $event;
     }
 
     /**
@@ -113,18 +91,21 @@ class ManipleDrive_Access_Manager
     {
         $key = $this->_generateHandlerCacheKey($entry);
         if (!isset($this->_handlerCache[$key])) {
-            $results = $this->getEventManager()->trigger(
-                self::EVENT_COLLECT_HANDLERS,
-                $this->_event,
-                // callback used to stop event propagation when handler is found
-                function ($result) use ($entry) {
-                    return $result instanceof ManipleDrive_Access_HandlerInterface
-                        && $result->canHandle($entry);
+            $foundHandler = null;
+            if (self::$_sharedHandlers) {
+                foreach (self::$_sharedHandlers as $handler) {
+                    $handler = $handler($this);
+                    /** @var ManipleDrive_Access_HandlerInterface $handler */
+                    if ($handler instanceof ManipleDrive_Access_HandlerInterface
+                        && $handler->canHandle($entry)
+                    ) {
+                        $foundHandler = $handler;
+                        break;
+                    }
                 }
-            );
-            $handler = $results->last();
-            if ($handler instanceof ManipleDrive_Access_HandlerInterface) {
-                $this->_handlerCache[$key] = $handler;
+            }
+            if ($foundHandler) {
+                $this->_handlerCache[$key] = $foundHandler;
             } else {
                 throw new ManipleDrive_Access_Exception_HandlerNotFoundException(
                     sprintf('No handler found for entry %s:%s', get_class($entry), $entry->getId())
@@ -155,27 +136,6 @@ class ManipleDrive_Access_Manager
         return $this->_securityContext;
     }
 
-    public function setEventManager(Zend\EventManager\EventManagerInterface $events)
-    {
-        // identifiers are important for shared events
-        $events->setIdentifiers(array(
-            __CLASS__,
-            get_class($this),
-            self::SHARED_EVENT_ID,
-        ));
-
-        // default handler must have low priority
-        $events->attach(self::EVENT_COLLECT_HANDLERS, $this->_defaultHandler, -1000);
-
-        $this->_eventManager = $events;
-        return $this;
-    }
-
-    public function getEventManager()
-    {
-        return $this->_eventManager;
-    }
-
     /**
      * Register access handler
      *
@@ -192,17 +152,17 @@ class ManipleDrive_Access_Manager
      * @param int $priority OPTIONAL
      * @throws ManipleDrive_Access_Exception_InvalidArgumentException
      */
-    public static function registerHandler(\Zend\EventManager\SharedEventManager $sharedEvents, $handler, $priority = 1)
+    public static function registerHandler($handler, $priority = 1)
     {
         if ($handler instanceof ManipleDrive_Access_HandlerInterface) {
             $callback = function () use ($handler) {
                 return $handler;
             };
         } elseif (is_callable($handler)) {
-            $callback = function (ManipleDrive_Access_SecurityEvent $event) use ($handler) {
+            $callback = function (ManipleDrive_Access_Manager $manager) use ($handler) {
                 static $result = null;
                 if ($result === null) {
-                    $result = call_user_func($handler, $event->getSecurity());
+                    $result = call_user_func($handler, $manager);
                     if (!$result instanceof ManipleDrive_Access_HandlerInterface) {
                         $result = false;
                     }
@@ -212,6 +172,9 @@ class ManipleDrive_Access_Manager
         } else {
             throw new ManipleDrive_Access_Exception_InvalidArgumentException('Handler must be an instanceof HandlerInterface or a callable');
         }
-        $sharedEvents->attach(self::SHARED_EVENT_ID, self::EVENT_COLLECT_HANDLERS, $callback, $priority);
+        if (self::$_sharedHandlers === null) {
+            self::$_sharedHandlers = new Zend_Stdlib_PriorityQueue();
+        }
+        self::$_sharedHandlers->insert($callback, $priority);
     }
 }

@@ -73,6 +73,17 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         return $upload;
     }
 
+    protected function _getUploadOptions()
+    {
+        // if uploadOptions request param is passed as an object, it means that
+        // it is provided internally via _forward)
+        $uploadOptions = $this->_request->get('uploadOptions');
+        if (!$uploadOptions instanceof ManipleDrive_Options_FileUpload) {
+            $uploadOptions = null;
+        }
+        return $uploadOptions;
+    }
+
     /**
      * Pobiera treść pliku przesłanego metodą POST.
      *
@@ -82,13 +93,7 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
      */
     protected function _handlePostUpload($key = 'file') // {{{
     {
-        // if uploadOptions request param is passed as an object, it means that
-        // it is provided internally via _forward)
-        $uploadOptions = $this->_request->get('uploadOptions');
-        if (!$uploadOptions instanceof ManipleDrive_Options_FileUpload) {
-            $uploadOptions = null;
-        }
-
+        $uploadOptions = $this->_getUploadOptions();
         $upload = $this->getFileTransfer($uploadOptions);
 
         // zapamietaj oryginalna nazwe pliku
@@ -252,6 +257,11 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
         } catch (Exception $e) {
             $db->rollBack();
             throw $e;
+        }
+
+        $fileSaveListener = $this->_getUploadOptions()->getFileSaveListener();
+        if ($fileSaveListener) {
+            $fileSaveListener->invoke($file);
         }
 
         $result = $this->getDriveHelper()->getViewableData($file);

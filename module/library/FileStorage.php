@@ -4,17 +4,23 @@ class ManipleDrive_FileStorage
 {
     public static function requireStorageDir($name = null) // {{{
     {
+        if (is_dir(APPLICATION_PATH . '/../data')) {
+            return self::_requireWritableDir(APPLICATION_PATH . '/../data/storage', $name);
+        }
         return self::_requireWritableDir(APPLICATION_PATH . '/../storage', $name);
     } // }}}
 
     public static function requireCacheDir($name = null) // {{{
     {
-        return self::_requireWritableDir(VARIABLE_PATH . '/cache', $name);
+        if (is_dir(APPLICATION_PATH . '/../data')) {
+            return self::_requireWritableDir(APPLICATION_PATH . '/../data/cache', $name);
+        }
+        return self::_requireWritableDir(APPLICATION_PATH . '/../variable/cache', $name);
     } // }}}
 
     public static function requireTempDir($name = null) // {{{
     {
-        return self::_requireWritableDir(APPLICATION_PATH . '/../variable/temp', $name);
+        return self::_requireWritableDir(Zefram_Os::getTempDir(), $name);
     } // }}}
 
     public static function requireDirAccess($path) // {{{

@@ -366,7 +366,12 @@ class ManipleDrive_Helper
     {
         $user = $this->getUserMapper()->getUser($user_id);
         if ($user) {
-            return $this->projectUserData($user->toArray(Maniple_Model::UNDERSCORE));
+            return $this->projectUserData(array(
+                'user_id' => $user->getId(),
+                'first_name' => $user->getFirstName(),
+                'last_name' => $user->getLastName(),
+                'mid_name' => method_exists($user, 'getMiddleName') ? $user->getMiddleName() : '',
+            ));
         }
     } // }}}
 
@@ -659,8 +664,17 @@ class ManipleDrive_Helper
         return $this->getSecurity()->getSecurityContext();
     }
 
-    public function setUserRepository(ManipleCore_Model_UserRepositoryInterface $userRepository = null)
+    public function setUserRepository($userRepository = null)
     {
+        if (!$userRepository instanceof ManipleCore_Model_UserRepositoryInterface
+            && !$userRepository instanceof ModUser_Model_UserMapperInterface
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'User repository must be an instance of %s or %s',
+                'ManipleCore_Model_UserRepositoryInterface',
+                'ModUser_Model_UserMapperInterface'
+            ));
+        }
         $this->_userRepository = $userRepository;
         return $this;
     }
@@ -670,7 +684,13 @@ class ManipleDrive_Helper
         return $this->_userRepository;
     }
 
-    public function setUserMapper(ManipleCore_Model_UserRepositoryInterface $userRepository = null)
+    /**
+     * @param ManipleCore_Model_UserRepositoryInterface|ModUser_Model_UserMapperInterface $userRepository
+     * @return $this
+     * @throws InvalidArgumentException
+     * @deprecated Use setUserRepository instead
+     */
+    public function setUserMapper($userRepository = null)
     {
         return $this->setUserRepository($userRepository);
     }

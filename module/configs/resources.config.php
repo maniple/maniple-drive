@@ -2,8 +2,8 @@
     'drive.manager' => array(
         'class' => 'ManipleDrive_DriveManager',
         'args' => array(
-            'db' => null,
-            'securityContext' => null,
+            'db' => 'resource:ZeframDb',
+            'securityContext' => 'resource:user.sessionManager',
             'security' => 'resource:drive.security',
         ),
     ),
@@ -11,9 +11,9 @@
         'class' => 'ManipleDrive_Helper',
         'options' => array(
             'view'            => 'resource:view',
-            'securityContext' => null,
-            'tableProvider'   => null,
-            'userMapper'      => null,
+            'securityContext' => 'resource:user.sessionManager',
+            'tableProvider'   => 'resource:tableManager',
+            'userMapper'      => 'resource:user.model.userMapper',
             'userSearchRoute' => null,
             'security'        => 'resource:drive.security',
         ),
@@ -29,7 +29,7 @@
     'drive.security' => array(
         'class' => 'ManipleDrive_Access_Manager',
         'args' => array(
-            'securityContext' => 'resource:core.security',
+            'securityContext' => 'resource:user.sessionManager',
             'db' => 'resource:ZeframDb',
         ),
     ),

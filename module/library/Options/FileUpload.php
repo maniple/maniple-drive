@@ -17,6 +17,24 @@ class ManipleDrive_Options_FileUpload
      */
     protected $_allowedMimeTypes;
 
+    /**
+     * @var Zefram_Stdlib_CallbackHandler
+     */
+    protected $_fileSaveListener;
+
+    /**
+     * @param array $options OPTIONAL
+     */
+    public function __construct(array $options = array())
+    {
+        foreach ($options as $key => $value) {
+            $method = 'set' . $key;
+            if (!method_exists($this, $method)) {
+                throw new InvalidArgumentException(sprintf('Invalid option: %s', $key));
+            }
+            $this->$method($value);
+        }
+    }
 
     /**
      * @param array|Traversable $allowedMimeTypes
@@ -84,5 +102,25 @@ class ManipleDrive_Options_FileUpload
     public function getMinSize()
     {
         return $this->_minSize;
+    }
+
+    /**
+     * @param Zefram_Stdlib_CallbackHandler $fileSaveListener
+     */
+    public function setFileSaveListener($fileSaveListener)
+    {
+        if (!$fileSaveListener instanceof Zefram_Stdlib_CallbackHandler) {
+            $fileSaveListener = new Zefram_Stdlib_CallbackHandler($fileSaveListener);
+        }
+        $this->_fileSaveListener = $fileSaveListener;
+        return $this;
+    }
+
+    /**
+     * @return \Zefram_Stdlib_CallbackHandler|null
+     */
+    public function getFileSaveListener()
+    {
+        return $this->_fileSaveListener;
     }
 }
