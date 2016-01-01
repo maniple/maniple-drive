@@ -68,6 +68,10 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
             ));
         }
 
+        if ($options->getImageSize()) {
+            $validatorChain->addValidator('File_ImageSize', true, $options->getImageSize());
+        }
+
         $upload->addValidator($validatorChain);
 
         return $upload;

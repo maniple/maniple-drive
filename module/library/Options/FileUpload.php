@@ -23,6 +23,11 @@ class ManipleDrive_Options_FileUpload
     protected $_fileSaveListener;
 
     /**
+     * @var array
+     */
+    protected $_imageSize;
+
+    /**
      * @param array $options OPTIONAL
      */
     public function __construct(array $options = array())
@@ -122,5 +127,16 @@ class ManipleDrive_Options_FileUpload
     public function getFileSaveListener()
     {
         return $this->_fileSaveListener;
+    }
+
+    public function setImageSize(array $imageSize)
+    {
+        $this->_imageSize = $imageSize;
+        return $this;
+    }
+
+    public function getImageSize()
+    {
+        return $this->_imageSize;
     }
 }
