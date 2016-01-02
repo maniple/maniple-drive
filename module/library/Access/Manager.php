@@ -107,10 +107,11 @@ class ManipleDrive_Access_Manager
             if ($foundHandler) {
                 $this->_handlerCache[$key] = $foundHandler;
             } else {
-                throw new ManipleDrive_Access_Exception_HandlerNotFoundException(
-                    sprintf('No handler found for entry %s:%s', get_class($entry), $entry->getId())
-                );
+                $this->_handlerCache[$key] = false;
             }
+        }
+        if ($this->_handlerCache[$key] === false) {
+            return $this->_defaultHandler;
         }
         return $this->_handlerCache[$key];
     }
