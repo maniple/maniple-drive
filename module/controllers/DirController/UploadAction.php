@@ -263,8 +263,9 @@ class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_S
             throw $e;
         }
 
-        $fileSaveListener = $this->_getUploadOptions()->getFileSaveListener();
-        if ($fileSaveListener) {
+        if (($uploadOptions = $this->_getUploadOptions())
+            && ($fileSaveListener = $uploadOptions->getFileSaveListener())
+        ) {
             $fileSaveListener->invoke($file);
         }
 
