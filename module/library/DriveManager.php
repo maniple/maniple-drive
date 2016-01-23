@@ -359,6 +359,12 @@ class ManipleDrive_DriveManager
         return $this->_saveFileInfo($dir, $fileinfo);
     } // }}}
 
+    /**
+     * @param ManipleDrive_Model_Dir $dir
+     * @param array $fileinfo
+     * @return mixed
+     * @throws InvalidArgumentException
+     */
     protected function _saveFileInfo($dir, $fileinfo)
     {
         $name = trim($fileinfo['name']);
@@ -381,6 +387,21 @@ class ManipleDrive_DriveManager
 
         $file = $dir->saveFile($fileinfo['tmp_name'], $fileinfo);
         return $file;
+    }
+
+    /**
+     * @param ManipleDrive_Model_Dir $dir
+     * @param string $path
+     * @param array $fileInfo OPTIONAL
+     * @return ManipleDrive_Model_File
+     */
+    public function importFile($dir, $path, array $fileInfo = null)
+    {
+        if (empty($fileInfo['name'])) {
+            $fileInfo['name'] = basename($path);
+        }
+        $fileInfo['tmp_name'] = $path;
+        return $this->_saveFileInfo($dir, $fileInfo);
     }
 
 
