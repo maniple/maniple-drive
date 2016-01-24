@@ -381,9 +381,11 @@ class ManipleDrive_DriveManager
         }
         $fileinfo['name'] = $name;
 
-        $fileinfo['owner'] = $this->_securityContext->getUser()->getId();
-        $fileinfo['created_by'] = $this->_securityContext->getUser()->getId();
-        $fileinfo['modified_by'] = $this->_securityContext->getUser()->getId();
+        if ($user = $this->_securityContext->getUser()) {
+            $fileinfo['owner'] = $user->getId();
+            $fileinfo['created_by'] = $user->getId();
+            $fileinfo['modified_by'] = $user->getId();
+        }
 
         $file = $dir->saveFile($fileinfo['tmp_name'], $fileinfo);
         return $file;
