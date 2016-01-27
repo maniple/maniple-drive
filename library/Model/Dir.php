@@ -306,12 +306,12 @@ class ManipleDrive_Model_Dir
                     $pdf = Zend_Pdf::load($path);
 
                     if (empty($data['title'])) {
-                        $title = $pdf->properties['Title'];
+                        $title = isset($pdf->properties['Title']) ? $pdf->properties['Title'] : null;
                         $encoding = mb_detect_encoding($title);
                         $data['title'] = mb_convert_encoding($title, 'UTF-8', $encoding);
                     }
                     if (empty($data['author'])) {
-                        $author = $pdf->properties['Author'];
+                        $author = isset($pdf->properties['Author']) ? $pdf->properties['Author'] : null;
                         $encoding = mb_detect_encoding($author);
                         $data['author'] = mb_convert_encoding($author, 'UTF-8', $encoding);
                     }
