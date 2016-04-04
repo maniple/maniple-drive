@@ -90,6 +90,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
                             'login', 'auth', 'core', array(
                                 'continue' => $this->getDriveHelper()->getFileUrl($file, array(
                                     'absolute' => false,
+                                    'download' => (bool) intval($this->getScalarParam('download')),
                                 )),
                                 'auth_required' => true
                             )

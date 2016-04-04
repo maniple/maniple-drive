@@ -245,6 +245,9 @@ class ManipleDrive_Helper
             $dir = $dir->ParentDir;
         }
         $url = '!' . implode('/', $path);
+        if (isset($options['download']) && $options['download']) {
+            $url .= '?download=1';
+        }
         if (isset($options['absolute']) && !$options['absolute']) {
             return $url;
         }
