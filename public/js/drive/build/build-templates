@@ -54,8 +54,9 @@ foreach ($templates as $template) {
     $out = 'Handlebars.template(' . $out . ')';
     @unlink($temp);
 
-    $t[] = $indent . quote($template->getAttribute('id')) . ': ' . $out; // quote($str);
+    $t[$id] = $indent . quote($template->getAttribute('id')) . ': ' . $out; // quote($str);
 }
+ksort($t);
 ob_start();
 
 // npm install -g handlebars@1.3.0

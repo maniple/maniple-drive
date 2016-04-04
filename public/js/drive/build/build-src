@@ -81,12 +81,19 @@ for ($i = 2, $n = count($argv); $i < $n; ++$i) {
             }
 
             $input = $argv[$i];
-            $path = ($pos = strpos($input, ':')) === false ? $input : substr($input, 0, $pos);
+            if (($pos = strpos($input, ':')) === false) {
+                $path = $input;
+                $key = basename($input);
+            } else {
+                $path = substr($input, 0, $pos);
+                $key = substr($input, $pos + 1);
+            }
+            // $path = ($pos = strpos($input, ':')) === false ? $input : substr($input, 0, $pos);
             if (!is_file($path)) {
                 fprintf(STDERR, "%s: %s: File not found\n", $SELF, $path);
                 exit(1);
             }
-            $INPUTS[] = $input;
+            $INPUTS[$key] = $input;
             break;
     }
 }
@@ -95,6 +102,8 @@ if (empty($INPUTS)) {
     fprintf(STDERR, "%s: No input files\n", $SELF);
     exit(1);
 }
+ksort($INPUTS);
+$INPUTS = array_values($INPUTS);
 
 $indent = $SIZE ? str_repeat(' ', $SIZE) : '';
 

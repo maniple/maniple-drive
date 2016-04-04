@@ -432,7 +432,7 @@ Loading directory contents...
     </div>
   </dd>
   <dt>ID</dt>
-  <dd>{{ file.id }}</dd>
+  <dd>{{ file.file_id }}</dd>
   <dt>{{ str.size }}</dt>
   <dd>{{ fileSize file.size }}</dd>
   <dt>{{ str.mimetype }}</dt>
