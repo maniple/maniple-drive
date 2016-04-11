@@ -339,12 +339,13 @@ html.grabbing * {
   direction: ltr;
 }
 #drive-uploader-dropzone .file-input-wrapper input[type="file"] {
+  cursor: pointer;
   border: none;
   height: auto;
   width: auto;
   margin: 0;
   padding: 0;
-  font-size: 250px;
+  font-size: 1000px; /* 250px; */
   opacity: 0;
   filter: alpha(opacity=0);
 }
