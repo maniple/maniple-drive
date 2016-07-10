@@ -2,7 +2,7 @@
 
 class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
 {
-    protected $_moduleDeps = array('maniple-core');
+    protected $_moduleDeps = array('maniple-core', 'mod-user');
 
     protected $_moduleTasks = array('translations');
 
