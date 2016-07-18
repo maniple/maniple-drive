@@ -534,15 +534,15 @@ class ManipleDrive_Helper
             $modified_by = @$users[$item['modified_by']];
 
             $item['owner'] = $owner
-                ? $that->projectUserData($owner->toArray(Maniple_Model::UNDERSCORE))
+                ? $that->projectUserData($this->_userToArray($owner))
                 : null;
 
             $item['created_by'] = $created_by
-                ? $that->projectUserData($created_by->toArray(Maniple_Model::UNDERSCORE))
+                ? $that->projectUserData($this->_userToArray($created_by))
                 : null;
 
             $item['modified_by'] = $modified_by
-                ? $that->projectUserData($modified_by->toArray(Maniple_Model::UNDERSCORE))
+                ? $that->projectUserData($this->_userToArray($modified_by))
                 : null;
         };
 
@@ -577,6 +577,18 @@ class ManipleDrive_Helper
 
         return $result;
     } // }}}
+
+    protected function _userToArray($user)
+    {
+        if (method_exists($user, 'toArray')) {
+            return $user->toArray(Maniple_Model::UNDERSCORE);
+        }
+        return array(
+            'user_id' => $user->getId(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+        );
+    }
 
     /**
      * @param ManipleDrive_Model_Dir $dir
