@@ -534,15 +534,15 @@ class ManipleDrive_Helper
             $modified_by = @$users[$item['modified_by']];
 
             $item['owner'] = $owner
-                ? $that->projectUserData($this->_userToArray($owner))
+                ? $that->projectUserData($that->_userToArray($owner))
                 : null;
 
             $item['created_by'] = $created_by
-                ? $that->projectUserData($this->_userToArray($created_by))
+                ? $that->projectUserData($that->_userToArray($created_by))
                 : null;
 
             $item['modified_by'] = $modified_by
-                ? $that->projectUserData($this->_userToArray($modified_by))
+                ? $that->projectUserData($that->_userToArray($modified_by))
                 : null;
         };
 
