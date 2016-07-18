@@ -69,9 +69,8 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
         );
 
         $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
-        $default['userSearchUrl'] = $this->view->url(
-            (string) $bootstrap->getResource('drive.helper')->getUserSearchRoute()
-        );
+        $userSearchRoute = (string) $bootstrap->getResource('drive.helper')->getUserSearchRoute();
+        $default['userSearchUrl'] = $userSearchRoute ? $this->view->url($userSearchRoute) : null;
 
         $config = array_replace_recursive($default, $config);
 

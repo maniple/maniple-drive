@@ -25,14 +25,18 @@ class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
             ),
         );
 
-        $locale = preg_replace('/\\..+$/', '', $this->getResource('locale'));
+        try {
+            $locale = preg_replace('/\\..+$/', '', $this->getResource('locale'));
+        } catch (Exception $e) {}
         if (empty($locale)) {
             $locale = 'en_GB';
         }
         $this->view->locale = $locale;
-        $this->view->user_search_url = $this->view->url(
-            (string) $this->getDriveHelper()->getUserSearchRoute()
-        );
+
+        $userSearchRoute = (string) $this->getDriveHelper()->getUserSearchRoute();
+        if ($userSearchRoute) {
+            $this->view->user_search_url = $this->view->url($userSearchRoute);
+        }
 
         // dir instance can be passed via forward() calls
         $dir = $this->getParam('dir');
