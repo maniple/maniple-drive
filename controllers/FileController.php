@@ -8,6 +8,11 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
 
         if (!$this->getResource('drive.helper')->isFileReadable($file)) {
+            if (!$this->getSecurity()->isAuthenticated()) {
+                $continue = $this->_request->getRequestUri();
+                $this->forward('login', 'auth', 'mod-user', compact('continue'));
+                return;
+            }
             echo '403 Forbidden';
             exit;
         }
