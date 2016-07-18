@@ -578,7 +578,7 @@ class ManipleDrive_Helper
         return $result;
     } // }}}
 
-    protected function _userToArray($user)
+    public function _userToArray($user)
     {
         if (method_exists($user, 'toArray')) {
             return $user->toArray(Maniple_Model::UNDERSCORE);
