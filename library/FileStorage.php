@@ -4,15 +4,15 @@ class ManipleDrive_FileStorage
 {
     public static function requireStorageDir($name = null) // {{{
     {
-        if (is_dir(APPLICATION_PATH . '/../data')) {
+        if (is_dir(APPLICATION_PATH . '/../data/storage')) {
             return self::_requireWritableDir(APPLICATION_PATH . '/../data/storage', $name);
         }
-        return self::_requireWritableDir(APPLICATION_PATH . '/../storage', $name);
+        return self::_requireWritableDir(APPLICATION_PATH . '/../variable/storage', $name);
     } // }}}
 
     public static function requireCacheDir($name = null) // {{{
     {
-        if (is_dir(APPLICATION_PATH . '/../data')) {
+        if (is_dir(APPLICATION_PATH . '/../data/cache')) {
             return self::_requireWritableDir(APPLICATION_PATH . '/../data/cache', $name);
         }
         return self::_requireWritableDir(APPLICATION_PATH . '/../variable/cache', $name);
