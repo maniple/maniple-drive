@@ -12,8 +12,6 @@
     "require": {
         "php": ">=5.3.3",
         "xemlock/zefram-composer-installer": "*",
-        "maniple/maniple-core": "*",
-        "maniple/mod-user": "*",
-        "zendframework/zend-eventmanager": "~2.2"
+        "maniple/maniple-core": "*"
     }
 }
