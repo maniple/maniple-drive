@@ -1,6 +1,6 @@
 <?php
 
-abstract class ManipleDrive_Controller_Action extends Zefram_Controller_Action
+abstract class ManipleDrive_Controller_Action extends Maniple_Controller_Action
 {
     /**
      * @return ManipleDrive_DriveManager

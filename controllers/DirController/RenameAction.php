@@ -7,7 +7,7 @@
  *
  * @version 2014-06-02 / 2012-12-09
  */
-class ManipleDrive_DirController_RenameAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 

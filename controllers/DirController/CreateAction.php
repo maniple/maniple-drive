@@ -1,6 +1,6 @@
 <?php
 
-class ManipleDrive_DirController_CreateAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = false;
 

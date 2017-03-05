@@ -6,7 +6,7 @@
  * i przenoszonego katalogu. Parametry wywołania akcji muszą być
  * przekazane metodą POST.
  */
-class ManipleDrive_DirController_MoveAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DirController_MoveAction extends Maniple_Controller_Action_StandaloneForm
 {
     /**
      * @var ManipleDrive_Model_Dir

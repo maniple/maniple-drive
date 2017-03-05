@@ -6,7 +6,7 @@
  * @version 2014-05-14 / 2013-01-25
  * @author xemlock
  */
-class ManipleDrive_DriveController_EditAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DriveController_EditAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_drive;
 

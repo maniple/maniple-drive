@@ -1,6 +1,6 @@
 <?php
 
-class ManipleDrive_FileController_EditAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_FileController_EditAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 

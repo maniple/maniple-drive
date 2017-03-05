@@ -6,7 +6,7 @@
  * @version 2013-01-25
  * @author xemlock
  */
-class ManipleDrive_DriveController_CreateAction extends Zefram_Controller_Action_StandaloneForm
+class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 

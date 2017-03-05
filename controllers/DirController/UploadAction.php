@@ -1,6 +1,6 @@
 <?php
 
-class ManipleDrive_DirController_UploadAction extends Zefram_Controller_Action_Standalone_Abstract
+class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_Standalone
 {
     protected function _getTempName() // {{{
     {
