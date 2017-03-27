@@ -432,6 +432,11 @@ class ManipleDrive_Model_Dir
             if ($del_path) {
                 @unlink($path);
             }
+            $log = Zend_Controller_Front::getInstance()->getParam('bootstrap')->getResource('Log');
+            $log->err(sprintf(
+                'File upload failed (%s)',
+                Zefram_Json::encode($data, array('unescapedSlashes' => true))
+            ));
             throw $e;
         }
 

@@ -254,13 +254,33 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         $db = $dir->getAdapter();
         $db->beginTransaction();
 
+        $error = null;
+
         try {
             $file = $dir->saveFile($info['tmp_name'], $info);
             $db->commit();
-
         } catch (Exception $e) {
             $db->rollBack();
-            throw $e;
+            $error = $e;
+        }
+
+        /** @var Zefram_Log $log */
+        $log = $this->getResource('Log');
+        if ($error) {
+            if ($log) $log->err(sprintf(
+                'File upload failed (%s) %s',
+                Zefram_Json::encode($info, array('unescapedSlashes' => true)),
+                $error->getMessage()
+            ));
+            throw $error;
+        } else {
+            if ($log) $log->info(sprintf(
+                'File upload success (file_id = %d, mimetype = %s, size = %d, name = %s)',
+                $file->getId(),
+                $file->mimetype,
+                $file->size,
+                $file->name
+            ));
         }
 
         if (($uploadOptions = $this->_getUploadOptions())
