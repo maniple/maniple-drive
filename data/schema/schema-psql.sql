@@ -221,7 +221,7 @@ CREATE TABLE {PREFIX}drive_files (
     md5sum          CHAR(32) NOT NULL,
 
     -- typ MIME pliku
-    mimetype        VARCHAR(64) NOT NULL,
+    mimetype        VARCHAR(128) NOT NULL,
 
     -- filtrowanie po kategorii pliku, NOT NULL zeby bylo latwo filtrowac po tej
     -- kolumnie, bez potrzeby sprawdzania IS (NOT) NULL:

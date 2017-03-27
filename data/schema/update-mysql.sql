@@ -11,3 +11,6 @@ ALTER TABLE {PREFIX}drive_dirs DROP FOREIGN KEY drive_dirs_drive_id_parent_id_fk
 ALTER TABLE {PREFIX}drive_dirs DROP INDEX drive_dirs_drive_id_dir_id_idx;
  
 ALTER TABLE {PREFIX}drive_dirs MODIFY COLUMN drive_id INTEGER NULL;
+
+-- http://stackoverflow.com/questions/643690/maximum-mimetype-length-when-storing-type-in-db
+ALTER TABLE {PREFIX}drive_files MODIFY COLUMN mimetype VARCHAR(128) NOT NULL;
