@@ -2,13 +2,9 @@
 
 class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
 {
-    protected $_moduleDeps = array('maniple-core', 'mod-user');
-
-    protected $_moduleTasks = array('translations');
-
-    public function getAssetsBaseDir()
+    public function getModuleDependencies()
     {
-        return 'drive';
+        return array('maniple-core', 'mod-user');
     }
 
     public function getRoutesConfig()
@@ -19,6 +15,29 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
     public function getResourcesConfig()
     {
         return require dirname(__FILE__) . '/configs/resources.config.php';
+    }
+
+    public function getTranslationsConfig()
+    {
+        return array(
+            'scan'    => Zend_Translate::LOCALE_DIRECTORY,
+            'content' => dirname(__FILE__) . '/languages',
+        );
+    }
+
+    public function getViewConfig()
+    {
+        return array(
+            'scriptPaths' => dirname(__FILE__) . '/views/scripts',
+            'helperPaths' => array(
+                'ManipleDrive_View_Helper_' => dirname(__FILE__) . '/library/View/Helper/',
+            )
+        );
+    }
+
+    public function getAssetsBaseDir()
+    {
+        return 'drive';
     }
 
     protected function _initEntityManager()
