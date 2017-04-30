@@ -817,6 +817,7 @@ var Drive = {
                 width:         300,
                 title:         str.title,
                 submitLabel:   str.submit,
+                cancelLabel:   Drive.Util.i18n('DirBrowser.cancelLabel'),
                 url:           url,
                 form:          buildForm,
                 open: function () {
@@ -973,6 +974,7 @@ var Drive = {
                         className: 'btn'
                     }
                 ],
+                cancelLabel: Drive.Util.i18n('DirBrowser.cancelLabel'),
                 submitLabel: str.submit,
                 submitStatus: str.messageSending,
                 content: function (dialog) {
@@ -1115,6 +1117,7 @@ var Drive = {
                 url:         url,
                 title:       str.title,
                 submitLabel: str.submit,
+                cancelLabel: Drive.Util.i18n('DirBrowser.cancelLabel'),
                 complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedz od serwera'};
                     if (!response.error) {
@@ -1225,6 +1228,7 @@ var Drive = {
                 width:       240,
                 title:       str.title,
                 submitLabel: str.submit,
+                cancelLabel: Drive.Util.i18n('DirBrowser.cancelLabel'),
                 url:         url,
                 form:        buildForm,
                 open: function () {
@@ -1306,6 +1310,7 @@ var Drive = {
                 url:         url,
                 title:       str.title,
                 submitLabel: str.submit,
+                cancelLabel: Drive.Util.i18n('DirBrowser.cancelLabel'),
                 complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
@@ -1328,6 +1333,7 @@ var Drive = {
                 url:         url,
                 title:       str.title,
                 submitLabel: str.submit,
+                cancelLabel: Drive.Util.i18n('DirBrowser.cancelLabel'),
                 complete: function (dialog, response) {
                     response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
                     if (!response.error) {
