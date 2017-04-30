@@ -1,48 +1,37 @@
 <div style="font-size:.9em;">
 
-<p>Are you sure you want to remove directory <strong>{{ name }}</strong>?
-All files and subdirectories contained within this directory will be
-irrevocably deleted.</p>
+<p>
+{{
+    translate('Are you sure you want to remove directory <strong>%name%</strong>? All files and subdirectories contained within this directory will be irrevocably deleted.')
+    | replace({'%name%': name}) | raw
+}}
+</p>
 
-{#
-<p>Czy na pewno usunąć katalog <strong>{{ name }}</strong>?
-Wszystkie zawarte w nim pliki i katalogi zostaną bezpowrotnie usunięte.</p>
-#}
 <p>
 {% if fileCount %}
-{%     if (1 == fileCount) %}
-This directory contains one file of size {{ fileSize(size) }}.
-{#W katalogu znajduje się jeden plik o rozmiarze {{ fileSize(size) }}. #}
-{%     else %}
-{#{{  translate().plural(
-        'W katalogu znajduje się 1 plik',
-        'W katalogu znajdują się %d pliki',
-        'W katalogu znajduje się %d plików',
-        fileCount
-    ) | format(fileCount)
-    }} o łącznym rozmiarze {{ fileSize(size) }}.
-#}
-This directory contains {{ fileCount }} files having total size of {{ fileSize(size) }}.
-{%     endif %}
+    {{
+        translate([
+            'This directory contains one file of size %size%.',
+            'This directory contains %fileCount% files having total size of %size%.',
+            fileCount
+        ])
+        | replace({'%fileCount%': fileCount, '%size%': fileSize(size)})
+    }}
 {% elseif dirCount %}
-{#
-{{  translate().plural(
-        'W katalogu znajduje się 1 pusty katalog.',
-        'W katalogu znajdują się %d puste katalogi.',
-        'W katalogu znajduje się %d pustych katalogów.',
-        dirCount
-    ) | format(dirCount)
-}}
-#}
-Directory contains {{ dirCount }} subdirectories.    
+    {{
+        translate([
+            'This directory contains one subdirectory',
+            'This directory contains %dirCount% subdirectories.',
+            dirCount
+        ])
+        | replace({'%dirCount%': dirCount})
+    }}
 {% else %}
-{#Katalog nie zawiera plików ani innych katalogów.#}
-This directory contains no files or subfolders.
+    {{ translate('This directory contains no files or subfolders.') }}
 {% endif %}
 </p>
 
-{# <p><strong>Tej operacji nie można cofnąć.</strong></p> #}
-<p><strong>You cannot undo this operation.</strong></p>
+<p><strong>{{ translate('You cannot undo this operation.') }}</strong></p>
 
 {{ form().openTag(form) | raw }}
 {{ form.renderElements() | raw }}

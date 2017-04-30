@@ -12,4 +12,19 @@
     'Description' => 'Opis',
     'Author / source' => 'Autor / źródło',
     'You are not allowed to edit metadata of this file' => 'Nie masz uprawnień do edycji metadanych tego pliku',
+    'Are you sure you want to remove directory <strong>%name%</strong>? All files and subdirectories contained within this directory will be irrevocably deleted.' => 'Czy na pewno usunąć katalog <strong>%name%</strong>? Wszystkie zawarte w nim pliki i katalogi zostaną bezpowrotnie usunięte.',
+    'This directory contains one file of size %size%.' => array(
+        'W katalogu znajduje się jeden plik o rozmiarze %size%',
+        'W katalogu znajdują się %fileCount% pliki o łącznym rozmiarze %size%',
+        'W katalogu znajduje się %fileCount% plików o łącznym rozmiarze %size%',
+    ),
+    'This directory contains %fileCount% files having total size of %size%.' => '',
+    'This directory contains one subdirectory' => array(
+        'W katalogu znajduje się 1 katalog.',
+        'W katalogu znajdują się %dirCount% katalogi.',
+        'W katalogu znajduje się %dirCount% katalogów.',
+    ),
+    'This directory contains %dirCount% subdirectories.' => '',
+    'This directory contains no files or subfolders.' => 'Katalog nie zawiera plików ani innych katalogów.',
+    'You cannot undo this operation.' => 'Tej operacji nie można cofnąć.',
 );
