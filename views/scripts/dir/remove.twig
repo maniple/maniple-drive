@@ -3,7 +3,7 @@
 <p>
 {{
     translate('Are you sure you want to remove directory <strong>%name%</strong>? All files and subdirectories contained within this directory will be irrevocably deleted.')
-    | replace({'%name%': name}) | raw
+    | replace({'%name%': name|escape}) | raw
 }}
 </p>
 

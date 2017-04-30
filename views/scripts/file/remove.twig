@@ -1,5 +1,11 @@
-<p>Are you sure you want to remove file <strong>{{ name }}</strong>?</p>
-<p><strong>This operation cannot be reverted.</strong></p>
+<p>
+{{
+    translate('Are you sure you want to remove file <strong>%name%</strong>?')
+    | replace({'%name%': name|escape}) | raw
+}}
+</p>
+
+<p><strong>{{ translate('You cannot undo this operation.') }}</strong></p>
 
 {{ form().openTag(form) | raw }}
 {{ form.renderElements() | raw }}
