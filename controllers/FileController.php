@@ -140,6 +140,9 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
             $dims = explode('x', $dims);
             $width = (int) array_shift($dims);
             $height = (int) array_shift($dims);
+        } else {
+            $width = 0;
+            $height = 0;
         }
 
         $image_path = $this->getResource('core.image_helper')->getImagePath(
