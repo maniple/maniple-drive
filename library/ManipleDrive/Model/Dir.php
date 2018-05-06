@@ -4,6 +4,8 @@ class ManipleDrive_Model_Dir
     extends ManipleDrive_Model_HierarchicalRow
     implements ManipleDrive_Model_DirInterface
 {
+    protected $_tableClass = ManipleDrive_Model_DbTable_Dirs::className;
+
     protected $_idColumn = 'dir_id';
 
     public function getId()
@@ -81,7 +83,7 @@ class ManipleDrive_Model_Dir
      */
     public function getFileByName($name) // {{{
     {
-        $file = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->fetchRow(array(
+        $file = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)->fetchRow(array(
             'name = ?'   => (string) $name,
             'dir_id = ?' => (int) $this->dir_id,
         ));
@@ -120,7 +122,7 @@ class ManipleDrive_Model_Dir
                 $block  = array_splice($parts, 0, $block_size);
                 $nblock = count($block);
 
-                // przygotuj poczatek zapytania i liste kolumn do pobrania - 
+                // przygotuj poczatek zapytania i liste kolumn do pobrania -
                 // identyfikatorow kolejnych katalogow
                 $query = '';
                 for ($i = 0; $i < $nblock; ++$i) {
@@ -206,7 +208,7 @@ class ManipleDrive_Model_Dir
     /**
      * $options
      * - orderByWeight
-     * - 
+     * -
      */
     public function fetchFiles($where = null) // {{{
     {
@@ -235,7 +237,7 @@ class ManipleDrive_Model_Dir
             'weight' => new Zend_Db_Expr($case),
         );
 
-        $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->update($data, $where);
+        $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)->update($data, $where);
     } // }}}
 
     public function getDrive()
@@ -244,7 +246,7 @@ class ManipleDrive_Model_Dir
         while ($rootDir->ParentDir) {
             $rootDir = $rootDir->ParentDir;
         }
-        $drive = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives')->fetchRow(array('root_dir = ?' => $rootDir->dir_id));
+        $drive = $this->_getTableFromString(ManipleDrive_Model_DbTable_Drives::className)->fetchRow(array('root_dir = ?' => $rootDir->dir_id));
         if (empty($drive)) {
             throw new Exception('Drive not found');
         }
@@ -350,7 +352,7 @@ class ManipleDrive_Model_Dir
             // tymczasowy. Jezeli nie istnieje przenies go do docelowej
             // lokalizacji.
             /** @var ManipleDrive_Model_DbTable_Drives $drivesTable */
-            $drivesTable = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives');
+            $drivesTable = $this->_getTableFromString(ManipleDrive_Model_DbTable_Drives::className);
             if ($drivesTable->getFilePath($md5)) {
                 // plik o pasujacej sumie kontrolnej juz istnieje w podanej lokalizacji,
                 // usun plik tymczasowy (o ile jest on tymczasowy)
@@ -415,7 +417,7 @@ class ManipleDrive_Model_Dir
             }
 
             $db = $this->getAdapter();
-            $file = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->createRow($data);
+            $file = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)->createRow($data);
 
             if ($eventManager) {
                 $eventManager->trigger('drive.fileBeforeSave', null, array('file' => (object) $file->toArray()));
@@ -453,7 +455,7 @@ class ManipleDrive_Model_Dir
     public function fetchShares() // {{{
     {
         $db = $this->getAdapter();
-        $sharesTable = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
+        $sharesTable = $this->_getTableFromString(ManipleDrive_Model_DbTable_DirShares::className);
         $shares = array();
 
         foreach ($sharesTable->fetchAll(array('dir_id = ?' => $this->dir_id)) as $row) {
@@ -472,7 +474,7 @@ class ManipleDrive_Model_Dir
         $db = $this->getAdapter();
 
         // usun aktualne rekordy uprawnien
-        $sharesTable = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares');
+        $sharesTable = $this->_getTableFromString(ManipleDrive_Model_DbTable_DirShares::className);
         $sharesTable->delete(array('dir_id = ?' => $this->dir_id));
 
         $count = 0;
@@ -548,7 +550,7 @@ class ManipleDrive_Model_Dir
             // fetch previous parent dir, decrement its counters using previous
             // counter values
             if ($prev['parent_id']) {
-                $prevParentDir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($prev['parent_id']);
+                $prevParentDir = $this->_getTableFromString(ManipleDrive_Model_DbTable_Dirs::className)->findRow($prev['parent_id']);
                 if ($prevParentDir) {
                     self::_updateCounters(
                         $prevParentDir, -1, -$prev['file_count'], -$prev['byte_count'], -($prev['system_count'] + self::_01($prev['is_system']))
@@ -590,7 +592,7 @@ class ManipleDrive_Model_Dir
         }
 
         // usun udostepnienia
-        $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->delete(array(
+        $this->_getTableFromString(ManipleDrive_Model_DbTable_DirShares::className)->delete(array(
             'dir_id = ?' => $this->dir_id,
         ));
 
@@ -640,7 +642,7 @@ class ManipleDrive_Model_Dir
 
         $select = Zefram_Db_Select::factory($db)
             ->from(
-                $this->_getTableFromString('ManipleDrive_Model_DbTable_Files'),
+                $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className),
                 array(
                     'SUM(size) AS size',
                     'COUNT(1) AS file_count',

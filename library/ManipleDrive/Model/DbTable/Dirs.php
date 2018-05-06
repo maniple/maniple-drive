@@ -2,6 +2,8 @@
 
 class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 {
+    const className = __CLASS__;
+
     const VISIBILITY_PUBLIC    = ManipleDrive_DirVisibility::VIS_PUBLIC;
     const VISIBILITY_PRIVATE   = ManipleDrive_DirVisibility::VIS_PRIVATE;
     const VISIBILITY_INHERITED = ManipleDrive_DirVisibility::VIS_INHERITED;
@@ -261,7 +263,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
             $where[] = 'dir_id IN (NULL)';
         }
 
-        $shares = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->fetchAll($where, 'dir_id');
+        $shares = $this->_getTableFromString(ManipleDrive_Model_DbTable_DirShares::className)->fetchAll($where, 'dir_id');
         return $shares;
     }
 }

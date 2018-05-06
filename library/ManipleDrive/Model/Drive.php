@@ -8,7 +8,9 @@
  */
 class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
 {
-    /** 
+    protected $_tableClass = ManipleDrive_Model_DbTable_Drives::className;
+
+    /**
      * Nazwa dysku zapisywana w katalogu ustawionym jako korzen dysku.
      * @var string
      */
@@ -36,7 +38,7 @@ class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
         $dir = $this->RootDir;
 
         if (empty($dir)) {
-            $dirs = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs');
+            $dirs = $this->_getTableFromString(ManipleDrive_Model_DbTable_Dirs::className);
             $dir = $dirs->createRow();
 
             // nowo tworzony katalog bedacy korzeniem dysku jest prywatny

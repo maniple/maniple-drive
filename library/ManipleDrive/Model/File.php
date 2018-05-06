@@ -4,7 +4,7 @@ class ManipleDrive_Model_File
     extends Zefram_Db_Table_Row
     implements ManipleDrive_Model_FileInterface
 {
-    protected $_tableClass = 'ManipleDrive_Model_DbTable_Files';
+    protected $_tableClass = ManipleDrive_Model_DbTable_Files::className;
 
     /**
      * @return int
@@ -84,7 +84,7 @@ class ManipleDrive_Model_File
 
         if ($this->_cleanData['dir_id'] != $this->dir_id) {
             // fetch previous parent dir
-            $dir = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->findRow($this->_cleanData['dir_id']);
+            $dir = $this->_getTableFromString(ManipleDrive_Model_DbTable_Dirs::className)->findRow($this->_cleanData['dir_id']);
             if ($dir) {
                 ManipleDrive_Model_Dir::_updateCounters($dir, 0, -1, -$this->size);
             }
@@ -96,14 +96,14 @@ class ManipleDrive_Model_File
 
     public function getPath() // {{{
     {
-        $drives = $this->_getTableFromString('ManipleDrive_Model_DbTable_Drives');
+        $drives = $this->_getTableFromString(ManipleDrive_Model_DbTable_Drives::className);
         return $drives->getFilePath($this);
     } // }}}
 
     public function isReadable($user_id) // {{{
     {
-        $dirs = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs');
-        return $dirs->isDirReadable($this->dir_id, $user_id);    
+        $dirs = $this->_getTableFromString(ManipleDrive_Model_DbTable_Dirs::className);
+        return $dirs->isDirReadable($this->dir_id, $user_id);
     } // }}}
 
     public function fetchDependentRows() // {{{

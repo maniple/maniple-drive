@@ -23,7 +23,7 @@ class ManipleDrive_Model_Repository
     public function getDir($dir_id) // {{{
     {
         $dir_id = (int) $dir_id;
-        $dir = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs')->findRow($dir_id);
+        $dir = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Dirs::className)->findRow($dir_id);
 
         return $dir ? $dir : null;
     } // }}}
@@ -67,7 +67,7 @@ class ManipleDrive_Model_Repository
         );
         $select->where('dir_id = ?', $dir_id);
 
-        $dir = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow($select);
+        $dir = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Dirs::className)->fetchRow($select);
 
         return $dir ? $dir : null;
     } // }}}
@@ -79,7 +79,7 @@ class ManipleDrive_Model_Repository
     public function getDriveSummary($drive_id) // {{{
     {
         $drive_id = (int) $drive_id;
-        $drive = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Drives')->findRow($drive_id);
+        $drive = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Drives::className)->findRow($drive_id);
         if (empty($drive)) {
             throw new Exception('Invalid drive ID');
         }
@@ -131,7 +131,7 @@ class ManipleDrive_Model_Repository
 
             $disk_usage += $row['disk_usage'];
         }
-        
+
         return array(
             'disk_usage' => $disk_usage,
             'num_dirs'  => $num_dirs,
@@ -150,8 +150,8 @@ class ManipleDrive_Model_Repository
 
         // create drive and its root dir in one go
 
-        $drives_table = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Drives');
-        $dirs_table = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $drives_table = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Drives::className);
+        $dirs_table = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Dirs::className);
 
         $select = $this->_createSelect();
         $select->from(
@@ -199,7 +199,7 @@ class ManipleDrive_Model_Repository
         $select->order('ctime DESC');
         $select->limit($limit);
 
-        return $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
+        return $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Files::className)->fetchAll($select);
     } // }}}
 
     public function getLastPublishedFiles($drive_id = null, $limit = 10) // {{{
@@ -215,7 +215,7 @@ class ManipleDrive_Model_Repository
             $select->order('ctime DESC');
             $select->limit($limit);
 
-            return $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
+            return $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Files::className)->fetchAll($select);
         }
 
         return array();
@@ -234,7 +234,7 @@ class ManipleDrive_Model_Repository
             $select->order('ctime DESC');
             $select->limit($limit);
 
-            return $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll($select);
+            return $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Files::className)->fetchAll($select);
         }
 
         return array();
@@ -363,7 +363,7 @@ class ManipleDrive_Model_Repository
     public function getFile($file_id) // {{{
     {
         $file_id = (int) $file_id;
-        $file = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Files')->findRow($file_id);
+        $file = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Files::className)->findRow($file_id);
 
         return $file ? $file : null;
     } // }}}
@@ -393,7 +393,7 @@ class ManipleDrive_Model_Repository
     public function getDirByInternalName($internal_name) // {{{
     {
         $internal_name = (string) $internal_name;
-        $dir = $this->_tableFactory->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchRow(array(
+        $dir = $this->_tableFactory->getTable(ManipleDrive_Model_DbTable_Dirs::className)->fetchRow(array(
             'internal_name = ?' => $internal_name,
         ));
         if ($dir) {

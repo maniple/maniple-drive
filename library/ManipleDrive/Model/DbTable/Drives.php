@@ -2,6 +2,8 @@
 
 class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
 {
+    const className = __CLASS__;
+
     protected $_name = ManipleDrive_Model_TableNames::TABLE_DRIVES;
 
     protected $_rowClass = 'ManipleDrive_Model_Drive';
@@ -9,12 +11,12 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
     protected $_referenceMap = array(
         'RootDir' => array(
             'columns'       => 'root_dir',
-            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
+            'refTableClass' => ManipleDrive_Model_DbTable_Dirs::className,
             'refColumns'    => 'dir_id',
         ),
         'Dir' => array(
             'columns'       => 'root_dir',
-            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
+            'refTableClass' => ManipleDrive_Model_DbTable_Dirs::className,
             'refColumns'    => 'dir_id',
         ),
         'Owner' => array(
@@ -97,7 +99,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
         $result = false;
 
         if (count($parts)) {
-            $dirs = $this->_getTableFromString('ManipleDrive_Model_DbTable_Dirs')->getQuotedName();
+            $dirs = $this->_getTableFromString(ManipleDrive_Model_DbTable_Dirs::className)->getQuotedName();
 
             // lista identyfikatorow napotkanych katalogow
             $id_path = array();
@@ -116,7 +118,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
                 $block  = array_splice($parts, 0, $block_size);
                 $nblock = count($block);
 
-                // przygotuj poczatek zapytania i liste kolumn do pobrania - 
+                // przygotuj poczatek zapytania i liste kolumn do pobrania -
                 // identyfikatorow kolejnych katalogow
                 $query = '';
                 for ($i = 0; $i < $nblock; ++$i) {
@@ -164,7 +166,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
             // identyfikator katalogu, w ktorym znajduje sie ostatni element
             // podanej sciezki (plik lub katalog).
 
-            $result = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')
+            $result = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)
                 ->fetchRow("name = $last_part AND dir_id = $d0_parent_id");
         }
 
