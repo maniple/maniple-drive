@@ -262,7 +262,8 @@ class ManipleDrive_Model_Dir
      * @param  string $path
      * @param  array $data
      * @param  bool $isTempFile OPTIONAL
-     * @return Zend_Db_Table_Row
+     * @return ManipleDrive_Model_File
+     * @throws Exception
      */
     public function saveFile($path, array $data, $isTempFile = true) // {{{
     {

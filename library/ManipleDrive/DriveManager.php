@@ -274,9 +274,18 @@ class ManipleDrive_DriveManager
         return $file;
     } // }}}
 
+    /**
+     * @param ManipleDrive_Model_Dir $dir
+     * @param string $name
+     * @param string $contents
+     * @return ManipleDrive_Model_File
+     */
     public function createFileFromString(ManipleDrive_Model_Dir $dir, $name, $contents)
     {
-        throw new Exception(__METHOD__ . ' is not yet implemented');
+        $tmpFile = tempnam(Zefram_Os::getTempDir(), __METHOD__);
+        file_put_contents($tmpFile, $contents);
+
+        return $dir->saveFile($tmpFile, array('name' => $name));
     }
 
     /**
