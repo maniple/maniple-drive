@@ -23,6 +23,7 @@ class ManipleDrive_FileIndexer
      * Retrieves index factory.
      *
      * @return Maniple_Search_WritableIndexInterface
+     * @throws Exception
      */
     public function getIndex() // {{{
     {
@@ -58,7 +59,7 @@ class ManipleDrive_FileIndexer
             Zefram_File_MimeType_Data::DOC => 'catdoc -d UTF-8 %filename% 2>' . $devnull,
             Zefram_File_MimeType_Data::XLS => 'xls2csv -d UTF-8 %filename% 2>' . $devnull,*/
         );
-        
+
         $output = null;
 
         if (isset($commands[$file->mimetype])) {
@@ -98,7 +99,7 @@ class ManipleDrive_FileIndexer
 
         if ($textContent) {
             $doc->addField(Maniple_Search_Field::Text('text_content', $textContent));
-        }        
+        }
 
         return $doc;
     }
