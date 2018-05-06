@@ -13,5 +13,13 @@
         "php": ">=5.3.3",
         "xemlock/zend1-composer-installer": "*",
         "maniple/maniple-core": "*"
+    },
+    "autoload": {
+        "classmap": [
+            "Bootstrap.php"
+        ],
+        "psr-0": {
+            "ManipleDrive_": "library/"
+        }
     }
 }

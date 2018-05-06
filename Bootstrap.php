@@ -30,7 +30,7 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
         return array(
             'scriptPaths' => dirname(__FILE__) . '/views/scripts',
             'helperPaths' => array(
-                'ManipleDrive_View_Helper_' => dirname(__FILE__) . '/library/View/Helper/',
+                'ManipleDrive_View_Helper_' => dirname(__FILE__) . '/library/ManipleDrive/View/Helper/',
             )
         );
     }
@@ -47,7 +47,7 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
         /** @var ManipleCore\Doctrine\Config $config */
         $config = $bootstrap->getResource('EntityManager.config');
         if ($config) {
-            $config->addPath(__DIR__ . '/library/Entity');
+            $config->addPath(__DIR__ . '/library/ManipleDrive/Entity');
         }
     }
 }
