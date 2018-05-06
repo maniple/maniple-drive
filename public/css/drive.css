@@ -569,7 +569,6 @@ html.grabbing * {
 #drive-dir-contents .no-items-message {
     text-align: center;
     padding: 1em 2em;
-    border-bottom: 1px solid #eaeaea;
     color: #888;
     font-style: italic;
     display: none;
@@ -1032,6 +1031,9 @@ html.grabbing * {
     table-layout: fixed;
     width: 100%;
     border-bottom: 1px solid rgb(234, 234, 234);
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
 }
 
 .dir-entry.dir-entry-header {
@@ -1253,6 +1255,7 @@ html.grabbing * {
     padding: 0;
     margin: 0;
     background: #ccc url(../img/display-mode.png) no-repeat 0 0;
+    cursor: pointer;
 }
 .dirbrowser-display-mode-icon.display-mode-media {
     background-position: -24px 0;
@@ -1265,3 +1268,13 @@ html.grabbing * {
 }
 /* }}} */
 
+/* Retina-specific stuff */
+@media
+only screen and (-webkit-min-device-pixel-ratio: 2),
+only screen and (   min--moz-device-pixel-ratio: 2),
+only screen and (     -o-min-device-pixel-ratio: 2/1) {
+  .dirbrowser-display-mode-icon {
+    background-image: url(../img/display-mode@2x.png);
+    background-size: 48px 24px;
+  }
+}
