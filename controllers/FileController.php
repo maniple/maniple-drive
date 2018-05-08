@@ -136,23 +136,26 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
             throw new Exception('Plik nie jest obrazem');
         }
 
+        $options = array(
+            'width'  => 0,
+            'height' => 0,
+            'scale'  => true,
+            'crop'   => true,
+        );
+
         if (null !== ($dims = $this->getScalarParam('dims'))) {
             $dims = explode('x', $dims);
             $width = (int) array_shift($dims);
             $height = (int) array_shift($dims);
-        } else {
-            $width = 0;
-            $height = 0;
+            $options['width'] = min($width, 1024);
+            $options['height'] = min($height, 1024);
+        } elseif (null !== ($max = $this->getScalarParam('max'))) {
+            $options['max'] = max(0, $max);
         }
 
         $image_path = $this->getResource('core.image_helper')->getImagePath(
             $file->getPath(),
-            array(
-                'width' => min($width, 1024),
-                'height' => min($height, 1024),
-                'scale' => true,
-                'crop' => true,
-            )
+            $options
         );
 
         $options = array(
