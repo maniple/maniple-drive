@@ -238,12 +238,12 @@ DirBrowser.prototype._initDiskUsageView = function () { // {{{
 
 DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
     // skonwertuj przekazane wartosci do liczb
-    used = used | 0;
-    available = available | 0;
+    used = Math.max(used, 0) || 0;
+    available = Math.max(available, 0) || 0;
 
     this.emit('diskUsageChanged', {
         diskSize:  available,
-        freeBytes: available - +used,
+        freeBytes: available - used,
         usedBytes: +used
     });
 
