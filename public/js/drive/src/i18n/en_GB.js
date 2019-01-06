@@ -79,7 +79,8 @@ var I18n = {
             owner:              'Owner',
             mtime:              'Last modified',
             ctime:              'Created',
-            timeSeparator:      'by'
+            timeSeparator:      'by',
+            quota:              'Max capacity'
         },
         opShareDir: {
             opname:             'Sharing',

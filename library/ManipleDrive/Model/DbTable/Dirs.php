@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @method ManipleDrive_Model_Dir findRow(mixed $id)
+ * @method ManipleDrive_Model_Dir createRow(array $data = array(), string $defaultSource = null)
+ */
 class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 {
     const className = __CLASS__;
@@ -17,11 +21,12 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
 
     protected $_name = ManipleDrive_Model_TableNames::TABLE_DIRS;
 
-    protected $_rowClass = 'ManipleDrive_Model_Dir';
+    protected $_rowClass = ManipleDrive_Model_Dir::className;
+
     protected $_referenceMap = array(
         'ParentDir' => array(
             'columns'       => 'parent_id',
-            'refTableClass' => 'ManipleDrive_Model_DbTable_Dirs',
+            'refTableClass' => self::className,
             'refColumns'    => 'dir_id',
         ),
     );

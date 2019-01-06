@@ -2,6 +2,8 @@
 
 class ManipleDrive_FileController_EditAction extends Maniple_Controller_Action_StandaloneForm
 {
+    protected $_actionControllerClass = ManipleDrive_FileController::className;
+
     protected $_ajaxFormHtml = true;
 
     /**

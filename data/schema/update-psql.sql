@@ -14,3 +14,6 @@ ALTER TABLE {PREFIX}drive_dirs ALTER COLUMN drive_id DROP NOT NULL;
 
 -- http://stackoverflow.com/questions/643690/maximum-mimetype-length-when-storing-type-in-db
 ALTER TABLE {PREFIX}drive_files ALTER COLUMN mimetype TYPE VARCHAR(128);
+
+-- 2019-01-06
+ALTER TABLE {PREFIX}drive_dirs ADD COLUMN max_byte_size BIGINT NOT NULL DEFAULT 0 CHECK (max_byte_size >= 0);

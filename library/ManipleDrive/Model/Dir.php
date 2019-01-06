@@ -1,9 +1,15 @@
 <?php
 
+/**
+ * @property ManipleDrive_Model_Dir $ParentDir
+ * @method ManipleDrive_Model_DbTable_Dirs getTable()
+ */
 class ManipleDrive_Model_Dir
     extends ManipleDrive_Model_HierarchicalRow
     implements ManipleDrive_Model_DirInterface
 {
+    const className = __CLASS__;
+
     protected $_tableClass = ManipleDrive_Model_DbTable_Dirs::className;
 
     protected $_idColumn = 'dir_id';
@@ -287,6 +293,19 @@ class ManipleDrive_Model_Dir
                 $drive->quota && $drive->getDiskUsage() + $size > $drive->quota
             ) {
                 throw new Exception('Brak miejsca na dysku aby zapisać plik');
+            }
+
+            /** @var ManipleDrive_Model_Dir $d */
+            $d = $this;
+            while ($d) {
+                $maxByteSize = $d->getMaxByteSize();
+                if ($maxByteSize > 0 && $d->byte_count + $size > $maxByteSize) {
+                    throw new Exception(sprintf(
+                        'Brak miejsca aby zapisać plik w tym katalogu. Pozostało %s wolnego miejsca',
+                        Zefram_Filter_FileSize::filterStatic($maxByteSize - $this->byte_count)
+                    ));
+                }
+                $d = $d->getParent();
             }
 
             $md5 = md5_file($path);
@@ -766,4 +785,22 @@ class ManipleDrive_Model_Dir
         $dir->save();
         return $dir;
     } // }}}
+
+    /**
+     * @return int
+     */
+    public function getMaxByteSize()
+    {
+        return (int) $this->max_byte_size;
+    }
+
+    /**
+     * @param int $maxByteSize
+     * @return ManipleDrive_Model_Dir
+     */
+    public function setMaxByteSize($maxByteSize)
+    {
+        $this->max_byte_size = max($maxByteSize, 0);
+        return $this;
+    }
 }

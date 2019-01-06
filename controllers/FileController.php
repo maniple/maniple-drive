@@ -2,6 +2,8 @@
 
 class ManipleDrive_FileController extends ManipleDrive_Controller_Action
 {
+    const className = __CLASS__;
+
     public function readAction() // {{{
     {
         $file_id = (string) $this->getScalarParam('file_id');

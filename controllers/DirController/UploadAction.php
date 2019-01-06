@@ -290,20 +290,6 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         }
 
         $result = $this->getDriveHelper()->getViewableData($file);
-
-        // do zwracanych danych dolacz jeszcze informacje o zajetym
-        // miejscu na dysku
-        try {
-            $drive = $dir->getDrive();
-
-            // zwroc te wartosci jako floaty, zeby uniknac przekroczenia zakresu
-            // liczb calkowitych na 32-bitowych maszynach
-            $result['disk_usage'] = $drive->getDiskUsage();
-            $result['quota'] = (float) $drive->quota;
-        } catch (Exception $e) {
-            $result['disk_usage'] = '';
-            $result['quota'] = '';
-        }
         $result['file'] = $file;
 
         return $result;

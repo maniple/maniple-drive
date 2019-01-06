@@ -59,7 +59,7 @@ class ManipleDrive_DirController extends ManipleDrive_Controller_Action
                 $shares = array();
             }
         } else {
-            $rows = $this->getDriveHelper()->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')->fetchDirShares($dir->dir_id);
+            $rows = $this->getDriveHelper()->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Dirs::className)->fetchDirShares($dir->dir_id);
             $shares = array();
 
             $user_ids = array();

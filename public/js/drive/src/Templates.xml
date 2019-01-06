@@ -403,6 +403,10 @@ Loading directory contents...
       <span class="user">{{ dir.created_by.name }}</span>
     </div>
   </dd>
+  {{# if dir.quota }}
+    <dt>{{ str.quota }}</dt>
+    <dd>{{ fileSize dir.quota }}</dd>
+  {{/ if}}
  </dl>
 </div>
 ]]>

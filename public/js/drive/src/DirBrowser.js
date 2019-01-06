@@ -292,7 +292,7 @@ DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
         // klase paska postepu
         if (percent < 75) {
             level = 'ok';
-        } else if (percent < 95) {
+        } else if (percent < 90) {
             level = 'warning';
         } else {
             level = 'danger';
@@ -499,14 +499,16 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
         };
     }
 
-    if(0)ops.push({
-        op: 'dirDetails',
-        title: Drive.Util.i18n('DirBrowser.opDirDetails.opname')
-    });
-    handlers.dirDetails = function() {
-        self.opDirDetails(dir);
-        self._closeOpdd();
-    };
+    if (perms.admin) {
+        ops.push({
+            op: 'dirDetails',
+            title: Drive.Util.i18n('DirBrowser.opDirDetails.opname')
+        });
+        handlers.dirDetails = function() {
+            self.opDirDetails(dir);
+            self._closeOpdd();
+        };
+    }
 
     // brak opRemoveDir bo nie mozna usunac biezacego katalogu
 
@@ -1315,7 +1317,7 @@ DirBrowser.prototype.opRemoveFile = function(file) { // {{{
             response = response || {error: 'Nieoczekiwana odpowiedź od serwera'};
             if (!response.error) {
                 self._removeFile(file);
-                self._updateDiskUsage(response.disk_usage, response.quota);
+                self._updateDiskUsage(response.data.disk_usage, response.data.quota);
                 dialog.close();
             }
         }

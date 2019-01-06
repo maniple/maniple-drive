@@ -70,7 +70,7 @@ class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
             $db = $this->getResource('db');
-            $drive = $this->getDriveHelper()->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Drives')
+            $drive = $this->getDriveHelper()->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Drives::className)
                 ->fetchRow(array('owner = ?' => $this->getSecurityContext()->getUser()->getId()), 'drive_id');
             if (empty($drive)) {
                 throw new Exception('Drive was not found');

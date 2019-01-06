@@ -111,6 +111,7 @@ class ManipleDrive_Helper
     const REMOVE = 'remove';
     const SHARE  = 'share';
     const CHOWN  = 'chown';
+    const ADMIN  = 'admin';
 
     const PERM_CHANGE_OWNER = 'drive.change_owner';
     const PERM_READ_ANY     = 'drive.read_any';
@@ -133,6 +134,7 @@ class ManipleDrive_Helper
                 self::REMOVE => ManipleDrive_Access_Access::canDelete($access),
                 self::SHARE  => ManipleDrive_Access_Access::canShare($access),
                 self::CHOWN  => $this->getSecurityContext()->isAllowed(self::PERM_CHANGE_OWNER),
+                self::ADMIN  => $this->getSecurityContext()->isSuperUser(),
             );
 
             $this->_dirPermissions[$id] = $perms;
@@ -172,6 +174,7 @@ class ManipleDrive_Helper
                     self::REMOVE => !$dir->is_system && !$dir->system_count && !$dir->isInternal() && $dir->parent_id,
                     self::SHARE  => true,
                     self::CHOWN  => true,
+                    self::ADMIN  => true,
                 );
             } else {
                 $write  = !$dir->is_readonly && ($this->getSecurityContext()->isAllowed(self::PERM_EDIT_ANY) || $dir->isWritable($user_id));
@@ -194,6 +197,7 @@ class ManipleDrive_Helper
                     self::REMOVE => $remove,
                     self::SHARE  => $dir->owner && $dir->owner == $user_id,
                     self::CHOWN  => $this->getSecurityContext()->isAllowed(self::PERM_CHANGE_OWNER),
+                    self::ADMIN  => false,
                 );
             }
 
@@ -221,6 +225,7 @@ class ManipleDrive_Helper
                 $perms[self::RENAME] = true;
                 $perms[self::REMOVE] = true;
                 $perms[self::SHARE]  = true;
+                $perms[self::ADMIN]  = $this->getSecurityContext()->isSuperUser();
             }
         }
 
@@ -333,6 +338,18 @@ class ManipleDrive_Helper
             $data['owner'] = $this->fetchUserData((int) $data['owner']);
             $data['created_by'] = $this->fetchUserData((int) $data['created_by']);
             $data['modified_by'] = $this->fetchUserData((int) $data['modified_by']);
+        }
+
+        if ($row instanceof ManipleDrive_Model_Dir) {
+            $dir = $row;
+        } elseif ($row instanceof ManipleDrive_Model_File) {
+            $dir = $row->Dir;
+        } else {
+            $dir = null;
+        }
+
+        if ($dir) {
+            $data = array_merge($data, $this->getUsageSummary($dir));
         }
 
         return $data;
@@ -563,20 +580,45 @@ class ManipleDrive_Helper
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         if ($dir instanceof ManipleDrive_Model_Dir) {
-            try {
-                $drive = $dir->getDrive();
-                if ($drive) {
-                    $result['disk_usage'] = $drive->getDiskUsage();
-                    $result['quota'] = (float) $drive->quota;
-                }
-            } catch (Exception $e) {
-                $result['disk_usage'] = $dir->byte_count;
-                $result['quota'] = null;
-            }
+            $result = array_merge($result, $this->getUsageSummary($dir));
         }
 
         return $result;
     } // }}}
+
+    public function getUsageSummary(ManipleDrive_Model_Dir $dir)
+    {
+        $quota = null;
+        $diskUsage = null;
+
+        try {
+            /** @var ManipleDrive_Model_Drive $drive */
+            $drive = $dir->getDrive();
+            if ($drive) {
+                $result['disk_usage'] = +$drive->getDiskUsage();
+                $result['quota'] = +$drive->quota;
+            }
+        } catch (Exception $e) {}
+
+        if ($quota === null) {
+            $diskUsage = +$dir->byte_count;
+
+            $d = $dir;
+            while ($d) {
+                $maxByteSize = +$d->getMaxByteSize();
+                if ($maxByteSize) {
+                    $quota = $maxByteSize;
+                    break;
+                }
+                $d = $d->getParentDir();
+            }
+        }
+
+        return array(
+            'quota'      => +$quota,
+            'disk_usage' => $diskUsage,
+        );
+    }
 
     public function _userToArray($user)
     {

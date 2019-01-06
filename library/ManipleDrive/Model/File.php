@@ -1,9 +1,15 @@
 <?php
 
+/**
+ * @property ManipleDrive_Model_Dir $Dir
+ * @method ManipleDrive_Model_DbTable_Files getTable()
+ */
 class ManipleDrive_Model_File
     extends Zefram_Db_Table_Row
     implements ManipleDrive_Model_FileInterface
 {
+    const className = __CLASS__;
+
     protected $_tableClass = ManipleDrive_Model_DbTable_Files::className;
 
     /**
@@ -138,4 +144,14 @@ class ManipleDrive_Model_File
 
         return $result;
     } // }}}
+
+    /**
+     * Retrieves all metadata of the file
+     *
+     * @return Zend_Db_Table_Rowset_Abstract
+     */
+    public function getMetas()
+    {
+        return $this->getTable()->getFileMetas($this);
+    }
 }

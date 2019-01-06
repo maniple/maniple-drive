@@ -30,6 +30,7 @@ html.grabbing * {
 #drive-du {
   position: relative;
   z-index: 1; /* potrzebne do przykrycia opdd.right */
+  top: 15px;
 }
 
 #drive-du .pane {
@@ -48,17 +49,35 @@ html.grabbing * {
      -moz-box-shadow: 0 2px 3px #aaa;
           box-shadow: 0 2px 3px #aaa;
 }
-#drive-du .progress-bar {
+#drive-du .progress {
   width: 136px;
-  height: 8px;
+  height: 10px;
   margin: 2px 0 0;
   padding: 1px;
   border: 1px solid #bbb;
   background: #fff;
 }
-#drive-du .progress-bar > .bar {
+#drive-du .progress > .progress-bar {
+  display: block;
+  float: none;
   min-width: 1px;
+  height: 8px;
+  border: 0;
+  background: #aaa;
+  transition: background-color 250ms;
 }
+#drive-du .progress > .progress-bar.progress-bar-ok {
+  background-color: #74d359;
+}
+#drive-du .progress > .progress-bar.progress-bar-warning {
+  background-color: #fcd72a;
+}
+#drive-du .progress > .progress-bar.progress-bar-danger {
+  background-color: #d24c4c;
+}
+
+
+
 #drive-du dl {
   margin: 12px 0 0;
   padding: 0;
@@ -108,7 +127,7 @@ html.grabbing * {
   color: #888;
 }
 #drive-du.no-limit .percent,
-#drive-du.no-limit .progress-bar {
+#drive-du.no-limit .progress {
   display: none;
 }
 /* }}} */

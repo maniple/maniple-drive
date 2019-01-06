@@ -1,9 +1,18 @@
 <?php
 
+/**
+ * @method ManipleDrive_Helper getDriveHelper()
+ * @method void assertAccess(bool $expr)
+ */
 class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action_StandaloneForm
 {
+    protected $_actionControllerClass = ManipleDrive_FileController::className;
+
     protected $_ajaxFormHtml = true;
 
+    /**
+     * @var ManipleDrive_Model_File
+     */
     protected $_file;
 
     protected function _prepare() // {{{
@@ -28,17 +37,12 @@ class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action
     protected function _process() // {{{
     {
         $file = $this->_file;
-
-        try {
-            $drive = $file->Dir->getDrive();
-        } catch (Exception $e) {
-            $drive = null;
-        }
+        $dir = $file->Dir;
 
         // pobierz teraz identyfikator pliku, poniewaz po usunieciu pliku
         // nie bedzie on dostepny
-        $file_id = $file->file_id;
-        $name = $file->name;
+        $file_id = $file->getId();
+        $name = $file->getName();
 
         $db = $file->getAdapter();
         $db->beginTransaction();
@@ -55,11 +59,12 @@ class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action
 
         $response = Zefram_Json::encode(array(
             'status' => 'success',
-            'data' => array(
-                'file_id' => $file_id,
-                'name' => $name,
-                'disk_usage' => $drive ? $drive->getDiskUsage() : null,
-                'quota' => (float) $drive ? $drive->quota : null,
+            'data' => array_merge(
+                array(
+                    'file_id' => $file_id,
+                    'name' => $name,
+                ),
+                $this->getDriveHelper()->getUsageSummary($dir)
             ),
         ));
 
@@ -67,6 +72,7 @@ class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action
         header('Connection: close');
         header('Content-Length: ' . strlen($response));
 
+        /** @noinspection PhpStatementHasEmptyBodyInspection */
         while (@ob_end_clean());
 
         echo $response;

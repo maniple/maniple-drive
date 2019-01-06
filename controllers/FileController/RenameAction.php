@@ -7,6 +7,8 @@
  */
 class ManipleDrive_FileController_RenameAction extends Maniple_Controller_Action_StandaloneForm
 {
+    protected $_actionControllerClass = ManipleDrive_FileController::className;
+
     protected $_ajaxFormHtml = false;
 
     protected $_file;

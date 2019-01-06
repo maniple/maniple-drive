@@ -148,7 +148,6 @@ class ManipleDrive_Access_Manager
      * with active AccessManager instance as the first (and only) parameter.
      * The result of the invocation will be stored for later use.
      *
-     * @param \Zend\EventManager\SharedEventManager $sharedEvents
      * @param ManipleDrive_Access_HandlerInterface|callable $handler
      * @param int $priority OPTIONAL
      * @throws ManipleDrive_Access_Exception_InvalidArgumentException

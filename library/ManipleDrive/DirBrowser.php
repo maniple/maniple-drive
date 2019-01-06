@@ -7,7 +7,12 @@ class ManipleDrive_DirBrowser
      */
     protected $_userId;
 
-    public function __construct($driveHelper, $userId = null) // {{{
+    /**
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    public function __construct(ManipleDrive_Helper $driveHelper, $userId = null) // {{{
     {
         $this->_driveHelper = $driveHelper;
 
@@ -18,6 +23,7 @@ class ManipleDrive_DirBrowser
 
     /**
      * @param  string $path
+     * @param  array $options OPTIONAL
      * @return array
      */
     public function browse($path, array $options = null) // {{{
@@ -31,6 +37,7 @@ class ManipleDrive_DirBrowser
     /**
      * @param  ManipleDrive_Model_DirInterface $dir
      * @param  ManipleDrive_Model_DirInterface[] $parents
+     * @param  array $options
      * @return array
      */
     public function browseDir(ManipleDrive_Model_DirInterface $dir, array $parents = null, array $options = null) // {{{

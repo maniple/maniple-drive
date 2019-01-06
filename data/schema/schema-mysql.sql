@@ -87,6 +87,8 @@ CREATE TABLE {PREFIX}drive_dirs (
 
     byte_count      BIGINT UNSIGNED NOT NULL DEFAULT 0,
 
+    max_byte_size   BIGINT UNSIGNED NOT NULL DEFAULT 0,
+
     owner           INTEGER,
 
     -- czas utworzenia katalogu
@@ -293,3 +295,20 @@ CREATE INDEX {PREFIX}drive_files_dir_id_name_idx
 CREATE INDEX {PREFIX}drive_files_filter_idx 
     ON {PREFIX}drive_files (filter);
 
+
+CREATE TABLE {PREFIX}drive_file_metas (
+
+    file_meta_id  INTEGER PRIMARY KEY AUTO_INCREMENT,
+
+    file_id       INTEGER NOT NULL,
+
+    name          VARCHAR(255) NOT NULL,
+
+    value         TEXT,
+
+    CONSTRAINT {PREFIX}drive_file_metas_file_id_fkey
+        FOREIGN KEY (file_id) REFERENCES {PREFIX}drive_files (file_id),
+
+    UNIQUE INDEX {PREFIX}drive_file_metas_file_meta_id_name_idx (file_meta_id, name)
+
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

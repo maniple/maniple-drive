@@ -15,7 +15,9 @@ $(function() {
             dirNames:       dirBrowser_dirNames,
         }) | raw }});
 
-        {% if dir %}dirBrowser.setInitDir({{ dir | json_encode | raw }}){% endif %}
+        {% if dir -%}
+        dirBrowser.setInitDir({{ dir | json_encode | raw }});
+        {%- endif %}
     });
 });
 </script>
