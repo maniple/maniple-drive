@@ -291,7 +291,7 @@ CREATE TABLE {PREFIX}drive_file_metas (
     CONSTRAINT {PREFIX}drive_file_metas_file_id_fkey
         FOREIGN KEY (file_id) REFERENCES {PREFIX}drive_files (file_id),
 
-    UNIQUE INDEX {PREFIX}drive_file_metas_file_meta_id_name_idx (file_meta_id, name)
+    CONSTRAINT {PREFIX}drive_file_metas_file_meta_id_name_idx UNIQUE (file_meta_id, name)
 
 );
 
