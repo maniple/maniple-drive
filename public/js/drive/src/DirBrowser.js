@@ -215,7 +215,7 @@ DirBrowser.prototype._initDiskUsageView = function () { // {{{
     var str = Drive.Util.i18n('DirBrowser.diskUsage'),
         element = this._renderTemplate('DirBrowser.diskUsage', {str: str}),
         view = new Drive.View(element, [
-            'used', 'available'
+            'used', 'usedPercentage', 'available'
             // opcjonalne: 'percent', 'progressBar'
         ]),
         progressBar = view.hooks.progressBar;
@@ -237,7 +237,10 @@ DirBrowser.prototype._initDiskUsageView = function () { // {{{
 }; // }}}
 
 DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
-    available = +available > 0 ? +available : Infinity;
+    // skonwertuj przekazane wartosci do liczb
+    used = used | 0;
+    available = available | 0;
+
     this.emit('diskUsageChanged', {
         diskSize:  available,
         freeBytes: available - +used,
@@ -257,10 +260,6 @@ DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
         level, levelTemplate,
         percent;
 
-    // skonwertuj przekazane wartosci do liczb
-    used = +used || 0;
-    available = +available || 0;
-
     percent = available ? Math.round(100 * used / available) : 0;
 
     // jezeli nie podano rozmiaru dysku przyjmij, ze jest on nieograniczony
@@ -274,6 +273,12 @@ DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
     }
 
     hooks.used.text(Viewtils.fsize(used));
+
+    if (available) {
+        hooks.usedPercentage.show();
+    } else {
+        hooks.usedPercentage.hide();
+    }
 
     if (hooks.percent) {
         if (percent === 0 && used > 0) {

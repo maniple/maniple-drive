@@ -220,7 +220,7 @@ var Drive = {
             var str = Drive.Util.i18n('DirBrowser.diskUsage'),
                 element = this._renderTemplate('DirBrowser.diskUsage', {str: str}),
                 view = new Drive.View(element, [
-                    'used', 'available'
+                    'used', 'usedPercentage', 'available'
                     // opcjonalne: 'percent', 'progressBar'
                 ]),
                 progressBar = view.hooks.progressBar;
@@ -242,7 +242,10 @@ var Drive = {
         }; // }}}
 
         DirBrowser.prototype._updateDiskUsage = function (used, available) { // {{{
-            available = +available > 0 ? +available : Infinity;
+            // skonwertuj przekazane wartosci do liczb
+            used = used | 0;
+            available = available | 0;
+
             this.emit('diskUsageChanged', {
                 diskSize:  available,
                 freeBytes: available - +used,
@@ -262,10 +265,6 @@ var Drive = {
                 level, levelTemplate,
                 percent;
 
-            // skonwertuj przekazane wartosci do liczb
-            used = +used || 0;
-            available = +available || 0;
-
             percent = available ? Math.round(100 * used / available) : 0;
 
             // jezeli nie podano rozmiaru dysku przyjmij, ze jest on nieograniczony
@@ -279,6 +278,12 @@ var Drive = {
             }
 
             hooks.used.text(Viewtils.fsize(used));
+
+            if (available) {
+                hooks.usedPercentage.show();
+            } else {
+                hooks.usedPercentage.hide();
+            }
 
             if (hooks.percent) {
                 if (percent === 0 && used > 0) {
@@ -3421,7 +3426,7 @@ var Drive = {
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.used)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</dt>\n<dd>\n<span data-hook=\"used\">"
             + escapeExpression((helper = helpers.fileSize || (depth0 && depth0.fileSize),options={hash:{},data:data},helper ? helper.call(depth0, (depth0 && depth0.used), options) : helperMissing.call(depth0, "fileSize", (depth0 && depth0.used), options)))
-            + "</span>\n<span class=\"percent\">(<span data-hook=\"percent\"></span>%)</span>\n</dd>\n</dl>\n<dl class=\"available\">\n<dt>"
+            + "</span>\n<span data-hook=\"used-percentage\" class=\"percent\">(<span data-hook=\"percent\"></span>%)</span>\n</dd>\n</dl>\n<dl class=\"available\">\n<dt>"
             + escapeExpression(((stack1 = ((stack1 = (depth0 && depth0.str)),stack1 == null || stack1 === false ? stack1 : stack1.available)),typeof stack1 === functionType ? stack1.apply(depth0) : stack1))
             + "</dt>\n<dd data-hook=\"available\"></dd>\n</dl>\n</div>\n</div>";
           return buffer;

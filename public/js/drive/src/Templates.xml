@@ -95,7 +95,7 @@ Loading directory contents...
    <dt>{{ str.used }}</dt>
    <dd>
     <span data-hook="used">{{ fileSize used }}</span>
-    <span class="percent">(<span data-hook="percent"></span>%)</span>
+    <span data-hook="used-percentage" class="percent">(<span data-hook="percent"></span>%)</span>
    </dd>
   </dl>
   <dl class="available">
