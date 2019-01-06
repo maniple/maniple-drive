@@ -333,6 +333,8 @@ DirBrowser.prototype._initUploader = function () { // {{{
         // zaktualizuj informacje o zajmowanym miejscu na dysku:
         // odpowiedz musi zawierac pola disk_usage i quota
         self._updateDiskUsage(response.disk_usage, response.quota);
+
+        self.emit('fileUploaded', response);
     });
 
     self._uploader = uploader;
@@ -675,7 +677,7 @@ DirBrowser.prototype.setDir = function (dir) { // {{{
     // pokaz zawartosc katalogu
     self._renderDirContents(dir);
 
-    self.emit('dirChanged');
+    self.emit('dirChanged', dir);
 }; // }}}
 
 DirBrowser.prototype.getDisplayMode = function () {

@@ -338,6 +338,8 @@ var Drive = {
                 // zaktualizuj informacje o zajmowanym miejscu na dysku:
                 // odpowiedz musi zawierac pola disk_usage i quota
                 self._updateDiskUsage(response.disk_usage, response.quota);
+
+                self.emit('fileUploaded', response);
             });
 
             self._uploader = uploader;
@@ -680,7 +682,7 @@ var Drive = {
             // pokaz zawartosc katalogu
             self._renderDirContents(dir);
 
-            self.emit('dirChanged');
+            self.emit('dirChanged', dir);
         }; // }}}
 
         DirBrowser.prototype.getDisplayMode = function () {
@@ -2256,13 +2258,25 @@ var Drive = {
                 // onreadystatechange handler.
                 // Source: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.xml/dCV-F7ZuaOg
                 xhr.onreadystatechange = function () {
-                    if (this.readyState == 4 && !self.isAborted) {
-                        self.emit('complete', this.responseText);
+                    self.status = this.status;
+                    self.statusText = this.statusText;
+
+                    if (this.readyState === 4 && !self.isAborted) {
+                        if (200 <= this.status && this.status < 400) {
+                            self.emit('complete', this.responseText);
+                        } else {
+                            self.emit('error', this.statusText);
+                        }
                     }
                 };
 
+                // onerror fires when there is a failure on the network level. If the error only exists
+                // on the application level, e.g., an HTTP error code is sent, then onload still fires.
+                // https://stackoverflow.com/questions/10584318/when-should-xmlhttprequests-onerror-handler-fire
                 xhr.onerror = function () {
-                    self.emit('error');
+                    self.status = this.status;
+                    self.statusText = this.statusText;
+                    self.emit('error', this.statusText);
                 };
 
                 if (xhr.upload) {

@@ -334,13 +334,25 @@ FileUpload.XHRUpload = function (file, url, options) { // {{{
         // onreadystatechange handler.
         // Source: https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.xml/dCV-F7ZuaOg
         xhr.onreadystatechange = function () {
-            if (this.readyState == 4 && !self.isAborted) {
-                self.emit('complete', this.responseText);
+            self.status = this.status;
+            self.statusText = this.statusText;
+
+            if (this.readyState === 4 && !self.isAborted) {
+                if (200 <= this.status && this.status < 400) {
+                    self.emit('complete', this.responseText);
+                } else {
+                    self.emit('error', this.statusText);
+                }
             }
         };
 
+        // onerror fires when there is a failure on the network level. If the error only exists
+        // on the application level, e.g., an HTTP error code is sent, then onload still fires.
+        // https://stackoverflow.com/questions/10584318/when-should-xmlhttprequests-onerror-handler-fire
         xhr.onerror = function () {
-            self.emit('error');
+            self.status = this.status;
+            self.statusText = this.statusText;
+            self.emit('error', this.statusText);
         };
 
         if (xhr.upload) {
