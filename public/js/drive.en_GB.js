@@ -286,10 +286,11 @@ var Drive = {
             }
 
             if (hooks.percent) {
+                var percentText = percent;
                 if (percent === 0 && used > 0) {
-                    percent = '<1';
+                    percentText = '<1';
                 }
-                hooks.percent.text(percent);
+                hooks.percent.text(percentText);
             }
 
             if (progressBar) {
@@ -313,9 +314,7 @@ var Drive = {
                     progressBarClass += level;
                 }
 
-                progressBar.animate({width: percent + '%'}, 500, function () {
-                    progressBar.attr('class', progressBarClass);
-                });
+                progressBar.attr('class', progressBarClass).animate({width: percent + '%'}, 500);
             }
         }; // }}}
 

@@ -60,6 +60,7 @@ html.grabbing * {
 #drive-du .progress > .progress-bar {
   display: block;
   float: none;
+  width: 0;
   min-width: 1px;
   height: 8px;
   border: 0;
