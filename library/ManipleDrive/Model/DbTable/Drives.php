@@ -48,14 +48,24 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
             return false;
         }
 
-        $path = ManipleDrive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2)
-              . '/' . substr($md5, 2);
+        $storagePath = ManipleDrive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2);
 
-        if ($check && !is_file($path)) {
+        $paths = array(
+            $storagePath . '/' . $md5,
+            $storagePath . '/' . substr($md5, 2), // legacy
+        );
+
+        foreach ($paths as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        if ($check) {
             return false;
         }
 
-        return $path;
+        return $paths[0];
     } // }}}
 
     /**
@@ -67,7 +77,7 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
         // roznica w stosunku do getFilePath() jest taka, ze utworzony zostaje
         // katalog nazwany pierwszymi dwoma literami sumy MD5
         $path = ManipleDrive_FileStorage::requireStorageDir('drive/' . substr($md5, 0, 2))
-              . substr($md5, 2);
+              . $md5;
 
         return $path;
     } // }}}
