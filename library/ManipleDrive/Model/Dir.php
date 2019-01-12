@@ -277,6 +277,7 @@ class ManipleDrive_Model_Dir
             throw new InvalidArgumentException('Plik nie został znaleziony');
         }
 
+        /** @var Zend_EventManager_EventManager $eventManager */
         $eventManager = Zend_Controller_Front::getInstance()->getParam('bootstrap')->getResource('drive.helper')->getEventManager();
         $del_path = $isTempFile ? $path : null;
 
@@ -440,7 +441,7 @@ class ManipleDrive_Model_Dir
             $file = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)->createRow($data);
 
             if ($eventManager) {
-                $eventManager->trigger('drive.fileBeforeSave', null, array('file' => (object) $file->toArray()));
+                $eventManager->trigger('drive.fileBeforeSave', null, array('file' => $file));
             }
 
             $file->save();
@@ -463,7 +464,7 @@ class ManipleDrive_Model_Dir
         }
 
         if ($eventManager) {
-            $eventManager->trigger('drive.fileSaved', null, array('file' => (object) $file->toArray()));
+            $eventManager->trigger('drive.fileSaved', null, array('file' => $file));
         }
 
         return $file;

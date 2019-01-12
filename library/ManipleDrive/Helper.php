@@ -32,6 +32,11 @@ class ManipleDrive_Helper
      */
     protected $_security;
 
+    public function __construct()
+    {
+        $this->setEventManager(new Zend_EventManager_EventManager());
+    }
+
     /**
      * @param ManipleDrive_Access_Manager $security
      * @return $this
@@ -56,7 +61,24 @@ class ManipleDrive_Helper
 
     public function setEventManager(Zend_EventManager_EventManager $eventManager)
     {
+        try {
+            /** @var Zend_Application_Bootstrap_BootstrapAbstract $bootstrap */
+            $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
+            $sharedEventManager = $bootstrap->getResource('SharedEventManager');
+        } catch (Exception $e) {
+            $sharedEventManager = null;
+        }
+
         $this->_eventManager = $eventManager;
+        $this->_eventManager->setIdentifiers(array(
+            __CLASS__,
+            'drive.helper',
+        ));
+
+        if ($sharedEventManager) {
+            $this->_eventManager->setSharedCollections($sharedEventManager);
+        }
+
         return $this;
     }
 
