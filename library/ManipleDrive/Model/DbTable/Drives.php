@@ -1,12 +1,16 @@
 <?php
 
+/**
+ * @method ManipleDrive_Model_Drive findRow(mixed $id)
+ * @method ManipleDrive_Model_Drive createRow(array $data = array(), string $defaultSource = null)
+ */
 class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
 {
     const className = __CLASS__;
 
     protected $_name = ManipleDrive_Model_TableNames::TABLE_DRIVES;
 
-    protected $_rowClass = 'ManipleDrive_Model_Drive';
+    protected $_rowClass = ManipleDrive_Model_Drive::className;
 
     protected $_referenceMap = array(
         'RootDir' => array(

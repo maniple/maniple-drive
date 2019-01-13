@@ -5,9 +5,13 @@
  *
  * @author xemlock
  * @version 2013-01-15
+ *
+ * @method ManipleDrive_Model_DbTable_Drives getTable()
  */
 class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
 {
+    const className = __CLASS__;
+
     protected $_tableClass = ManipleDrive_Model_DbTable_Drives::className;
 
     /**
