@@ -438,10 +438,15 @@ class ManipleDrive_Model_Dir
             }
 
             $db = $this->getAdapter();
-            $file = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)->createRow($data);
+
+            /** @var ManipleDrive_Model_DbTable_Files $filesTable */
+            $filesTable = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className);
+            $file = $filesTable->createRow($data);
 
             if ($eventManager) {
-                $eventManager->trigger('drive.fileBeforeSave', null, array('file' => $file));
+                $event = new ManipleDrive_FileEvent('drive.fileBeforeSave');
+                $event->setFile($file);
+                $eventManager->trigger($event);
             }
 
             $file->save();
@@ -464,7 +469,9 @@ class ManipleDrive_Model_Dir
         }
 
         if ($eventManager) {
-            $eventManager->trigger('drive.fileSaved', null, array('file' => $file));
+            $event = new ManipleDrive_FileEvent('drive.fileSaved');
+            $event->setFile($file);
+            $eventManager->trigger($event);
         }
 
         return $file;

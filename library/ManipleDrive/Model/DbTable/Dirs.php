@@ -68,6 +68,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
             if ($cache = self::_getCache()) {
                 // jezeli ustawiono cache, uzyj cache'owanej tablicy
                 $key = 'ManipleDrive_DirAccess_' . $user_id;
+                // @fixme Data\CachedArray ???
                 self::$_dirAccessCache[$user_id] = new Data\CachedArray($cache, $key, self::CACHE_TAG);
 
             } else {
@@ -190,7 +191,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
             // zas wartosc kolumny can_write jest niezerowa, uzytkownik ma
             // dostep rowniez do zapisu
             if ($user_id) {
-                $row = $this->_getTableFromString('ManipleDrive_Model_DbTable_DirShares')->fetchRow(array(
+                $row = $this->_getTableFromString(ManipleDrive_Model_DbTable_DirShares::className)->fetchRow(array(
                     'dir_id = ?' => $dir_id,
                     'user_id = ?' => $user_id,
                 ));
@@ -247,7 +248,7 @@ class ManipleDrive_Model_DbTable_Dirs extends Zefram_Db_Table
         $where = (array) $where;
         $where['dir_id = ?'] = (int) $dir_id;
 
-        $files = $this->_getTableFromString('ManipleDrive_Model_DbTable_Files')->fetchAll($where, $order);
+        $files = $this->_getTableFromString(ManipleDrive_Model_DbTable_Files::className)->fetchAll($where, $order);
 
         return $files;
     }
