@@ -1,0 +1,51 @@
+<div id="drive-dir-share">
+ <form class="form">
+  <div id="drive-dir-share-vis">
+   <label for="drive-dir-share-visibility">{{ str.visLabel }}</label>
+   <table>
+    <tr>
+     <td>
+      <select name="visibility" id="drive-dir-share-visibility">
+       <option value="private">{{ str.visOptPrivate }}</option>
+       <option value="usersonly">{{ str.visOptUsersonly }}</option>
+       <option value="public">{{ str.visOptPublic }}</option>
+       <option value="inherited">{{ str.visOptInherited }}</option>
+      </select>
+     </td>
+     <td style="padding-left:6px">
+      <div id="drive-dir-share-vis-desc-private" class="vis-desc">{{ str.visDescPrivate }}</div>
+      <div id="drive-dir-share-vis-desc-usersonly" class="vis-desc">{{ str.visDescUsersonly }}</div>
+      <div id="drive-dir-share-vis-desc-public" class="vis-desc">{{ str.visDescPublic }}</div>
+      <div id="drive-dir-share-vis-desc-inherited" class="vis-desc">{{ str.visDescInherited }}</div>
+     </td>
+    </tr>
+   </table>
+  </div>
+  <div id="drive-dir-share-acl">
+   <label for="drive-dir-share-acl-search-user">{{ str.aclLabel }}</label>
+   <div id="drive-dir-share-acl-users">
+    <div class="highlight"></div>
+    <table>
+     <tbody data-hook="user-list">
+      <tr data-hook="empty-list-message">
+       <td id="drive-dir-share-acl-no-users" colspan="3"></td>
+      </tr>
+     </tbody>
+    </table>
+   </div>
+   <div id="drive-dir-share-acl-search">
+    <table>
+     <tr>
+      <td>
+       <input type="text" id="drive-dir-share-acl-search-user" data-hook="user-search" placeholder="{{ str.userSearch }}" />
+      </td>
+      <td>
+       <button type="button" class="btn btn-primary disabled" data-hook="user-add">{{ str.userAdd }}</button>
+      </td>
+     </tr>
+    </table>
+    <div class="hint">{{ str.searchHint }}</div>
+   </div>
+  </div>
+ </form>
+</div>

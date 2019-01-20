@@ -1,0 +1,14 @@
+<form method="post">
+    <div class="form-group{{#if errors }} has-error{{/if }}">
+        <label class="required" for="drive-dir-form-name">{{ str.nameLabel }}</label>
+        <input type="text" name="name" class="form-control" value="{{ value }}" autocomplete="off" id="drive-dir-form-name" />
+        {{#if errors }}
+        <div class="message-block">
+            <ul class="errors">
+            {{# errors }}
+                <li>{{ . }}</li>
+            {{/ errors }}
+            </ul>
+        {{/if }}
+    </div>
+</form>

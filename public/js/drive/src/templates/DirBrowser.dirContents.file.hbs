@@ -1,0 +1,63 @@
+<div class="dir-entry dir-entry-file">
+    <div class="col-grab" data-hook="grab"></div>
+    <div class="col-name">
+        <a href="#!" data-hook="name" title="{{ file.name }}">
+            <span class="dir-entry-icon" data-hook="icon">
+                {{#if file.thumb_url }}
+                <img src="{{ file.thumb_url }}" alt="" />
+                {{ else }}
+                <span class="drive-icon"></span>
+                {{/if }}
+            </span>
+            <span class="dir-entry-name">{{ file.name }}</span>
+        </a>
+    </div>
+    <div class="col-cmeta">
+        <div class="title">{{ file.title }}</div>
+        <div class="author">
+            {{#if file.author }}
+                {{ file.author }}
+            {{ else }}
+                <i>{{ str.noAuthor }}</i>
+            {{/if }}
+        </div>
+        <div class="desc">
+            {{#if file.description }}
+                {{ file.description }}
+            {{ else }}
+                <i>{{ str.noDescription }}</i>
+            {{/if }}
+        </div>
+    </div>
+    <div class="col-owner">{{ file.owner.name }}</div>
+    <div class="col-size">{{ fileSize file.size }}</div>
+    <div class="col-mtime">
+        <div class="full">{{ file.mtime.short }}</div>
+        <div class="date-only">{{ file.mtime.date }}</div>
+    </div>
+    <div class="col-ops">
+    {{#if ops }}
+        <div class="dropdown">
+            <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
+            <ul class="dropdown-menu dropdown-menu-right has-tip">
+            {{# ops.open }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.open }}
+            {{# ops.edit }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.edit }}
+            {{# ops.rename }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.rename }}
+            {{# ops.details }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.details }}
+            {{# ops.remove }}
+                <li class="divider"></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.remove }}
+            </ul>
+        </div>
+    {{/if }}
+    </div>
+</div>

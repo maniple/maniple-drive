@@ -1,0 +1,28 @@
+<div id="drive-dir-details">
+ <dl>
+  <dt>{{ str.name }}</dt>
+  <dd>{{ dir.name }}</dd>
+  <dt>{{ str.owner }}</dt>
+  <dd><span class="owner">{{ dir.owner.id }} ({{ dir.owner.name }})</span></dd>
+  <dt>{{ str.mtime }}</dt>
+  <dd>
+    <div class="mtime timelog">
+      <span class="time">{{ dir.mtime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ dir.modified_by.name }}</span>
+    </div>
+  </dd>
+  <dt>{{ str.ctime }}</dt>
+  <dd>
+    <div class="ctime timelog">
+      <span class="time">{{ dir.ctime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ dir.created_by.name }}</span>
+    </div>
+  </dd>
+  {{# if dir.quota }}
+    <dt>{{ str.quota }}</dt>
+    <dd>{{ fileSize dir.quota }}</dd>
+  {{/ if}}
+ </dl>
+</div>

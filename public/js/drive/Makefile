@@ -19,7 +19,7 @@ dist:
 
 src/%.js: $(wildcard src/i18n/*.js)
 
-src/Templates.js: src/Templates.xml
+src/Templates.js: $(wildcard src/templates/*.hbs)
 	php$(BIN_SUFFIX) build/build-templates $< $@
 
 dist/drive.%.js: src/deps.json $(wildcard src/*.js) src/Templates.js

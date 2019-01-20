@@ -1,0 +1,15 @@
+<tr>
+ <td class="user-name">
+  <div class="user-name-fn">{{ user.first_name }} {{ user.last_name }}</div>
+  <div class="user-name-un">{{ user.username }}</div>
+ </td>
+ <td class="user-perms">
+  <select name="shares[{{ user.user_id }}]">
+   <option value="0">{{ str.aclRead }}</option>
+   <option value="1"{{#if user.can_write }}selected{{/if }}>{{ str.aclReadWrite }}</option>
+  </select>
+ </td>
+ <td class="user-delete">
+  <button type="button" data-hook="user-delete" title="{{ str.userDelete }}">&times;</button>
+ </td>
+</tr>

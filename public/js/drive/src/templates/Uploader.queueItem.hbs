@@ -1,0 +1,14 @@
+<tr>
+ <td class="col-filename">
+  <span class="filename">{{ file.name }}</span>
+  <span class="error-message" data-hook="error-message"></span>
+ </td>
+ <td class="col-size">{{ fileSize file.size }}</td>
+ <td class="col-progress">
+  <span class="progress-text" data-hook="progress-text"></span>
+  <span class="progress-bar"><span class="bar" data-hook="progress-bar"></span></span>
+ </td>
+ <td class="col-cancel">
+  <button class="seamless" data-hook="cancel-button" title="{{ str.cancelButtonTooltip }}"></button>
+ </td>
+</tr>

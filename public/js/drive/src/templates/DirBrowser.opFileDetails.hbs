@@ -1,0 +1,36 @@
+<div id="drive-file-details">
+ <dl>
+  <dt>{{ str.name }}</dt>
+  <dd>{{ file.name }}</dd>
+  <dt>{{ str.owner }}</dt>
+  <dd><span class="owner">{{ file.owner.id }} ({{ file.owner.name }})</span></dd>
+  <dt>{{ str.mtime }}</dt>
+  <dd>
+    <div class="mtime timelog">
+      <span class="time">{{ file.mtime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ file.modified_by.name }}</span>
+    </div>
+  </dd>
+  <dt>{{ str.ctime }}</dt>
+  <dd>
+    <div class="ctime timelog">
+      <span class="time">{{ file.ctime.long }}</span>
+      <span class="sep">{{ str.timeSeparator }}</span>
+      <span class="user">{{ file.created_by.name }}</span>
+    </div>
+  </dd>
+  <dt>ID</dt>
+  <dd>{{ file.file_id }}</dd>
+  <dt>{{ str.size }}</dt>
+  <dd>{{ fileSize file.size }}</dd>
+  <dt>{{ str.mimetype }}</dt>
+  <dd>{{ file.mimetype }}</dd>
+  <dt>{{ str.md5sum }}</dt>
+  <dd>{{ file.md5sum }}</dd>
+    {{#if file.url }}
+        <dt>{{ str.url }}</dt>
+        <dd><code>{{ file.url }}</code></dd>
+    {{/if }}
+ </dl>
+</div>

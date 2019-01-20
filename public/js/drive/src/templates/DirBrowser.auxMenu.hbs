@@ -1,0 +1,17 @@
+<ul>
+{{#ops}}
+    <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+{{/ops}}
+{{#if moreOps.length }}
+    <li id="drive-more-ops" class="dropdown">
+        <a href="#drive-more-ops" data-toggle="dropdown">
+            {{ str.moreOps }} <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-right has-tip">
+        {{#moreOps}}
+            <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+        {{/moreOps}}
+        </ul>
+    </li>
+{{/ if }}
+</ul>

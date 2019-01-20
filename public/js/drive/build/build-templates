@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+// npm install -g handlebars@1.3.0
+
 $argv = $_SERVER['argv'];
 $SELF = basename($argv[0]);
 
@@ -21,49 +23,51 @@ $OUTPUT = empty($argv[2])
     ? dirname($INPUT) . '/' . $path['filename'] . '.js'
     : $_SERVER['argv'][2];
 
-$doc = new DOMDocument;
-if (false === @$doc->loadXML(file_get_contents($INPUT))) {
-    fprintf(STDERR, "%s: %s: Invalid XML file\n", $SELF, $INPUT);
-    exit(1);
+$indent = str_repeat(' ', 4);
+$templatesDir = __DIR__ . '/../src/templates';
+
+$t = array();
+
+echo "Compiling templates:\n";
+foreach (scandir($templatesDir) as $entry) {
+    if (substr($entry, -4) !== '.hbs') {
+        continue;
+    }
+
+    $templateId = substr($entry, 0, -4);
+
+    $template = file_get_contents($templatesDir . '/' . $entry);
+    $template = implode("\n",
+        array_map(
+            'ltrim',
+            explode(
+                "\n", trim($template)
+            )
+        )
+    );
+
+    echo '  ', $templateId, ' ... ';
+    $temp = 'temp.handlebars';
+    file_put_contents($temp, $template);
+
+    $out = `handlebars --simple "$temp"`;
+    $out = 'Handlebars.template(' . $out . ')';
+    @unlink($temp);
+
+    $t[$templateId] = $indent . quote($templateId) . ': ' . $out; // quote($str);
+    echo "done\n";
 }
-
-
-$xpath = new DOMXPath($doc);
-$templates = $xpath->query('//template');
 
 function quote($x) {
     return '"' . str_replace('"', '\"', $x) . '"';
 }
 
-$indent = str_repeat(' ', 4);
-
-$t = array();
-foreach ($templates as $template) {
-    $str = implode("\n",
-        array_map(
-            'ltrim',
-            explode(
-                "\n", trim($template->textContent)
-            )
-        )
-    );
-    $id = $template->getAttribute('id');
-    $temp = 'temp.handlebars';
-    file_put_contents($temp, $str);
-    $out = `handlebars --simple "$temp"`;
-    $out = 'Handlebars.template(' . $out . ')';
-    @unlink($temp);
-
-    $t[$id] = $indent . quote($template->getAttribute('id')) . ': ' . $out; // quote($str);
-}
 ksort($t);
 ob_start();
 
-// npm install -g handlebars@1.3.0
 
-echo "var {$path['filename']} = {\n";
+echo "var Templates = {\n";
 echo implode(",\n", $t), "\n";
 echo "};\n";
 
 file_put_contents($OUTPUT, ob_get_clean());
-

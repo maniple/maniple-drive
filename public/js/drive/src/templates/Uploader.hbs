@@ -1,0 +1,28 @@
+<div id="drive-uploader">
+ <div id="drive-uploader-dialog" data-hook="dialog-content">
+  <div id="drive-uploader-dropzone" data-hook="drop-zone-pane">
+   <div class="uploader" data-hook="drop-zone">
+    <div class="drop-here" data-hook="drop-zone-text"></div>
+   </div>
+  </div>
+  <div id="drive-uploader-queue" data-hook="queue-pane">
+   <table id="drive-uploader-queue-items">
+    <tbody data-hook="items"></tbody>
+   </table>
+   <div class="no-items-message">{{ str.noItems }}</div>
+  </div>
+ </div>
+ <div id="drive-uploader-status">
+  <div id="drive-uploader-status-icon"></div>
+  <div id="drive-uploader-status-content">
+   <h3>
+    <span class="name" data-hook="item-name"></span>
+    <span class="size" data-hook="item-size"></span>
+   </h3>
+   <p data-hook="status-message"></p>
+  </div>
+  <div id="drive-uploader-status-button">
+   <button class="seamless" data-hook="open-button">{{ str.openButtonText }}</button>
+  </div>
+ </div>
+</div>

@@ -1,0 +1,18 @@
+<div id="drive-du">
+ <div class="pane">
+  <div class="progress">
+   <div class="progress-bar" role="progressbar" data-hook="progress-bar" data-level-template="progress-bar-{level}"></div>
+  </div>
+  <dl class="used">
+   <dt>{{ str.used }}</dt>
+   <dd>
+    <span data-hook="used">{{ fileSize used }}</span>
+    <span data-hook="used-percentage" class="percent">(<span data-hook="percent"></span>%)</span>
+   </dd>
+  </dl>
+  <dl class="available">
+   <dt>{{ str.available }}</dt>
+   <dd data-hook="available"></dd>
+  </dl>
+ </div>
+</div>

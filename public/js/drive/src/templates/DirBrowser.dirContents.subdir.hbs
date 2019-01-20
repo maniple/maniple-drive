@@ -1,0 +1,40 @@
+<div class="dir-entry dir-entry-subdir">
+    <div class="col-grab" data-hook="grab"></div>
+    <div class="col-name" data-hook="name">
+        <span class="dir-entry-icon">
+            <span class="drive-icon drive-icon-folder" data-hook="icon"></span>
+        </span>
+        <span class="dir-entry-name" title="{{ dir.name }}">{{ dir.name }}</span>
+    </div>
+    <div class="col-owner">{{ dir.owner.name }}</div>
+    <div class="col-size"></div>
+    <div class="col-mtime">
+        <div class="full">{{ dir.mtime.short }}</div>
+        <div class="date-only">{{ dir.mtime.date }}</div>
+    </div>
+    <div class="col-ops">
+    {{#if ops }}
+        <div class="dropdown">
+            <div data-toggle="dropdown" class="dropdown-toggle"><span class="caret"></span></div>
+            <ul class="dropdown-menu dropdown-menu-right has-tip">
+            {{# ops.open }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.open }}
+            {{# ops.share }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.share }}
+            {{# ops.rename }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.rename }}
+            {{# ops.details }}
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.details }}
+            {{# ops.remove }}
+                <li class="divider"></li>
+                <li><a href="#!" data-op="{{ op }}">{{ title }}</a></li>
+            {{/ ops.remove }}
+            </ul>
+        </div>
+    {{/ if }}
+    </div>
+</div>
