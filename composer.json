@@ -11,8 +11,10 @@
     ],
     "require": {
         "php": ">=5.3.3",
-        "xemlock/zend1-composer-installer": "*",
-        "maniple/maniple-core": "*"
+        "xemlock/zend1-composer-installer": "*"
+    },
+    "require-dev": {
+        "oyejorge/less.php": "~1.7.0.14"
     },
     "autoload": {
         "classmap": [
