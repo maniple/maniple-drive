@@ -2,6 +2,7 @@
 
 /**
  * @property ManipleDrive_Model_Dir $Dir
+ * @property Zefram_Db_Table_Row $CreatedByUser
  * @method ManipleDrive_Model_DbTable_Files getTable()
  */
 class ManipleDrive_Model_File

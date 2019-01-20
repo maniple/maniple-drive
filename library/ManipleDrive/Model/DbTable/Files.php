@@ -17,7 +17,12 @@ class ManipleDrive_Model_DbTable_Files extends Zefram_Db_Table
             'columns'       => 'dir_id',
             'refTableClass' => ManipleDrive_Model_DbTable_Dirs::className,
             'refColumns'    => 'dir_id',
-        )
+        ),
+        'CreatedByUser' => array(
+            'columns'       => 'created_by',
+            'refTableClass' => ModUser_Model_DbTable_Users::className,
+            'refColumns'    => 'user_id',
+        ),
     );
 
     /**

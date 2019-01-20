@@ -1840,8 +1840,9 @@ DirBrowser.prototype._renderFile = function (file, replace) { // {{{
 
     [/*hooks.icon,*/ hooks.name].forEach(function (elem) {
         if (file.preview_url) {
+            elem.data('file', file);
             // enable lightbox on this element
-            elem.attr('data-open-lightbox', '');
+            elem.attr('data-open-lightbox', JSON.stringify({file_id: file.file_id}));
             elem.attr('data-download-url', url);
             elem.attr('href', file.preview_url);
         } else {
@@ -1908,7 +1909,12 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
     }
 
     self._lightbox = new Drive.Lightbox(self._element, {
-        delegate: '[data-open-lightbox]'
+        delegate: '[data-open-lightbox]',
+        title: dir.name
+    });
+    self._lightbox.on('imageLoaded', function (e, data) {
+        var file = data.el.data('file');
+        self.emit('imageLoaded', file);
     });
 
     self._active = null;

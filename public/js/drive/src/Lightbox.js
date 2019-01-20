@@ -3,6 +3,19 @@ function Lightbox(selector, options) {
 }
 
 Lightbox.prototype = {
+    on: function (event, handler) {
+        $(this).on(event, handler);
+        return this;
+    },
+    off: function (event, handler) {
+        $(this).off(event, handler);
+        return this;
+    },
+    emit: function (event) {
+        var data = Array.prototype.slice.call(arguments, 1);
+        $(this).trigger(event, data);
+        return this;
+    },
     _init: function (selector, options) {
         var self = this,
             el = $(selector).first(),
@@ -10,14 +23,37 @@ Lightbox.prototype = {
 
         options = $.extend(true, {}, options);
 
+        this.el = el;
+
         el.magnificPopup({
             delegate: options.delegate || 'a',
             type: 'image',
             closeBtnInside: false,
-            closeOnContentClick: true,
+            closeOnContentClick: false,
             callbacks: {
+                buildControls: function() {
+                    // move arrows inside content container
+                    var arrows = $()
+                        .add(this.arrowLeft)
+                        .add(this.arrowRight)
+                        .removeClass('mfp-arrow mfp-arrow-left mfp-arrow-right')
+                        .addClass('drive-viewer-arrow');
+
+                    this.arrowLeft
+                        .addClass('drive-viewer-arrow-left')
+                        .on('click', function () {
+                            this.contentContainer.removeClass('drive-viewer-content-ready');
+                        }.bind(this));
+                    this.arrowRight
+                        .addClass('drive-viewer-arrow-right')
+                        .on('click', function () {
+                            this.contentContainer.removeClass('drive-viewer-content-ready');
+                        }.bind(this));
+
+                    this.contentContainer
+                        .append(arrows);
+                },
                 beforeOpen: function () {
-                    var self = this;
                     [
                         ['bgOverlay',        'mfp-bg',        'drive-viewer-overlay'],
                         ['wrap',             'mfp-wrap',      'drive-viewer'],
@@ -25,7 +61,73 @@ Lightbox.prototype = {
                         ['contentContainer', 'mfp-content',   'drive-viewer-content'],
                         ['preloader',        'mfp-preloader', 'drive-viewer-preloader']
                     ].forEach(function (map) {
-                        self[map[0]].removeClass(map[1]).addClass(map[2]);
+                        this[map[0]].removeClass(map[1]).addClass(map[2]);
+                    }.bind(this));
+
+                    // It seems that closeOnContentClick:false doesn't work, and we
+                    // have to prevent closing on click manually
+                    this.container.on('click', function () {
+                        return false;
+                    });
+                },
+                resize: function () {
+                    var $image = this.currItem && this.currItem.img;
+                    $image.css({
+                        maxHeight: Math.floor(this.contentContainer.height()),
+                        maxWidth: Math.floor(this.contentContainer.width())
+                    });
+                },
+                imageLoadComplete: function () {
+                    var $image = this.currItem && this.currItem.img;
+                    if (!$image || !$image.length) {
+                        return;
+                    }
+
+                    var image = $image[0];
+                    var width = image.naturalWidth || image.width;
+                    var height = image.naturalHeight || image.height;
+
+                    $image.css({
+                        maxHeight: this.contentContainer.height(),
+                        maxWidth: this.contentContainer.width()
+                    });
+                    this.contentContainer.addClass('drive-viewer-content-ready');
+
+                    var downloadUrl = this.currItem.el.data('downloadUrl') || this.currItem.el.attr('href');
+
+                    // append download=1 URL parameter to force file download
+                    downloadUrl += (downloadUrl.indexOf('?') === -1 ? '?' : '&') + 'download=1';
+
+                    var file = this.currItem.el.data('file');
+                    console.log('titleSrc.file', file);
+
+                    var title = this.currItem.el.data('title') || this.currItem.el.attr('title');
+                    this.contentContainer.find('.drive-viewer-sidebar').html(
+                        '<div class="gallery-header">' +
+                            (options.title ? '<div class="gallery-title">' + options.title + '</div>' : '') +
+                            (file.create_time ? '<div class="create-time">' + file.create_time + '</div>' : '') +
+                        '</div>' +
+                        '<h4 class="title">' + Viewtils.esc(title) + '</h4>'
+                    );
+
+                    var sidebarContent = $('<div class="drive-viewer-sidebar-content" />');
+                    sidebarContent.append(
+                        (file.description ? '<div class="description">' + file.description + '</div>' : '') +
+                        (file.author ? '<div class="author">' + file.author + '</div>' : '')
+                    );
+                    this.contentContainer.find('.drive-viewer-sidebar').append(sidebarContent);
+
+                    this.contentContainer.find('.drive-viewer-toolbar').html(
+                        (this.contentContainer.find('.mfp-counter').text() || '&nbsp;') +
+                        '<a class="drive-viewer-toolbar-download btn btn-default" href="#!" onclick="(event||window.event).stopPropagation();document.location.href=\'' + Viewtils.esc(downloadUrl) + '\'" style="float:right">' + str.saveImage + '</a>'
+                    );
+
+                    self.emit('imageLoaded', {
+                        image: image,
+                        width: width,
+                        height: height,
+                        src: this.currItem.src,
+                        el: this.currItem.el
                     });
                 }
             },
@@ -46,31 +148,27 @@ Lightbox.prototype = {
                 verticalFit: false,
                 verticalGap: 0,
                 tError: String(str.imageFailedToLoad),
-                titleSrc: function titleSrc(item) {
-                    var title = item.el.data('title') || item.el.attr('title'),
-                        caption = item.el.data('caption'),
-                        downloadUrl = item.el.data('downloadUrl') || item.el.attr('href'),
-                        html;
-
-                    // append download=1 URL parameter to force file download
-                    downloadUrl += (downloadUrl.indexOf('?') === -1 ? '?' : '&') + 'download=1';
-
-                    html = '<div class="actions"><a class="btn btn-primary" href="#!" onclick="(event||window.event).stopPropagation();document.location.href=\'' + Viewtils.esc(downloadUrl) + '\'" >' + str.saveImage + '</a></div>' + '<h4 class="title">' + Viewtils.esc(title) + '</h4>';
-
-                    if (caption && (caption = Viewtils.esc(caption)).length) {
-                        html += '<div class="caption">' + caption + '</div>';
-                    }
-
-                    return html;
-                },
+                // titleSrc: function titleSrc(item) {
+                //     console.log('titleSrc', this, item);
+                //     var title = item.el.data('title') || item.el.attr('title'),
+                //         caption = item.el.data('caption'), // legacy
+                //         html;
+                //
+                //     html = '<h4 class="title">' + Viewtils.esc(title) + '</h4>';
+                //
+                //     if (caption && (caption = Viewtils.esc(caption)).length) {
+                //         html += '<div class="caption">' + caption + '</div>';
+                //     }
+                //
+                //     return html;
+                // },
                 markup: '<div class="drive-viewer-figure">' +
                             '<div class="mfp-img"></div>' +
-                            '<div class="drive-viewer-bottom-bar">' +
-                                '<div class="drive-viewer-bottom-bar-inner">' +
-                                    '<div class="drive-viewer-metadata mfp-title"></div>' +
-                                    '<div class="drive-viewer-counter mfp-counter"></div>' +
-                                '</div>' +
-                            '</div>' +
+                            '<div class="drive-viewer-counter mfp-counter"></div>' +
+                        '</div>' +
+                        '<div class="drive-viewer-sidebar">' +
+                        '</div>' +
+                        '<div class="drive-viewer-toolbar">' +
                         '</div>'
             }
         });
