@@ -1280,6 +1280,9 @@ html.grabbing * {
 .dirbrowser-display-mode-icon.display-mode-media {
     background-position: -24px 0;
 }
+.dirbrowser-display-mode-icon.display-mode-grid {
+    background-position: -48px 0;
+}
 .dirbrowser-display-mode-icon:hover {
     background-color: #999;
 }
@@ -1295,6 +1298,6 @@ only screen and (   min--moz-device-pixel-ratio: 2),
 only screen and (     -o-min-device-pixel-ratio: 2/1) {
   .dirbrowser-display-mode-icon {
     background-image: url(../img/display-mode@2x.png);
-    background-size: 48px 24px;
+    background-size: 72px 24px;
   }
 }
