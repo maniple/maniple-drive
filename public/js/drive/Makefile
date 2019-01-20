@@ -3,7 +3,7 @@
 LOCALES := $(patsubst %.js,%, $(wildcard src/i18n/*.js))
 LOCALES := $(LOCALES:src/i18n/%=%)
 
-OUTPUT = $(addprefix dist/drive., $(addsuffix .js, $(LOCALES)))
+OUTPUT = $(addprefix ../drive., $(addsuffix .js, $(LOCALES)))
 MODULE = Drive
 
 ifeq ($(windir),)
@@ -12,27 +12,18 @@ else
     BIN_SUFFIX = .exe
 endif
 
-all: dist $(OUTPUT)
-
-dist:
-	mkdir$(BIN_SUFFIX) -p dist
+all: $(OUTPUT)
 
 src/%.js: $(wildcard src/i18n/*.js)
 
 src/Templates.js: $(wildcard src/templates/*.hbs)
 	php$(BIN_SUFFIX) build/build-templates $< $@
 
-dist/drive.%.js: src/deps.json $(wildcard src/*.js) src/Templates.js
+../drive.%.js: src/deps.json $(wildcard src/*.js) src/Templates.js
 	php$(BIN_SUFFIX) build/build-src $(MODULE) src/i18n/$*.js:I18n -o $@ -d $^
 
 
-.PHONY: install clean dist distclean
-
-install: all
-	cp$(BIN_SUFFIX) -f $(OUTPUT) ..
+.PHONY: clean
 
 clean:
-	rm$(BIN_SUFFIX) -rf $(OUTPUT) src/Templates.js dist
-
-distclean:
-	rm -rf dist
+	rm$(BIN_SUFFIX) -rf $(OUTPUT) src/Templates.js
