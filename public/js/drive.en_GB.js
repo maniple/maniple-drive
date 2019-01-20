@@ -3038,8 +3038,7 @@ var Drive = {
                             // append download=1 URL parameter to force file download
                             downloadUrl += (downloadUrl.indexOf('?') === -1 ? '?' : '&') + 'download=1';
 
-                            var file = this.currItem.el.data('file');
-                            console.log('titleSrc.file', file);
+                            var file = this.currItem.el.data('file') || {};
 
                             var title = this.currItem.el.data('title') || this.currItem.el.attr('title');
                             this.contentContainer.find('.drive-viewer-sidebar').html(
@@ -3074,6 +3073,9 @@ var Drive = {
                     disableOn: function disableOn() {
                         // contrary to this function's name lightbox will be disabled
                         // when false is returned
+                        if (typeof self.disabled === 'function') {
+                            return !self.disabled();
+                        }
                         return self.disabled ? false : true;
                     },
                     tClose: String(str.close),

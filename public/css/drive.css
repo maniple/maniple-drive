@@ -871,9 +871,6 @@ html.grabbing * {
 .drive-viewer .mfp-counter {
   display: none;
 }
-.mfp-s-error .drive-viewer-content {
-  display: none;
-}
 .drive-viewer-metadata {
   position: relative;
   word-break: break-word;
