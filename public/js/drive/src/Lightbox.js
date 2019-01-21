@@ -33,25 +33,26 @@ Lightbox.prototype = {
             callbacks: {
                 buildControls: function() {
                     // move arrows inside content container
-                    var arrows = $()
-                        .add(this.arrowLeft)
-                        .add(this.arrowRight)
-                        .removeClass('mfp-arrow mfp-arrow-left mfp-arrow-right')
-                        .addClass('drive-viewer-arrow');
+                    if (this.arrowLeft) {
+                        this.arrowLeft
+                            .removeClass('mfp-arrow mfp-arrow-left')
+                            .addClass('drive-viewer-arrow drive-viewer-arrow-left')
+                            .on('click', function () {
+                                this.contentContainer.removeClass('drive-viewer-content-ready');
+                            }.bind(this))
+                            .appendTo(this.contentContainer);
+                        this.con
+                    }
 
-                    this.arrowLeft
-                        .addClass('drive-viewer-arrow-left')
-                        .on('click', function () {
-                            this.contentContainer.removeClass('drive-viewer-content-ready');
-                        }.bind(this));
-                    this.arrowRight
-                        .addClass('drive-viewer-arrow-right')
-                        .on('click', function () {
-                            this.contentContainer.removeClass('drive-viewer-content-ready');
-                        }.bind(this));
-
-                    this.contentContainer
-                        .append(arrows);
+                    if (this.arrowRight) {
+                        this.arrowRight
+                            .removeClass('mfp-arrow mfp-arrow-right')
+                            .addClass('drive-viewer-arrow drive-viewer-arrow-right')
+                            .on('click', function () {
+                                this.contentContainer.removeClass('drive-viewer-content-ready');
+                            }.bind(this))
+                            .appendTo(this.contentContainer);
+                    }
                 },
                 beforeOpen: function () {
                     [
