@@ -1919,6 +1919,9 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
         var file = image.triggerElement.closest('[data-open-lightbox]').data('file');
         self.emit('imageLoaded', { file: file, image: image });
     });
+    self._lightbox.on('imageUnload', function (e, data) {
+        self.emit('imageUnload', data);
+    });
 
     self._active = null;
 }; // }}}

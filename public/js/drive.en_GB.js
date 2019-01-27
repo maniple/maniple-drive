@@ -1924,6 +1924,9 @@ var Drive = {
                 var file = image.triggerElement.closest('[data-open-lightbox]').data('file');
                 self.emit('imageLoaded', { file: file, image: image });
             });
+            self._lightbox.on('imageUnload', function (e, data) {
+                self.emit('imageUnload', data);
+            });
 
             self._active = null;
         }; // }}}
@@ -2993,6 +2996,12 @@ var Drive = {
 
                 this.el = el;
 
+                // MagnificPopup does not expose previous contentContainer contents and
+                // currItem in markupParse event, so we need to manually store them
+                this.activeImage = null;
+                this.sidebar = null;
+                this.toolbar = null;
+
                 el.magnificPopup({
                     delegate: options.delegate || 'a',
                     type: 'image',
@@ -3009,7 +3018,6 @@ var Drive = {
                                         this.contentContainer.removeClass('drive-viewer-content-ready');
                                     }.bind(this))
                                     .appendTo(this.contentContainer);
-                                this.con
                             }
 
                             if (this.arrowRight) {
@@ -3039,6 +3047,18 @@ var Drive = {
                                 return false;
                             });
                         },
+                        markupParse: function () {
+                            if (self.activeImage) {
+                                var activeImage = self.activeImage;
+                                self.activeImage = null;
+
+                                // Clear previous sidebar and toolbar content
+                                self.sidebar.empty();
+                                self.toolbar.empty();
+
+                                self.emit('imageUnload', activeImage);
+                            }
+                        },
                         resize: function () {
                             var $image = this.currItem && this.currItem.img;
                             $image.css({
@@ -3051,6 +3071,8 @@ var Drive = {
                             if (!$image || !$image.length) {
                                 return;
                             }
+
+                            self.activeImage = this.currItem;
 
                             var imageElement = $image[0];
                             var width = imageElement.naturalWidth || imageElement.width;
@@ -3083,9 +3105,12 @@ var Drive = {
                                 (file.description ? '<div class="description">' + file.description + '</div>' : '') +
                                 (file.author ? '<div class="author">' + file.author + '</div>' : '')
                             );
-                            this.contentContainer.find('.drive-viewer-sidebar').append(sidebarContent);
 
-                            this.contentContainer.find('.drive-viewer-toolbar').html(
+                            self.sidebar = this.contentContainer.find('.drive-viewer-sidebar');
+                            self.sidebar.append(sidebarContent);
+
+                            self.toolbar = this.contentContainer.find('.drive-viewer-toolbar');
+                            self.toolbar.html(
                                 (this.contentContainer.find('.mfp-counter').text() || '&nbsp;') +
                                 '<a class="drive-viewer-toolbar-download btn btn-default" href="#!" onclick="(event||window.event).stopPropagation();document.location.href=\'' + Viewtils.esc(downloadUrl) + '\'" style="float:right">' + str.saveImage + '</a>'
                             );
