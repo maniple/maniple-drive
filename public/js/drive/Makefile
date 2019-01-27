@@ -1,5 +1,3 @@
-# npm install -g handlebars@^1.3.0
-
 LOCALES := $(patsubst %.js,%, $(wildcard src/i18n/*.js))
 LOCALES := $(LOCALES:src/i18n/%=%)
 
@@ -13,6 +11,9 @@ else
 endif
 
 all: $(OUTPUT)
+
+npm:
+	npm install -g handlebars@^1.3.0
 
 src/%.js: $(wildcard src/i18n/*.js)
 

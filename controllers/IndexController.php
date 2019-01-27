@@ -220,4 +220,19 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             )
         );
     }
+
+    public function jsBundleAction()
+    {
+        $locale = $this->getScalarParam('locale');
+
+        /** @var ManipleDrive_Service_JsBundle $jsBundle */
+        $jsBundle = $this->getResource('ManipleDrive.JsBundle');
+
+        $this->_helper->layout->disableLayout();
+        $this->_helper->viewRenderer->setNoRender();
+
+        $this->getResponse()
+            ->setHeader('Content-Type', 'application/javascript; charset=UTF-8')
+            ->setBody($jsBundle->renderSource($locale));
+    }
 }

@@ -11,9 +11,9 @@ Lightbox.prototype = {
         $(this).off(event, handler);
         return this;
     },
-    emit: function (event) {
+    emit: function (event, data) {
         var data = Array.prototype.slice.call(arguments, 1);
-        $(this).trigger(event, data);
+        $(this).triggerHandler(event, data);
         return this;
     },
     _init: function (selector, options) {
@@ -84,9 +84,9 @@ Lightbox.prototype = {
                         return;
                     }
 
-                    var image = $image[0];
-                    var width = image.naturalWidth || image.width;
-                    var height = image.naturalHeight || image.height;
+                    var imageElement = $image[0];
+                    var width = imageElement.naturalWidth || imageElement.width;
+                    var height = imageElement.naturalHeight || imageElement.height;
 
                     $image.css({
                         maxHeight: this.contentContainer.height(),
@@ -123,11 +123,11 @@ Lightbox.prototype = {
                     );
 
                     self.emit('imageLoaded', {
-                        image: image,
                         width: width,
                         height: height,
                         src: this.currItem.src,
-                        el: this.currItem.el
+                        element: $image,
+                        triggerElement: this.currItem.el
                     });
                 }
             },

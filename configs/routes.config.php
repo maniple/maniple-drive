@@ -1,4 +1,17 @@
 <?php return array(
+    'drive.js_bundle' => array(
+        'route' => '^drive/bundle.([_a-zA-Z]{2,5}).js$',
+        'type'  => 'Zend_Controller_Router_Route_Regex',
+        'map' => array(
+            'locale' => 1,
+        ),
+        'reverse' => 'drive/bundle.%s.js',
+        'defaults' => array(
+            'module'     => 'maniple-drive',
+            'controller' => 'index',
+            'action'     => 'js-bundle',
+        ),
+    ),
     'drive.dashboard' => array(
         'route' => 'drive',
         'defaults' => array(

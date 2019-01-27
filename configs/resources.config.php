@@ -33,4 +33,11 @@
             'db' => 'resource:ZeframDb',
         ),
     ),
+    'ManipleDrive.JsBundle' => array(
+        'class' => 'ManipleDrive_Service_JsBundle',
+        'args' => array(
+            'resource:SharedEventManager',
+            'resource:View',
+        ),
+    ),
 );

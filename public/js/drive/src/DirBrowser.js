@@ -91,6 +91,9 @@ function DirBrowser(selector, options) { // {{{
     //    {str: Drive.Util.i18n('DirBrowser.loading')}
     //));
 
+    // apply plugins
+    DirBrowser.plugins.apply(self);
+
     // zainicjuj obsluge zmiany hasha w adresie
     $.History.bind(function (state) {
         var path;
@@ -122,7 +125,7 @@ function DirBrowser(selector, options) { // {{{
 } // }}}
 
 DirBrowser.prototype.setInitDir = function (dir) { // {{{
-    if (document.location.hash.substr(0, 2) != '#/') {
+    if (document.location.hash.substr(0, 2) !== '#/') {
         this.setDir(dir);
     }
     return this;
@@ -1912,11 +1915,35 @@ DirBrowser.prototype._renderDirContents = function (dir) { // {{{
         delegate: '[data-open-lightbox]',
         title: dir.name
     });
-    self._lightbox.on('imageLoaded', function (e, data) {
-        var file = data.el.data('file');
-        self.emit('imageLoaded', file);
+    self._lightbox.on('imageLoaded', function (e, image) {
+        var file = image.triggerElement.closest('[data-open-lightbox]').data('file');
+        self.emit('imageLoaded', { file: file, image: image });
     });
 
     self._active = null;
 }; // }}}
 
+/**
+ * @constructor
+ */
+function PluginRegistry() {
+    this._plugins = [];
+
+    this.add = this.add.bind(this);
+    this.apply = this.apply.bind(this);
+}
+
+PluginRegistry.prototype.add = function (plugin) {
+    if (typeof plugin !== 'function') {
+        throw new TypeError('Plugin must be a function');
+    }
+    this._plugins.push(plugin);
+};
+
+PluginRegistry.prototype.apply = function (dirBrowser) {
+    this._plugins.forEach(function (plugin) {
+        plugin(dirBrowser);
+    });
+};
+
+DirBrowser.plugins = new PluginRegistry();

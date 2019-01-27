@@ -1,6 +1,6 @@
 define(
 ["jquery","jquery.magnific-popup","handlebars.runtime","maniple/core","maniple/viewtils","maniple/modal","maniple/modal.ajaxform"],
-function ($, __var0__, Handlebars, Maniple, Viewtils, Dialog, ajaxForm) {
+function ($, __var0, Handlebars, Maniple, Viewtils, Dialog, ajaxForm) {
 var Drive = {
     DirBrowser: (function() {
         /**
@@ -96,6 +96,9 @@ var Drive = {
             //    {str: Drive.Util.i18n('DirBrowser.loading')}
             //));
 
+            // apply plugins
+            DirBrowser.plugins.apply(self);
+
             // zainicjuj obsluge zmiany hasha w adresie
             $.History.bind(function (state) {
                 var path;
@@ -127,7 +130,7 @@ var Drive = {
         } // }}}
 
         DirBrowser.prototype.setInitDir = function (dir) { // {{{
-            if (document.location.hash.substr(0, 2) != '#/') {
+            if (document.location.hash.substr(0, 2) !== '#/') {
                 this.setDir(dir);
             }
             return this;
@@ -1917,13 +1920,38 @@ var Drive = {
                 delegate: '[data-open-lightbox]',
                 title: dir.name
             });
-            self._lightbox.on('imageLoaded', function (e, data) {
-                var file = data.el.data('file');
-                self.emit('imageLoaded', file);
+            self._lightbox.on('imageLoaded', function (e, image) {
+                var file = image.triggerElement.closest('[data-open-lightbox]').data('file');
+                self.emit('imageLoaded', { file: file, image: image });
             });
 
             self._active = null;
         }; // }}}
+
+        /**
+         * @constructor
+         */
+        function PluginRegistry() {
+            this._plugins = [];
+
+            this.add = this.add.bind(this);
+            this.apply = this.apply.bind(this);
+        }
+
+        PluginRegistry.prototype.add = function (plugin) {
+            if (typeof plugin !== 'function') {
+                throw new TypeError('Plugin must be a function');
+            }
+            this._plugins.push(plugin);
+        };
+
+        PluginRegistry.prototype.apply = function (dirBrowser) {
+            this._plugins.forEach(function (plugin) {
+                plugin(dirBrowser);
+            });
+        };
+
+        DirBrowser.plugins = new PluginRegistry();
         return DirBrowser;
     })(),
     FileUpload: (function() {
@@ -2951,9 +2979,9 @@ var Drive = {
                 $(this).off(event, handler);
                 return this;
             },
-            emit: function (event) {
+            emit: function (event, data) {
                 var data = Array.prototype.slice.call(arguments, 1);
-                $(this).trigger(event, data);
+                $(this).triggerHandler(event, data);
                 return this;
             },
             _init: function (selector, options) {
@@ -3024,9 +3052,9 @@ var Drive = {
                                 return;
                             }
 
-                            var image = $image[0];
-                            var width = image.naturalWidth || image.width;
-                            var height = image.naturalHeight || image.height;
+                            var imageElement = $image[0];
+                            var width = imageElement.naturalWidth || imageElement.width;
+                            var height = imageElement.naturalHeight || imageElement.height;
 
                             $image.css({
                                 maxHeight: this.contentContainer.height(),
@@ -3063,11 +3091,11 @@ var Drive = {
                             );
 
                             self.emit('imageLoaded', {
-                                image: image,
                                 width: width,
                                 height: height,
                                 src: this.currItem.src,
-                                el: this.currItem.el
+                                element: $image,
+                                triggerElement: this.currItem.el
                             });
                         }
                     },

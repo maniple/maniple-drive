@@ -118,7 +118,7 @@ if ($DEPS) {
 
     foreach ($deps as $key => $value) {
         if (empty($value)) {
-            $deps[$key] = '__var' . ($var++) . '__';
+            $deps[$key] = '__var' . ($var++);
         }
     }
 }

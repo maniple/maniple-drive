@@ -26,22 +26,20 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
         return $url;
     }
 
+    /**
+     * @return string
+     */
     public function jsLib()
     {
         try {
             $locale = (string) $this->view->translate()->getLocale();
-
-            // FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if ($locale === 'pl') {
-                $locale = 'pl_PL';
-            } elseif ($locale === 'en') {
-                $locale = 'en_GB';
-            }
         } catch (Exception $e) {
-            $locale = 'en_GB';
+            $locale = 'en';
         }
 
-        return $this->view->moduleAsset('js/drive.' . $locale . '.js', 'maniple-drive');
+        /** @var ManipleDrive_Service_JsBundle $jsBundle */
+        $jsBundle = $this->getResource('ManipleDrive.JsBundle');
+        return $jsBundle->getUrl($locale);
     }
 
     public function dirBrowserConfig(array $config)
@@ -110,5 +108,15 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 
         $url = rtrim($this->view->baseUrl(), '/') . '/!' . $path;
         return $this->view->serverUrl() . $url;
+    }
+
+    /**
+     * @param string $name
+     * @return mixed
+     */
+    public function getResource($name)
+    {
+        $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
+        return $bootstrap->getResource($name);
     }
 }
