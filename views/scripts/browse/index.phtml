@@ -6,13 +6,10 @@
 }
 </style>
 <div id="drive-dir-browser"></div>
-<script type="text/javascript" src="<?= $this->moduleAsset('js/vendor/jquery.history-1.5.0a.min.js', 'maniple-drive') ?>"></script>
-<script type="text/javascript" src="<?= $this->moduleAsset('js/vendor/jquery.eip-0.2.0.min.js', 'maniple-drive') ?>"></script>
-<script type="text/javascript" src="<?= $this->moduleAsset('js/vendor/jquery.grab.min.js', 'maniple-drive') ?>"></script>
 
 <script type="text/javascript">
 $(function() {
-    require(['<?= $this->moduleAsset('js/drive.' . $this->locale . '.js', 'maniple-drive') ?>'], function (Drive) {
+    require(['<?= $this->drive()->jsLib() ?>'], function (Drive) {
         new Drive.DirBrowser('#drive-dir-browser', <?= Zefram_Json::encode(array(
             'uriTemplates'   => $this->uri_templates,
             'breadcrumbs'    => $this->dir_browser_breadcrumbs ? $this->dir_browser_breadcrumbs : '#breadcrumbs',

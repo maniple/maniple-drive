@@ -5,5 +5,8 @@
     "maniple/core": "Maniple",
     "maniple/viewtils": "Viewtils",
     "maniple/modal": "Dialog",
-    "maniple/modal.ajaxform": "ajaxForm"
+    "maniple/modal.ajaxform": "ajaxForm",
+    "./vendor/jquery.history-1.5.0a.min.js": null,
+    "./vendor/jquery.eip-0.2.0.min.js": null,
+    "./vendor/jquery.grab.min.js": null
 }

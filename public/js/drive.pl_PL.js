@@ -1,6 +1,6 @@
 define(
-["jquery","jquery.magnific-popup","handlebars.runtime","maniple/core","maniple/viewtils","maniple/modal","maniple/modal.ajaxform"],
-function ($, __var0, Handlebars, Maniple, Viewtils, Dialog, ajaxForm) {
+["jquery","jquery.magnific-popup","handlebars.runtime","maniple/core","maniple/viewtils","maniple/modal","maniple/modal.ajaxform","./vendor/jquery.history-1.5.0a.min.js","./vendor/jquery.eip-0.2.0.min.js","./vendor/jquery.grab.min.js"],
+function ($, __var0, Handlebars, Maniple, Viewtils, Dialog, ajaxForm, __var1, __var2, __var3) {
 var Drive = {
     DirBrowser: (function() {
         /**
