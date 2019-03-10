@@ -52,8 +52,8 @@ class ManipleDrive_Form_Drive extends Zefram_Form
                             // 'required' => true,
                             'validators' => array(
                                 array(
-                                    new ManipleCore_Validate_UserExists(array(
-                                        'matchBy' => ManipleCore_Validate_User::MATCH_ID,
+                                    new ModUser_Validate_UserExists(array(
+                                        'matchBy' => ModUser_Validate_User::MATCH_ID,
                                         'userRepository' => $userMapper,
                                     )),
                                     true,
@@ -75,9 +75,9 @@ class ManipleDrive_Form_Drive extends Zefram_Form
         parent::__construct($options);
     }
 
-    public function getValues()
+    public function getValues($suppressArrayNotation = false)
     {
-        $values = parent::getValues();
+        $values = parent::getValues($suppressArrayNotation);
         $values['quota'] = $this->getValue('quota');
         return $values;
     }

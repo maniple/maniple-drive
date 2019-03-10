@@ -14,7 +14,6 @@ return array(
         'options' => array(
             'securityContext' => null,
             'tableProvider'   => null,
-            'userMapper'      => null,
             'userSearchRoute' => null,
             'security'        => 'resource:drive.security',
         ),

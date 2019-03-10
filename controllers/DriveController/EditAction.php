@@ -20,7 +20,7 @@ class ManipleDrive_DriveController_EditAction extends Maniple_Controller_Action_
         $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
         $drive_id = $this->getScalarParam('drive_id', 0);
-        $drive = $this->getResource('db.table_provider')->getTable('ManipleDrive_Model_DbTable_Drives')->findRow($drive_id);
+        $drive = $this->getResource('db.table_provider')->getTable(ManipleDrive_Model_DbTable_Drives::className)->findRow($drive_id);
 
         if (empty($drive)) {
             throw new Exception('Dysk o podanym identyfikatorze nie został znaleziony.');

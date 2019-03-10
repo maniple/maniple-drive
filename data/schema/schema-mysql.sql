@@ -39,8 +39,7 @@ CREATE TABLE {PREFIX}drives (
 
     UNIQUE INDEX {PREFIX}drives_root_dir_idx (root_dir),
 
-    -- uzytkownicy moga miec co najwyzej jeden dysk
-    UNIQUE INDEX {PREFIX}drives_owner_idx (owner),
+    INDEX {PREFIX}drives_owner_idx (owner),
 
     CONSTRAINT {PREFIX}drives_owner_fkey
         FOREIGN KEY (owner) REFERENCES {PREFIX}users (user_id),

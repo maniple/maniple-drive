@@ -17,3 +17,8 @@ ALTER TABLE {PREFIX}drive_files MODIFY COLUMN mimetype VARCHAR(128) NOT NULL;
 
 -- 2019-01-06
 ALTER TABLE {PREFIX}drive_dirs ADD COLUMN max_byte_size BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER byte_count;
+
+-- 2019-03-10 Drop uniqueness on drive owner
+ALTER TABLE {PREFIX}drives DROP FOREIGN KEY {PREFIX}drives_owner_fkey;
+ALTER TABLE {PREFIX}drives DROP INDEX {PREFIX}drives_owner_idx;
+CREATE INDEX {PREFIX}drives_owner_idx ON {PREFIX}drives (owner);

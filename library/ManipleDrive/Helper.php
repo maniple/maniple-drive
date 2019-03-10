@@ -3,7 +3,7 @@
 class ManipleDrive_Helper
 {
     /**
-     * @var Zend_View_Abstract
+     * @var Zefram_View_Interface
      */
     protected $_view;
 
@@ -13,7 +13,8 @@ class ManipleDrive_Helper
     protected $_tableProvider;
 
     /**
-     * @var ManipleCore_Model_UserRepositoryInterface
+     * @Inject('user.model.userMapper')
+     * @var ModUser_Model_UserMapperInterface
      */
     protected $_userRepository;
 
@@ -114,7 +115,7 @@ class ManipleDrive_Helper
     public function fetchFile($file_id) // {{{
     {
         $file_id = (int) $file_id;
-        $file = $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Files')->findRow($file_id);
+        $file = $this->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Files::className)->findRow($file_id);
 
         if (empty($file)) {
             throw new Exception('Plik nie został znaleziony', 404);
@@ -207,7 +208,7 @@ class ManipleDrive_Helper
                 // zeby przeniesc lub usunac katalog trzeba miec uprawnienia do
                 // zapisu tego katalogu, oraz miec uprawnienia do zapisu
                 // w katalogu nadrzednym (ten ostatni musi istniec)
-                if ($write && ($parent = $dir->fetchParent()) && $this->isDirWritable($parent)) {
+                if ($write && ($parent = $dir->getParentDir()) && $this->isDirWritable($parent)) {
                     $remove = !$dir->is_system && !$dir->is_readonly && !$dir->system_count && !$dir->isInternal();
                     $rename = !$dir->is_readonly;
                 }
@@ -286,7 +287,7 @@ class ManipleDrive_Helper
      * danych katalogu. Dane nie zawierają danych technicznych (np. kluczy
      * obcych) i są gotowe do bezpośredniego przesłania np. poprzez AJAX.
      *
-     * @param ManipleDrive_Model_Dir|ManipleDrive_Model_File $row
+     * @param ManipleDrive_Model_DirInterface|ManipleDrive_Model_File $row
      * @param bool $fetchUserData
      * @return array
      */
@@ -402,7 +403,8 @@ class ManipleDrive_Helper
     } // }}}
 
     /**
-     * @param int|array|Model_Core_User
+     * @param int|array|ModUser_Model_UserInterface
+     * @return array
      */
     public function fetchUserData($user_id) // {{{
     {
@@ -428,13 +430,13 @@ class ManipleDrive_Helper
             case 'shared':
                 return new ManipleDrive_Model_SharedDir(
                     $this->getSecurityContext()->getUser()->getId(),
-                    $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')
+                    $this->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Dirs::className)
                 );
 
             case 'public':
                 return new ManipleDrive_Model_PublicDir(
                     $this->getSecurityContext()->getUser()->getId(),
-                    $this->getTableProvider()->getTable('ManipleDrive_Model_DbTable_Dirs')
+                    $this->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Dirs::className)
                 );
         }
 
@@ -664,7 +666,7 @@ class ManipleDrive_Helper
     } // }}}
 
     /**
-     * @param ManipleDrive_Model_Dir $dir
+     * @param ManipleDrive_Model_DirInterface $dir
      * @return bool
      */
     public function isDirReadable(ManipleDrive_Model_DirInterface $dir) // {{{
@@ -673,7 +675,7 @@ class ManipleDrive_Helper
     } // }}}
 
     /**
-     * @param ManipleDrive_Model_Dir $dir
+     * @param ManipleDrive_Model_DirInterface $dir
      * @return bool
      */
     public function isDirShareable(ManipleDrive_Model_DirInterface $dir) // {{{
@@ -719,6 +721,9 @@ class ManipleDrive_Helper
         return $this;
     }
 
+    /**
+     * @return Zefram_Db_Table_FactoryInterface
+     */
     public function getTableProvider()
     {
         return $this->_tableProvider;
@@ -743,37 +748,42 @@ class ManipleDrive_Helper
         return $this->getSecurity()->getSecurityContext();
     }
 
-    public function setUserRepository($userRepository = null)
+    public function setUserRepository($userRepository)
     {
-        if (!$userRepository instanceof ManipleCore_Model_UserRepositoryInterface
-            && !$userRepository instanceof ModUser_Model_UserMapperInterface
+        if (!$userRepository instanceof ModUser_Model_UserMapperInterface
         ) {
             throw new InvalidArgumentException(sprintf(
-                'User repository must be an instance of %s or %s',
-                'ManipleCore_Model_UserRepositoryInterface',
-                'ModUser_Model_UserMapperInterface'
+                'User repository must be an instance of %s, %s given',
+                'ModUser_Model_UserMapperInterface',
+                is_object($userRepository) ? get_class($userRepository) : gettype($userRepository)
             ));
         }
         $this->_userRepository = $userRepository;
         return $this;
     }
 
+    /**
+     * @return ModUser_Model_UserMapperInterface
+     */
     public function getUserRepository()
     {
         return $this->_userRepository;
     }
 
     /**
-     * @param ManipleCore_Model_UserRepositoryInterface|ModUser_Model_UserMapperInterface $userRepository
+     * @param ModUser_Model_UserMapperInterface $userRepository
      * @return $this
      * @throws InvalidArgumentException
      * @deprecated Use setUserRepository instead
      */
-    public function setUserMapper($userRepository = null)
+    public function setUserMapper(ModUser_Model_UserMapperInterface $userRepository)
     {
         return $this->setUserRepository($userRepository);
     }
 
+    /**
+     * @return ModUser_Model_UserMapperInterface
+     */
     public function getUserMapper()
     {
         return $this->getUserRepository();
