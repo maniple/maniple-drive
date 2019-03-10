@@ -8,9 +8,15 @@ class ManipleDrive_Service_JsBundle
     protected $_eventManager;
 
     /**
-     * @var Zend_View
+     * @var Zend_View_Interface
      */
     protected $_view;
+
+    /**
+     * @Inject('Maniple.AssetManager')
+     * @var Maniple_Assets_AssetManager
+     */
+    protected $_assetManager;
 
     /**
      * @var string[]
@@ -19,9 +25,9 @@ class ManipleDrive_Service_JsBundle
 
     /**
      * @param Zend_EventManager_SharedEventManager $sharedEventManager
-     * @param Zend_View $view
+     * @param Zend_View_Interface $view
      */
-    public function __construct(Zend_EventManager_SharedEventManager $sharedEventManager, Zend_View $view)
+    public function __construct(Zend_EventManager_SharedEventManager $sharedEventManager, Zend_View_Interface $view)
     {
         $this->_view = $view;
 
@@ -54,7 +60,8 @@ class ManipleDrive_Service_JsBundle
             return $this->_view->url('drive.js_bundle', array('locale' => $locale));
         }
 
-        return $this->_view->moduleAsset('js/drive.' . $locale . '.js', 'maniple-drive');
+        $locale = $this->_getLocale($locale);
+        return $this->_assetManager->getAssetUrl('js/drive.' . $locale . '.js', 'maniple-drive');
     }
 
     /**
@@ -62,6 +69,29 @@ class ManipleDrive_Service_JsBundle
      * @return string
      */
     public function renderSource($locale)
+    {
+        $locale = $this->_getLocale($locale);
+
+        $deps = array_merge(
+            array(
+                $this->_assetManager->getAssetUrl('js/drive.' . $locale . '.js', 'maniple-drive'),
+            ),
+            $this->_pluginUrls
+        );
+
+        $source = sprintf(
+            'define(%s, %s);',
+            Zefram_Json::encode($deps, array('unescapedUnicode' => true, 'unescapedSlashes' => true)),
+"function (Drive) {
+    Array.prototype.slice.call(arguments, 1).forEach(Drive.DirBrowser.plugins.add);
+    return Drive;
+}"
+        );
+
+        return $source;
+    }
+
+    protected function _getLocale($locale)
     {
         try {
             $l = new Zefram_Locale((string) $locale);
@@ -83,22 +113,6 @@ class ManipleDrive_Service_JsBundle
             $locale = 'en_GB';
         }
 
-        $deps = array_merge(
-            array(
-                $this->_view->moduleAsset('js/drive.' . $locale . '.js', 'maniple-drive'),
-            ),
-            $this->_pluginUrls
-        );
-
-        $source = sprintf(
-            'define(%s, %s);',
-            Zefram_Json::encode($deps, array('unescapedUnicode' => true, 'unescapedSlashes' => true)),
-"function (Drive) {
-    Array.prototype.slice.call(arguments, 1).forEach(Drive.DirBrowser.plugins.add);
-    return Drive;
-}"
-        );
-
-        return $source;
+        return $locale;
     }
 }

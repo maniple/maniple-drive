@@ -748,7 +748,7 @@ class ManipleDrive_Helper
         return $this->getSecurity()->getSecurityContext();
     }
 
-    public function setUserRepository($userRepository)
+    public function setUserRepository(ModUser_Model_UserMapperInterface $userRepository)
     {
         if (!$userRepository instanceof ModUser_Model_UserMapperInterface
         ) {
