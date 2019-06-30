@@ -265,7 +265,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         }
 
         /** @var Zefram_Log $log */
-        $log = $this->getResource('Log');
+        $log = $this->getResource('Log', false);
         if ($error) {
             if ($log) $log->err(sprintf(
                 'File upload failed (%s) %s',
