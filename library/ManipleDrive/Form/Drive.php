@@ -52,8 +52,8 @@ class ManipleDrive_Form_Drive extends Zefram_Form
                             // 'required' => true,
                             'validators' => array(
                                 array(
-                                    new ModUser_Validate_UserExists(array(
-                                        'matchBy' => ModUser_Validate_User::MATCH_ID,
+                                    new ManipleUser_Validate_UserExists(array(
+                                        'matchBy' => ManipleUser_Validate_User::MATCH_ID,
                                         'userRepository' => $userMapper,
                                     )),
                                     true,

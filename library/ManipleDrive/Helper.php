@@ -14,7 +14,7 @@ class ManipleDrive_Helper
 
     /**
      * @Inject('user.model.userMapper')
-     * @var ModUser_Model_UserMapperInterface
+     * @var ManipleUser_Model_UserMapperInterface
      */
     protected $_userRepository;
 
@@ -403,7 +403,7 @@ class ManipleDrive_Helper
     } // }}}
 
     /**
-     * @param int|array|ModUser_Model_UserInterface
+     * @param int|array|ManipleUser_Model_UserInterface
      * @return array
      */
     public function fetchUserData($user_id) // {{{
@@ -748,13 +748,13 @@ class ManipleDrive_Helper
         return $this->getSecurity()->getSecurityContext();
     }
 
-    public function setUserRepository(ModUser_Model_UserMapperInterface $userRepository)
+    public function setUserRepository(ManipleUser_Model_UserMapperInterface $userRepository)
     {
-        if (!$userRepository instanceof ModUser_Model_UserMapperInterface
+        if (!$userRepository instanceof ManipleUser_Model_UserMapperInterface
         ) {
             throw new InvalidArgumentException(sprintf(
                 'User repository must be an instance of %s, %s given',
-                'ModUser_Model_UserMapperInterface',
+                'ManipleUser_Model_UserMapperInterface',
                 is_object($userRepository) ? get_class($userRepository) : gettype($userRepository)
             ));
         }
@@ -763,7 +763,7 @@ class ManipleDrive_Helper
     }
 
     /**
-     * @return ModUser_Model_UserMapperInterface
+     * @return ManipleUser_Model_UserMapperInterface
      */
     public function getUserRepository()
     {
@@ -771,18 +771,18 @@ class ManipleDrive_Helper
     }
 
     /**
-     * @param ModUser_Model_UserMapperInterface $userRepository
+     * @param ManipleUser_Model_UserMapperInterface $userRepository
      * @return $this
      * @throws InvalidArgumentException
      * @deprecated Use setUserRepository instead
      */
-    public function setUserMapper(ModUser_Model_UserMapperInterface $userRepository)
+    public function setUserMapper(ManipleUser_Model_UserMapperInterface $userRepository)
     {
         return $this->setUserRepository($userRepository);
     }
 
     /**
-     * @return ModUser_Model_UserMapperInterface
+     * @return ManipleUser_Model_UserMapperInterface
      */
     public function getUserMapper()
     {

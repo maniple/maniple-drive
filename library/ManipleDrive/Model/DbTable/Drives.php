@@ -25,12 +25,12 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
         ),
         'Owner' => array(
             'columns'       => 'owner',
-            'refTableClass' => 'ManipleCore_Model_DbTable_Users',
+            'refTableClass' => ManipleUser_Model_DbTable_Users::className,
             'refColumns'    => 'user_id',
         ),
         'Creator' => array(
             'columns'       => 'created_by',
-            'refTableClass' => 'ManipleCore_Model_DbTable_Users',
+            'refTableClass' => ManipleUser_Model_DbTable_Users::className,
             'refColumns'    => 'user_id',
         ),
     );

@@ -20,7 +20,7 @@ class ManipleDrive_Model_DbTable_Files extends Zefram_Db_Table
         ),
         'CreatedByUser' => array(
             'columns'       => 'created_by',
-            'refTableClass' => ModUser_Model_DbTable_Users::className,
+            'refTableClass' => ManipleUser_Model_DbTable_Users::className,
             'refColumns'    => 'user_id',
         ),
     );
