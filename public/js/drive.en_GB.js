@@ -3286,7 +3286,7 @@ var Drive = {
     })(),
     Templates: (function() {
         var Templates = {
-            "DirBrowser.auxMenu": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.auxMenu": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
@@ -3335,7 +3335,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.dirContents": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.dirContents": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
@@ -3348,7 +3348,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.dirContents.file": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.dirContents.file": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing, helperMissing=helpers.helperMissing;
@@ -3486,7 +3486,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.dirContents.header": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.dirContents.header": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
@@ -3505,7 +3505,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.dirContents.subdir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.dirContents.subdir": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
@@ -3579,7 +3579,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.dirContents.updir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.dirContents.updir": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
@@ -3592,7 +3592,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.diskUsage": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.diskUsage": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
@@ -3609,7 +3609,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.displayMode": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.displayMode": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
@@ -3619,7 +3619,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.loading": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.loading": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
@@ -3629,7 +3629,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.main": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.main": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
@@ -3639,7 +3639,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.nameForm": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.nameForm": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression, self=this, blockHelperMissing=helpers.blockHelperMissing;
@@ -3688,7 +3688,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.opDirDetails": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.opDirDetails": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing, self=this;
@@ -3738,7 +3738,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.opFileDetails": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.opFileDetails": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing, self=this;
@@ -3802,7 +3802,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.opShareDir": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.opShareDir": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
@@ -3839,7 +3839,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.opShareDir.user": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.opShareDir.user": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this;
@@ -3872,7 +3872,7 @@ var Drive = {
           }
 
         ),
-            "DirBrowser.opShareDir.userAutocomplete": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "DirBrowser.opShareDir.userAutocomplete": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression, self=this;
@@ -3896,7 +3896,7 @@ var Drive = {
           }
 
         ),
-            "Uploader": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "Uploader": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, functionType="function", escapeExpression=this.escapeExpression;
@@ -3911,7 +3911,7 @@ var Drive = {
           }
 
         ),
-            "Uploader.queueItem": Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
+            "Uploader.queueItem": Handlebars['default'].template(function (Handlebars,depth0,helpers,partials,data) {
           this.compilerInfo = [4,'>= 1.0.0'];
         helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
           var buffer = "", stack1, helper, options, functionType="function", escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
@@ -4975,7 +4975,7 @@ var Drive = {
                 wrapper = vars;
             }
 
-            Handlebars.registerHelper('fileSize', function (text) {
+            Handlebars['default'].registerHelper('fileSize', function (text) {
                 return Viewtils.fsize(text);
             });
 
@@ -4994,7 +4994,7 @@ var Drive = {
 
             function helper(str) {
                 if (typeof str === 'string') {
-                    return new Handlebars.SafeString(str);
+                    return new Handlebars['default'].SafeString(str);
                 } else if (typeof str === 'object' && str !== null) {
                     var output = {};
                     $.each(str, function (k, v) {

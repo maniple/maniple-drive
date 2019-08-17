@@ -42,7 +42,7 @@ Util.render = function (id, vars, wrapper) { // {{{
         wrapper = vars;
     }
 
-    Handlebars.registerHelper('fileSize', function (text) {
+    Handlebars['default'].registerHelper('fileSize', function (text) {
         return Viewtils.fsize(text);
     });
 
@@ -61,7 +61,7 @@ Util.i18n = function (key) { // {{{
 
     function helper(str) {
         if (typeof str === 'string') {
-            return new Handlebars.SafeString(str);
+            return new Handlebars['default'].SafeString(str);
         } else if (typeof str === 'object' && str !== null) {
             var output = {};
             $.each(str, function (k, v) {

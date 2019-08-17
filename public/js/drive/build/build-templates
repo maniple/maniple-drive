@@ -51,7 +51,7 @@ foreach (scandir($templatesDir) as $entry) {
     file_put_contents($temp, $template);
 
     $out = `handlebars --simple "$temp"`;
-    $out = 'Handlebars.template(' . $out . ')';
+    $out = sprintf("Handlebars['default'].template(%s)", $out);
     @unlink($temp);
 
     $t[$templateId] = $indent . quote($templateId) . ': ' . $out; // quote($str);
