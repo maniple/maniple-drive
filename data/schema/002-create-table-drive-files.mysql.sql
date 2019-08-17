@@ -9,10 +9,10 @@ CREATE TABLE drive_files (
     owner           INTEGER,
 
     -- data utworzenia pliku na dysku
-    ctime           INTEGER NOT NULL,
+    ctime           BIGINT NOT NULL,
 
     -- data ostatniej modyfikacji metadanych (sam plik jest niemutowalny)
-    mtime           INTEGER NOT NULL,
+    mtime           BIGINT NOT NULL,
 
     -- id uzytkownika, ktory wgral plik
     created_by      INTEGER,

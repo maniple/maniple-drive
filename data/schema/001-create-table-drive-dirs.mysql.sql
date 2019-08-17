@@ -30,10 +30,10 @@ CREATE TABLE drive_dirs (
     owner           INTEGER,
 
     -- czas utworzenia katalogu
-    ctime           INTEGER NOT NULL,
+    ctime           BIGINT NOT NULL,
 
     -- czas ostatniej zmiany (nazwa, uprawnienia)
-    mtime           INTEGER NOT NULL,
+    mtime           BIGINT NOT NULL,
 
     -- id uzytkownika, ktory wgral plik
     created_by      INTEGER,
