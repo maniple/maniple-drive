@@ -1,6 +1,7 @@
-vendor/
 composer.phar
 composer.lock
+/vendor/
+bower_components/
 
 *.swp
 *.swo

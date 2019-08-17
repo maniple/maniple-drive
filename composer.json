@@ -11,17 +11,40 @@
     ],
     "require": {
         "php": ">=5.3.3",
-        "xemlock/zend1-composer-installer": "*"
+        "maniple/maniple-requirejs": "*",
+        "maniple/maniple-user": "*",
+        "xemlock/zend1-composer-installer": "^0.1.0"
     },
     "require-dev": {
         "oyejorge/less.php": "~1.7.0.14"
     },
     "autoload": {
         "classmap": [
-            "Bootstrap.php"
+            "Bootstrap.php",
+            "controllers/"
         ],
         "psr-0": {
             "ManipleDrive_": "library/"
         }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/maniple/maniple"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/maniple/maniple-requirejs"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/maniple/maniple-user"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/xemlock/zefram"
+        }
+    ]
 }
