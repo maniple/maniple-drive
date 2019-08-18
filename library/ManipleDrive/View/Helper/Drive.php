@@ -2,8 +2,28 @@
 
 class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 {
+    /**
+     * @var bool
+     */
+    protected $_attached = false;
+
     public function drive()
     {
+        if (!$this->_attached) {
+            $this->view->headLink()->appendStylesheet($this->view->asset('css/drive.css', 'maniple-drive'));
+            $this->view->headScript()->appendFile(
+                $this->view->baseUrl('bower_components/jquery-ui.autocomplete/jquery-ui.autocomplete.js')
+            );
+            $this->view->headScript()->appendFile(
+                $this->view->baseUrl('bower_components/jquery-ui.autocomplete-enhanced/jquery-ui.autocomplete.min.js')
+            );
+            $this->view->requirejs()->addPaths(array(
+                'handlebars.runtime'    => 'bower_components/handlebars/handlebars.runtime.amd.min',
+                'jquery'                => 'bower_components/jquery/dist/jquery.min',
+                'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
+            ));
+            $this->_attached = true;
+        }
         return $this;
     }
 
