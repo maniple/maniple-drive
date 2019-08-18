@@ -7,6 +7,7 @@
  * @version 2013-01-15
  *
  * @method ManipleDrive_Model_DbTable_Drives getTable()
+ * @deprecated
  */
 class ManipleDrive_Model_Drive extends Zefram_Db_Table_Row
 {

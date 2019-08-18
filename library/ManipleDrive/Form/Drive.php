@@ -2,7 +2,10 @@
 
 class ManipleDrive_Form_Drive extends Zefram_Form
 {
-    protected $_drive;
+    /**
+     * @var ManipleDrive_Model_Dir
+     */
+    protected $_dir;
 
     public function __construct(array $options = array())
     {
@@ -92,12 +95,18 @@ class ManipleDrive_Form_Drive extends Zefram_Form
         return parent::getValue($name);
     }
 
+    /**
+     * @return ManipleDrive_Model_Dir
+     */
     public function getDrive()
     {
-        return $this->_drive;
+        return $this->_dir;
     }
 
-    public function setDrive(ManipleDrive_Model_Drive $drive)
+    /**
+     * @param ManipleDrive_Model_Dir $drive
+     */
+    public function setDrive(ManipleDrive_Model_Dir $drive)
     {
         $defaults = $drive->toArray();
         $defaults['name'] = $drive->getName();
@@ -112,6 +121,6 @@ class ManipleDrive_Form_Drive extends Zefram_Form
              ->getValidator('ManipleDrive_Validate_DirNotExists')
              ->setAllowed($drive->getName());
 
-        $this->_drive = $drive;
+        $this->_dir = $drive;
     }
 }

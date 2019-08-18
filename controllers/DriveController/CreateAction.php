@@ -33,9 +33,11 @@ class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Actio
         $db->beginTransaction();
 
         try {
-            $drive = $this->getTable(ManipleDrive_Model_DbTable_Drives::className)->createRow($values);
-            $drive->setName($values['name']);
-            $drive->created_by = $this->getSecurity()->getUser()->getId();
+            $drive = $this->getTable(ManipleDrive_Model_DbTable_Dirs::className)->createRow($values);
+            $drive->setFromArray(array(
+                'name'       => $values['name'],
+                'created_by' => $this->getSecurity()->getUser()->getId(),
+            ));
             $drive->save();
             $db->commit();
 
@@ -50,7 +52,7 @@ class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Actio
             $drive->getName()
         ));
         $response->setData(array(
-            'drive_id' => $drive->drive_id,
+            'dir_id' => $drive->getId(),
         ));
         $response->sendAndExit();
     }
