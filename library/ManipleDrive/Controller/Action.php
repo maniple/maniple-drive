@@ -26,7 +26,7 @@ abstract class ManipleDrive_Controller_Action extends Maniple_Controller_Action
         $dir = $this->getDriveManager()->getDir($dirId);
 
         if (!$dir instanceof ManipleDrive_Model_DirInterface) {
-            throw new Exception('Directory was not found');
+            throw new Maniple_Controller_Exception_NotFound('Directory was not found');
         }
 
         return $dir;
@@ -77,6 +77,6 @@ abstract class ManipleDrive_Controller_Action extends Maniple_Controller_Action
             $message = $this->view->translate('You do not have permissions to perform this action');
         }
 
-        throw new Exception($message);
+        throw new Maniple_Controller_Exception_NotAllowed($message);
     }
 }

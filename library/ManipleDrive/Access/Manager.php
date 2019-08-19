@@ -43,12 +43,20 @@ class ManipleDrive_Access_Manager
      * @param ManipleDrive_Model_EntryInterface $entry
      * @param int $user
      * @return int
+     * @throws Maniple_Security_Exception_InvalidStateException
      */
     public function getAccess(ManipleDrive_Model_EntryInterface $entry, $user = null)
     {
         if ($user === null) {
             $user = ($u = $this->_securityContext->getUser()) ? $u->getId() : null;
         }
+
+        // Short-circuit for super-users
+        $userId = intval($user instanceof ManipleUser_Model_UserInterface ? $user->getId() : $user);
+        if ($this->_securityContext->isSuperUser($userId)) {
+            return ManipleDrive_Access_Access::ACCESS_ALL;
+        }
+
         $key = sprintf('%d.%s', $user, $entry->getId());
         if (!isset($this->_access[$key])) {
             $handler = $this->getHandlerForEntry($entry);

@@ -8,6 +8,7 @@ abstract class ManipleDrive_Access_Access
     const ACCESS_RENAME = 0x0004;
     const ACCESS_DELETE = 0x0008;
     const ACCESS_SHARE  = 0x0010;
+    const ACCESS_ALL    = 0xFFFF;
 
     /**
      * @param int $value
@@ -45,6 +46,10 @@ abstract class ManipleDrive_Access_Access
         return (bool) ($value & self::ACCESS_DELETE);
     }
 
+    /**
+     * @param int $value
+     * @return bool
+     */
     public static function canShare($value)
     {
         return (bool) ($value & self::ACCESS_SHARE);
