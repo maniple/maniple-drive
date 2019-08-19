@@ -31,7 +31,7 @@ class ManipleDrive_ImageController extends ManipleDrive_Controller_Action
 
         $this->view->upload_url = $this->view->drive()->browseUrl($dir);
         $this->view->files = $files;
-        $html = $this->view->render('image/browse.twig');
+        $html = $this->view->render('maniple-drive/image/browse.twig');
 
         $response = $this->_helper->ajaxResponse();
         $response->setData($html);

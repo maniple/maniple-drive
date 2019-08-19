@@ -1,7 +1,7 @@
 <div id="drive-dir-browser" class="js-loading">
     <p class="text-center" style="padding-top:100px;">{{ translate('Loading directory contents...') }}</p>
 </div>
-{{ renderScript('browse/dirbrowser.twig', 'maniple-drive') | raw }}
+{{ renderScript('maniple-drive/browse/dirbrowser.twig', 'maniple-drive') | raw }}
 {% if dir %}
 <script>window.location = String(location).replace(/#.*$/, '') + '#/{{ dir.getId() }}';</script>
 {% endif %}

@@ -47,8 +47,8 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
     {
         /** @var Zefram_Controller_Action_Helper_ViewRenderer $viewRenderer */
         $viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('ViewRenderer');
-        $viewRenderer->setViewScriptPathSpec(':controller/:action.:suffix', 'maniple-drive');
-        // $viewRenderer->setViewSuffix('twig', 'maniple-drive');
+        $viewRenderer->setViewScriptPathSpec(':module/:controller/:action.:suffix', 'maniple-drive');
+        $viewRenderer->setViewSuffix('twig', 'maniple-drive');
     }
 
     protected function _initEntityManager()
