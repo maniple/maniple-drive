@@ -103,6 +103,9 @@ var Drive = {
             $.History.bind(function (state) {
                 var path;
                 state = String(state);
+                if (state.indexOf('%2F') !== -1) {
+                    state = decodeURIComponent(state);
+                }
                 if (state.match(/^\/.+/)) {
                     path = state.substr(1);
                     self.loadDir(path, function (dir) {
