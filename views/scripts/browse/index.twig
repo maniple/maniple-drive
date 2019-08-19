@@ -1,5 +1,5 @@
 <div id="drive-dir-browser" class="js-loading">
-    <p class="text-center" style="padding-top:100px;">Loading directory contents...</p>
+    <p class="text-center" style="padding-top:100px;">{{ translate('Loading directory contents...') }}</p>
 </div>
 {{ renderScript('browse/dirbrowser.twig', 'maniple-drive') | raw }}
 {% if dir %}

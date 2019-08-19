@@ -28,4 +28,6 @@
     'This directory contains no files or subfolders.' => 'Katalog nie zawiera plików ani innych katalogów.',
     'You cannot undo this operation.' => 'Tej operacji nie można cofnąć.',
     'Are you sure you want to remove file <strong>%name%</strong>?' => 'Czy na pewno trwale usunąć plik <strong>%name%</strong>?',
+    'You do not have permissions to perform this action' => 'Nie masz uprawnień do wykonania tej czynności',
+    'Loading directory contents...' => 'Ładowanie zawartości katalogu...',
 );
