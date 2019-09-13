@@ -4,7 +4,7 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
 {
     public function getModuleDependencies()
     {
-        return array('maniple-user');
+        return array('maniple-user', 'maniple-requirejs');
     }
 
     public function getRoutesConfig()
