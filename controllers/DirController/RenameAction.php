@@ -5,6 +5,8 @@
  * miec uprawnienia zapisu do katalogu (byc jego wlascicielem lub miec ten
  * katalog udostepniony do zapisu) albo byc administratorem.
  *
+ * @method void assertAccess(bool $expr)
+ *
  * @version 2014-06-02 / 2012-12-09
  */
 class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_StandaloneForm
@@ -16,6 +18,12 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
      */
     protected $_dir;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
     protected function _prepare() // {{{
     {
         $this->_helper->viewRenderer->setRender('create');
@@ -24,7 +32,7 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
         $this->assertAccess($security->isAuthenticated());
 
         $dir_id = $this->getScalarParam('dir_id');
-        $dir = $this->getDriveHelper()->getRepository()->getDirOrThrow($dir_id);
+        $dir = $this->_driveHelper->getRepository()->getDirOrThrow($dir_id);
 
         // za pomoca tej akcji nie mozna zmienic nazwy katalogu,
         // ktory jest w korzeniu dysku (innymi slowy nie mozna
@@ -34,7 +42,7 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
         }
 
         $this->assertAccess(
-            $this->getDriveHelper()->isDirWritable($dir),
+            $this->_driveHelper->isDirWritable($dir),
             $this->view->translate('You are not allowed to rename this directory')
         );
     
@@ -49,7 +57,7 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
                     'validators' => array(
                         new ManipleDrive_Validate_FileName,
                         new ManipleDrive_Validate_DirNotExists(array(
-                            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
+                            'tableProvider' => $this->_driveHelper->getTableProvider(),
                             'allowed'  => $dir->name,
                             'parentId' => $dir->parent_id
                         )),
@@ -85,7 +93,7 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
             throw $e;
         }
 
-        $result = $this->getDriveHelper()->getViewableData($dir, true);
+        $result = $this->_driveHelper->getViewableData($dir, true);
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @method void assertAccess(bool $expr)
+ */
 class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = false;
@@ -9,16 +12,22 @@ class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_
      */
     protected $_dir;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
     protected function _prepare() // {{{
     {
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
         $dir_id = $this->getScalarParam('dir_id');
-        $dir = $this->getDriveHelper()->getRepository()->getDirOrThrow($dir_id);
+        $dir = $this->_driveHelper->getRepository()->getDirOrThrow($dir_id);
 
         $this->assertAccess(
-            $this->getDriveHelper()->isDirWritable($dir),
+            $this->_driveHelper->isDirWritable($dir),
             $this->view->translate('You are not allowed to create new directories inside this directory.')
         );
 
@@ -37,7 +46,7 @@ class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_
                         ),
                         array(
                             new ManipleDrive_Validate_DirNotExists(array(
-                                'tableProvider' => $this->getDriveHelper()->getTableProvider(),
+                                'tableProvider' => $this->_driveHelper->getTableProvider(),
                                 'parentId' => $dir->dir_id
                             )),
                             true
@@ -64,7 +73,7 @@ class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_
         );
         $subdir = $this->_dir->createDir($name, $data);
 
-        $result = $this->getDriveHelper()->getViewableData($subdir, true);
+        $result = $this->_driveHelper->getViewableData($subdir, true);
 
         $response = $this->_helper->ajaxResponse();
         $response->setData(array(

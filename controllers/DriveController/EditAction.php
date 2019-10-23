@@ -12,6 +12,18 @@ class ManipleDrive_DriveController_EditAction extends Maniple_Controller_Action_
 
     protected $_ajaxFormHtml = true;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
+
     protected function _prepare()
     {
         $this->_helper->layout->setLayout('dialog');
@@ -28,8 +40,8 @@ class ManipleDrive_DriveController_EditAction extends Maniple_Controller_Action_
 
         $this->_drive = $drive;
         $this->_form  = new ManipleDrive_Form_Drive(array(
-            'userMapper' => $this->getDriveHelper()->getUserMapper(),
-            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
+            'userMapper' => $this->_driveHelper->getUserMapper(),
+            'tableProvider' => $this->_driveHelper->getTableProvider(),
             'drive' => $drive,
         ));
     }
@@ -38,18 +50,17 @@ class ManipleDrive_DriveController_EditAction extends Maniple_Controller_Action_
     {
         $values = $this->_form->getValues();
 
-        $db = $this->getResource('db.adapter');
-        $db->beginTransaction();
+        $this->_db->beginTransaction();
 
         try {
             $drive = $this->_drive;
             $drive->setFromArray($values);
             $drive->modified_by = $this->getSecurity()->getUser()->getId();
             $drive->save();
-            $db->commit();
+            $this->_db->commit();
 
         } catch (Exception $e) {
-            $db->rollBack();
+            $this->_db->rollBack();
             throw $e;
         }
 

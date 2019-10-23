@@ -2,6 +2,18 @@
 
 class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
 {
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
+
     public function indexAction()
     {
         $this->view->uri_templates = array(
@@ -33,7 +45,7 @@ class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
         }
         $this->view->locale = $locale;
 
-        $userSearchRoute = (string) $this->getDriveHelper()->getUserSearchRoute();
+        $userSearchRoute = (string) $this->_driveHelper->getUserSearchRoute();
         if ($userSearchRoute) {
             $this->view->user_search_url = $this->view->url($userSearchRoute);
         }
@@ -62,15 +74,14 @@ class ManipleDrive_BrowseController extends ManipleDrive_Controller_Action
         );
 
         $currentUser = $this->getSecurityContext()->getUser();
-        $dirBrowser = new ManipleDrive_DirBrowser($this->getDriveHelper(), $currentUser ? $currentUser->getId() : null);
+        $dirBrowser = new ManipleDrive_DirBrowser($this->_driveHelper, $currentUser ? $currentUser->getId() : null);
 
         $path = $this->getScalarParam('path');
 
         if (null === $path) {
             $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
-            $db = $this->getResource('db');
-            $drive = $this->getDriveHelper()->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Drives::className)
+            $drive = $this->_db->getTable(ManipleDrive_Model_DbTable_Drives::className)
                 ->fetchRow(array('owner = ?' => $this->getSecurityContext()->getUser()->getId()), 'drive_id');
             if (empty($drive)) {
                 throw new Exception('Drive was not found');

@@ -3,6 +3,24 @@
 class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 {
     /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject('drive.manager')
+     * @var ManipleDrive_DriveManager
+     */
+    protected $_driveManager;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
+
+    /**
      * Return file as optionally scaled image.
      *
      * Action parameters:
@@ -17,10 +35,10 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
 
         if (!$file instanceof ManipleDrive_Model_File) {
             $file_id = (int) $this->getScalarParam('file_id');
-            $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
+            $file = $this->_driveHelper->getRepository()->getFileOrThrow($file_id);
         }
 
-        if (!$this->getDriveHelper()->isFileReadable($file)) {
+        if (!$this->_driveHelper->isFileReadable($file)) {
             throw new Maniple_Controller_NotAllowedException('You are not allowed to access this file');
         }
 
@@ -53,7 +71,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
     {
         $path = explode('/', $this->getScalarParam('path'));
 
-        $dirs = $this->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $dirs = $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className);
         $name = array_shift($path);
 
         $dir = $dirs->fetchRow(array(
@@ -62,11 +80,11 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         ));
 
         if ($dir) {
-            $file = $this->getTable('ManipleDrive_Model_DbTable_Drives')->fetchByPath(
+            $file = $this->_db->getTable(ManipleDrive_Model_DbTable_Drives::className)->fetchByPath(
                 $dir, implode('/', $path)
             );
             if ($file) {
-                if ($this->getDriveHelper()->isFileReadable($file)) {
+                if ($this->_driveHelper->isFileReadable($file)) {
                     $options = array(
                         'type' => $file->mimetype,
                         'etag' => $file->md5sum,
@@ -88,7 +106,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
                     } else {
                         $this->_forward(
                             'login', 'auth', 'core', array(
-                                'continue' => $this->getDriveHelper()->getFileUrl($file, array(
+                                'continue' => $this->_driveHelper->getFileUrl($file, array(
                                     'absolute' => false,
                                     'download' => (bool) intval($this->getScalarParam('download')),
                                 )),
@@ -110,26 +128,25 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         $this->assertAccess($this->getSecurityContext()->isAuthenticated());
 
         $user_id = $this->getSecurityContext()->getUser()->getId();
-        $drive_helper = $this->getDriveHelper();
 
-        $drive = $drive_helper->getRepository()->getDriveByUserId($user_id);
+        $drive = $this->_driveHelper->getRepository()->getDriveByUserId($user_id);
         $drive_files = array();
 
         if ($drive) {
             // attach details about drive contents / usage
             $drive = new Zefram_Stdlib_ObjectWrapper($drive);
-            $drive->addExtras($drive_helper->getRepository()->getDriveSummary($drive->drive_id));
+            $drive->addExtras($this->_driveHelper->getRepository()->getDriveSummary($drive->drive_id));
 
-            foreach ($drive_helper->getRepository()->getLastUploadedFiles($drive->drive_id, 5) as $file) {
-                $drive_files[] = $drive_helper->getViewableData($file, false);
+            foreach ($this->_driveHelper->getRepository()->getLastUploadedFiles($drive->drive_id, 5) as $file) {
+                $drive_files[] = $this->_driveHelper->getViewableData($file, false);
             }
         }
 
         $user_ids = array();
 
         $shared_files = array();
-        foreach ($drive_helper->getRepository()->getLastSharedWithUserFiles($user_id, 5) as $file) {
-            $data = $drive_helper->getViewableData($file, false);
+        foreach ($this->_driveHelper->getRepository()->getLastSharedWithUserFiles($user_id, 5) as $file) {
+            $data = $this->_driveHelper->getViewableData($file, false);
             $data['dirname'] = $this->dirname($file);
             $shared_files[] = $data;
 
@@ -145,7 +162,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         }*/
 
         $users = array();
-        foreach ($drive_helper->getUserMapper()->getUsers(array_keys($user_ids)) as $user) {
+        foreach ($this->_driveHelper->getUserMapper()->getUsers(array_keys($user_ids)) as $user) {
             $users[$user->getId()] = $user;
         }
 
@@ -166,7 +183,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
         $this->view->public_files = null; // $public_files;
 
         // shared dirs - dirs I have explicit access to
-        $this->view->shared_dirs = $this->getResource('drive.manager')->getSharedDirs();
+        $this->view->shared_dirs = $this->_driveManager->getSharedDirs();
 
         $this->view->title = 'Drive dashboard';
     }
@@ -186,7 +203,7 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
     {
         set_time_limit(0);
         $dir_id = (int) $this->getScalarParam('dir_id');
-        $dir = $this->getResource('drive.manager')->getDir($dir_id);
+        $dir = $this->_driveManager->getDir($dir_id);
         if (!$dir) {
             throw new Exception('Directory not found');
         }

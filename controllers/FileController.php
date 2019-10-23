@@ -4,12 +4,18 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
 {
     const className = __CLASS__;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
     public function readAction() // {{{
     {
         $file_id = (string) $this->getScalarParam('file_id');
-        $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
+        $file = $this->_driveHelper->getRepository()->getFileOrThrow($file_id);
 
-        if (!$this->getResource('drive.helper')->isFileReadable($file)) {
+        if (!$this->_driveHelper->isFileReadable($file)) {
             if (!$this->getSecurity()->isAuthenticated()) {
                 $continue = $this->_request->getRequestUri();
                 $this->forward('login', 'auth', 'maniple-user', compact('continue'));
@@ -39,15 +45,13 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
      */
     public function moveAction() // {{{
     {
-        $drive_helper = $this->getDriveHelper();
-
         $file_id = $this->getScalarParam('file_id');
-        $file = $drive_helper->fetchFile($file_id);
-        $this->assertAccess($drive_helper->isDirWritable($file->Dir));
+        $file = $this->_driveHelper->fetchFile($file_id);
+        $this->assertAccess($this->_driveHelper->isDirWritable($file->Dir));
 
         $dir_id = $this->_request->getPost('dir_id');
-        $dir = $drive_helper->fetchDir($dir_id);
-        $this->assertAccess($drive_helper->isDirWritable($dir));
+        $dir = $this->_driveHelper->fetchDir($dir_id);
+        $this->assertAccess($this->_driveHelper->isDirWritable($dir));
 
         $db = $file->getAdapter();
         $db->beginTransaction();
@@ -75,17 +79,15 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
      */
     public function chownAction() // {{{
     {
-        $drive_helper = $this->getDriveHelper();
-
         $file_id = (string) $this->_request->getPost('file_id');
-        $file = $drive_helper->fetchFile($file_id);
+        $file = $this->_driveHelper->fetchFile($file_id);
 
-        $this->assertAccess($drive_helper->isFileChownable($file));
+        $this->assertAccess($this->_driveHelper->isFileChownable($file));
 
         $db = $file->getAdapter();
 
         $owner_id = (int) $this->_request->getPost('owner');
-        $owner = $drive_helper->getUserMapper()->getUser($owner_id);
+        $owner = $this->_driveHelper->getUserMapper()->getUser($owner_id);
 
         if (!$owner) {
             throw new InvalidArgumentException('Niepoprawny identyfikator użytkownika');
@@ -109,9 +111,9 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         $ajaxResponse = $this->_helper->ajaxResponse();
         $ajaxResponse->setData(array(
             'file_id' => $file->file_id,
-            'owner' => $drive_helper->projectUserData($owner),
-            'mtime' => $drive_helper->getDate($file->mtime),
-            'modified_by' => $drive_helper->projectUserData($user),
+            'owner' => $this->_driveHelper->projectUserData($owner),
+            'mtime' => $this->_driveHelper->getDate($file->mtime),
+            'modified_by' => $this->_driveHelper->projectUserData($user),
         ));
         $ajaxResponse->sendAndExit();
     } // }}}
@@ -128,9 +130,9 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
     public function thumbAction() // {{{
     {
         $file_id = $this->getScalarParam('file_id', 0);
-        $file = $this->getDriveHelper()->getRepository()->getFileOrThrow($file_id);
+        $file = $this->_driveHelper->getRepository()->getFileOrThrow($file_id);
 
-        if (!$this->getDriveHelper()->isFileReadable($file)) {
+        if (!$this->_driveHelper->isFileReadable($file)) {
             throw new Maniple_Controller_NotAllowedException('You are not allowed to access this file');
         }
 
@@ -182,7 +184,7 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
     public function searchAction()
     {
         $user_id = $this->getSecurityContext()->getUser()->getId();
-        $drive = $this->getDriveHelper()->getRepository()->getDriveByUserId($user_id);
+        $drive = $this->_driveHelper->getRepository()->getDriveByUserId($user_id);
 
         $q = $this->getScalarParam('q');
         // $hits = $this->getResource('drive.file_indexer')->searchInDrive($q, $drive->drive_id);
@@ -191,11 +193,11 @@ class ManipleDrive_FileController extends ManipleDrive_Controller_Action
         echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
         echo '<strong>', $hits->hitCount, '</strong> hits<br/>';
         foreach ($hits->hits as $hit) {
-            $file = $this->getDriveHelper()->getRepository()->getFile($hit->document->file_id);
+            $file = $this->_driveHelper->getRepository()->getFile($hit->document->file_id);
             if (empty($file)) {
                 echo 'Invalid file ID: ', $hit->document->file_id;
             }
-            if ($file && $this->getDriveHelper()->isFileReadable($file)) {
+            if ($file && $this->_driveHelper->isFileReadable($file)) {
                 echo '<div>', '<strong>', $file->name, '</strong> ', $this->view->fileSize($file->size), '</div>';
             }
         }

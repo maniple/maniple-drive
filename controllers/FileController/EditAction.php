@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @method void assertAccess(bool $expr)
+ */
 class ManipleDrive_FileController_EditAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_actionControllerClass = ManipleDrive_FileController::className;
@@ -11,6 +14,18 @@ class ManipleDrive_FileController_EditAction extends Maniple_Controller_Action_S
      */
     protected $_file;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
+
     protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
@@ -18,13 +33,11 @@ class ManipleDrive_FileController_EditAction extends Maniple_Controller_Action_S
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $helper = $this->getDriveHelper();
-
         $file_id = $this->getScalarParam('file_id');
-        $file = $helper->fetchFile($file_id);
+        $file = $this->_driveHelper->fetchFile($file_id);
 
         $this->assertAccess(
-            $helper->isFileWritable($file),
+            $this->_driveHelper->isFileWritable($file),
             'You are not allowed to edit metadata of this file'
         );
 
@@ -81,23 +94,22 @@ class ManipleDrive_FileController_EditAction extends Maniple_Controller_Action_S
         $values = $this->_form->getValues();
         $file = $this->_file;
 
-        $db = $file->getAdapter();
-        $db->beginTransaction();
+        $this->_db->beginTransaction();
 
         try {
             $file->setFromArray($values);
             $file->modified_by = $this->getSecurityContext()->getUser()->getId();
             $file->save();
-            $db->commit();
+            $this->_db->commit();
 
         } catch (Exception $e) {
-            $db->rollBack();
+            $this->_db->rollBack();
             throw $e;
         }
 
         $response = Zefram_Json::encode(array(
             'status' => 'success',
-            'data' => $this->getDriveHelper()->getViewableData($file)
+            'data' => $this->_driveHelper->getViewableData($file)
         ));
 
         header('Content-Type: application/json; charset=utf-8');

@@ -10,6 +10,12 @@ class ManipleDrive_DriveController extends ManipleDrive_Controller_Action
 
     /**
      * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
      * @var Zefram_Db
      */
     protected $_db;
@@ -51,7 +57,7 @@ class ManipleDrive_DriveController extends ManipleDrive_Controller_Action
             }
         }
 
-        $users = $this->getDriveHelper()->getUserMapper()->getUsers(array_keys($user_ids));
+        $users = $this->_driveHelper->getUserMapper()->getUsers(array_keys($user_ids));
 
         $drivesArray = array();
         foreach ($drives as $drive) {

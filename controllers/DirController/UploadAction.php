@@ -1,7 +1,16 @@
 <?php
 
+/**
+ * @method void assertAccess(bool $expr)
+ */
 class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_Standalone
 {
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
     protected function _getTempName() // {{{
     {
         $prefix = sprintf('%06d.', $this->getSecurityContext()->getUser()->getId());
@@ -11,6 +20,8 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
     /**
      * @param ManipleDrive_Options_FileUpload $options
      * @return Zend_File_Transfer_Adapter_Http
+     * @throws Zend_File_Transfer_Exception
+     * @throws Zend_Validate_Exception
      */
     public function getFileTransfer(ManipleDrive_Options_FileUpload $options = null)
     {
@@ -77,6 +88,9 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         return $upload;
     }
 
+    /**
+     * @return ManipleDrive_Options_FileUpload|null
+     */
     protected function _getUploadOptions()
     {
         // if uploadOptions request param is passed as an object, it means that
@@ -94,6 +108,8 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
      * @param string $key
      * @return array
      * @throws Zend_File_Transfer_Exception
+     * @throws Zend_Filter_Exception
+     * @throws Zend_Validate_Exception
      */
     protected function _handlePostUpload($key = 'file') // {{{
     {
@@ -201,10 +217,12 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
     }*/
 
     /**
+     * @param ManipleDrive_Model_Dir $dir
      * @param array $info
-     * @param string $destination
+     * @return array
+     * @throws Exception
      */
-    protected function _saveUploadedFile($dir, $info)
+    protected function _saveUploadedFile(ManipleDrive_Model_Dir $dir, array $info)
     {
         $name = trim($info['name']);
 
@@ -225,7 +243,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         $tempname = $info['tmp_name'];
 
         if (!is_file($tempname)) {
-            throw new Exception('Nie odnaleziono pliku.');
+            throw new InvalidArgumentException('Nie odnaleziono pliku.');
         }
 
         // wykonaj skan antywirusem
@@ -235,7 +253,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
             false === stripos($output, 'Infected files: 0'))
         {
             unlink($tempname);
-            throw new Exception('W pliku został wykryty wirus.');
+            throw new InvalidArgumentException('W pliku został wykryty wirus.');
         }
         }
 
@@ -255,6 +273,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         $db->beginTransaction();
 
         $error = null;
+        $file = null;
 
         try {
             $file = $dir->saveFile($info['tmp_name'], $info);
@@ -289,7 +308,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
             $fileSaveListener->invoke($file);
         }
 
-        $result = $this->getDriveHelper()->getViewableData($file);
+        $result = $this->$this->_driveHelper->getViewableData($file);
         $result['file'] = $file;
 
         return $result;
@@ -305,11 +324,11 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
 
             if (!$dir instanceof ManipleDrive_Model_Dir) {
                 $dir_id = (int) $this->getScalarParam('dir_id');
-                $dir = $this->getDriveHelper()->fetchDir($dir_id);
+                $dir = $this->_driveHelper->fetchDir($dir_id);
             }
 
             // TODO uprawnienia zapisu do dysku
-            if (!$this->getDriveHelper()->isDirWritable($dir)) {
+            if (!$this->_driveHelper->isDirWritable($dir)) {
                 throw new Exception($this->view->translate('This directory is not writable'));
             }
 
@@ -332,6 +351,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         header('Connection: close');
         header('Content-Length: ' . strlen($output));
 
+        /** @noinspection PhpStatementHasEmptyBodyInspection */
         while (@ob_end_clean());
 
         echo $output;

@@ -1,21 +1,31 @@
 <?php
 
+/**
+ * @method void assertAccess(bool $expr)
+ */
 class ManipleDrive_DirController_RemoveAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
 
+    /**
+     * @var ManipleDrive_Model_Dir
+     */
     protected $_dir;
+
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
 
     protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
 
-        $helper = $this->getDriveHelper();
-
         $dir_id = $this->getScalarParam('dir_id');
-        $dir = $helper->fetchDir($dir_id);
+        $dir = $this->_driveHelper->fetchDir($dir_id);
 
-        $this->assertAccess($helper->isDirRemovable($dir));
+        $this->assertAccess($this->_driveHelper->isDirRemovable($dir));
 
         $form = new Zefram_Form;
 

@@ -3,12 +3,26 @@
 /**
  * Dodawanie nowego dysku wirtualnego.
  *
+ * @method void assertAccess(bool $expr)
+ *
  * @version 2013-01-25
  * @author xemlock
  */
 class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Action_StandaloneForm
 {
     protected $_ajaxFormHtml = true;
+
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
 
     protected function _prepare()
     {
@@ -18,8 +32,8 @@ class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Actio
         $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
         $form = new ManipleDrive_Form_Drive(array(
-            'tableProvider' => $this->getDriveHelper()->getTableProvider(),
-            'userMapper' => $this->getDriveHelper()->getUserMapper(),
+            'tableProvider' => $this->_driveHelper->getTableProvider(),
+            'userMapper' => $this->_driveHelper->getUserMapper(),
         ));
 
         $this->_form = $form;
@@ -29,20 +43,19 @@ class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Actio
     {
         $values = $this->_form->getValues();
 
-        $db = $this->getResource('db');
-        $db->beginTransaction();
+        $this->_db->beginTransaction();
 
         try {
-            $drive = $this->getTable(ManipleDrive_Model_DbTable_Dirs::className)->createRow($values);
+            $drive = $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className)->createRow($values);
             $drive->setFromArray(array(
                 'name'       => $values['name'],
                 'created_by' => $this->getSecurity()->getUser()->getId(),
             ));
             $drive->save();
-            $db->commit();
+            $this->_db->commit();
 
         } catch (Exception $e) {
-            $db->rollBack();
+            $this->_db->rollBack();
             throw $e;
         }
 

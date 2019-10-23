@@ -5,6 +5,8 @@
  * akcje musi miec uprawnienia zapisu zarówno do nadrzędnego jak
  * i przenoszonego katalogu. Parametry wywołania akcji muszą być
  * przekazane metodą POST.
+ *
+ * @method void assertAccess(bool $expr)
  */
 class ManipleDrive_DirController_MoveAction extends Maniple_Controller_Action_StandaloneForm
 {
@@ -13,14 +15,18 @@ class ManipleDrive_DirController_MoveAction extends Maniple_Controller_Action_St
      */
     protected $_dir;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
     protected function _prepare()
     {
-        $drive_helper = $this->getDriveHelper();
-
         $dir_id = $this->getScalarParam('dir_id');
-        $dir = $drive_helper->getRepository()->getDirOrThrow($dir_id);
+        $dir = $this->_driveHelper->getRepository()->getDirOrThrow($dir_id);
 
-        $this->assertAccess($drive_helper->isDirWritable($dir));
+        $this->assertAccess($this->_driveHelper->isDirWritable($dir));
 
         $this->_dir = $dir;
         $this->_form = new Zefram_Form(array('elements' => array(
@@ -35,11 +41,9 @@ class ManipleDrive_DirController_MoveAction extends Maniple_Controller_Action_St
 
     protected function _process()
     {
-        $drive_helper = $this->getDriveHelper();
-
         $parent_id = $this->_form->getValue('parent_id');
-        $parent_dir = $drive_helper->fetchDir($parent_id);
-        $this->assertAccess($drive_helper->isDirWritable($parent_dir));
+        $parent_dir = $this->_driveHelper->fetchDir($parent_id);
+        $this->assertAccess($this->_driveHelper->isDirWritable($parent_dir));
 
         $db = $this->_dir->getAdapter();
         $db->beginTransaction();

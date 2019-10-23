@@ -2,6 +2,12 @@
 
 class ManipleDrive_SearchController extends ManipleDrive_Controller_Action
 {
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
+
     public function updateIndexAction()
     {
         $this->_helper->viewRenderer->setNoRender();
@@ -18,7 +24,7 @@ class ManipleDrive_SearchController extends ManipleDrive_Controller_Action
 
             echo sprintf("%8s  %-60s %s\n%s\n", 'file_id', 'name', 'stat', str_repeat('-', 76));
 
-            $files = $this->getResource('db.table_provider')->getTable('ManipleDrive_Model_DbTable_Files')->fetchAll(null, 'file_id');
+            $files = $this->_db->getTable(ManipleDrive_Model_DbTable_Files::className)->fetchAll(null, 'file_id');
 
             foreach ($files as $file) {
                 $s = microtime(true);

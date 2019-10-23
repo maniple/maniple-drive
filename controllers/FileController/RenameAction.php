@@ -3,6 +3,8 @@
 /**
  * Zmiana nazwy pliku.
  *
+ * @method void assertAccess(bool $expr)
+ *
  * @version 2012-12-13
  */
 class ManipleDrive_FileController_RenameAction extends Maniple_Controller_Action_StandaloneForm
@@ -11,7 +13,22 @@ class ManipleDrive_FileController_RenameAction extends Maniple_Controller_Action
 
     protected $_ajaxFormHtml = false;
 
+    /**
+     * @var ManipleDrive_Model_File
+     */
     protected $_file;
+
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
 
     protected function _prepare() // {{{
     {
@@ -20,13 +37,11 @@ class ManipleDrive_FileController_RenameAction extends Maniple_Controller_Action
         $security = $this->getSecurityContext();
         $this->assertAccess($security->isAuthenticated());
 
-        $helper = $this->getDriveHelper();
-
         $file_id = $this->getScalarParam('file_id');
-        $file = $helper->fetchFile($file_id);
+        $file = $this->_driveHelper->fetchFile($file_id);
 
         $this->assertAccess(
-            $helper->isFileWritable($file),
+            $this->_driveHelper->isFileWritable($file),
             'Nie masz uprawnien do zmiany nazwy tego pliku'
         );
 
@@ -59,21 +74,20 @@ class ManipleDrive_FileController_RenameAction extends Maniple_Controller_Action
         $security = $this->getSecurityContext();
         $file = $this->_file;
 
-        $db = $file->getAdapter();
-        $db->beginTransaction();
+        $this->_db->beginTransaction();
 
         try {
             $file->name = $this->_form->getValue('name');
             $file->modified_by = $security->getUser()->getId();
             $file->save();
-            $db->commit();
+            $this->_db->commit();
 
         } catch (Exception $e) {
-            $db->rollBack();
+            $this->_db->rollBack();
             throw $e;
         }
 
-        $result = $this->getDriveHelper()->getViewableData($file, true);
+        $result = $this->_driveHelper->getViewableData($file, true);
 
         $response = $this->_helper->ajaxResponse();
         $response->setData($result);

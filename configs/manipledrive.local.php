@@ -22,7 +22,7 @@ return array(
         'class' => 'ManipleDrive_Access_Manager',
         'args' => array(
             'securityContext' => 'resource:core.security',
-            'db' => 'resource:ZeframDb',
+            'db' => 'resource:Zefram_Db',
         ),
     ),
 );

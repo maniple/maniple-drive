@@ -1,5 +1,5 @@
 <?php return array(
-    'drive.manager' => array(
+    'ManipleDrive_DriveManager' => array(
         'class' => 'ManipleDrive_DriveManager',
         'args' => array(
             'db' => 'resource:Zefram_Db',
@@ -7,7 +7,9 @@
             'security' => 'resource:drive.security',
         ),
     ),
-    'drive.helper' => array(
+    'drive.manager' => 'resource:ManipleDrive_DriveManager',
+
+    'ManipleDrive_Helper' => array(
         'class' => 'ManipleDrive_Helper',
         'options' => array(
             'view'            => 'resource:view',
@@ -17,6 +19,8 @@
             'security'        => 'resource:drive.security',
         ),
     ),
+    'drive.helper' => 'resource:ManipleDrive_Helper',
+
     'drive.file_indexer' => array(
         'class' => 'ManipleDrive_FileIndexer',
         'params' => array(

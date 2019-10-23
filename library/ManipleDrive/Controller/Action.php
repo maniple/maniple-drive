@@ -12,7 +12,7 @@ abstract class ManipleDrive_Controller_Action extends Maniple_Controller_Action
 
     /**
      * @return ManipleDrive_Model_DirInterface
-     * @throws Exception
+     * @throws Maniple_Controller_Exception_NotFound
      */
     public function getDirFromRequest()
     {

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @method ManipleDrive_Helper getDriveHelper()
  * @method void assertAccess(bool $expr)
  */
 class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action_StandaloneForm
@@ -15,16 +14,26 @@ class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action
      */
     protected $_file;
 
+    /**
+     * @Inject
+     * @var ManipleDrive_Helper
+     */
+    protected $_driveHelper;
+
+    /**
+     * @Inject
+     * @var Zefram_Db
+     */
+    protected $_db;
+
     protected function _prepare() // {{{
     {
         $this->_helper->layout->setLayout('dialog');
 
-        $helper = $this->getDriveHelper();
-
         $file_id = $this->getScalarParam('file_id');
-        $file = $helper->fetchFile($file_id);
+        $file = $this->_driveHelper->fetchFile($file_id);
 
-        $this->assertAccess($helper->isFileRemovable($file));
+        $this->assertAccess($this->_driveHelper->isFileRemovable($file));
 
         $form = new Zefram_Form;
 
@@ -44,15 +53,14 @@ class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action
         $file_id = $file->getId();
         $name = $file->getName();
 
-        $db = $file->getAdapter();
-        $db->beginTransaction();
+        $this->_db->beginTransaction();
 
         try {
             $file->delete();
-            $db->commit();
+            $this->_db->commit();
 
         } catch (Exception $e) {
-            $db->rollBack();
+            $this->_db->rollBack();
             throw $e;
         }
 
@@ -64,7 +72,7 @@ class ManipleDrive_FileController_RemoveAction extends Maniple_Controller_Action
                     'file_id' => $file_id,
                     'name' => $name,
                 ),
-                $this->getDriveHelper()->getUsageSummary($dir)
+                $this->_driveHelper->getUsageSummary($dir)
             ),
         ));
 
