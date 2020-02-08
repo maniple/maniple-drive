@@ -249,7 +249,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
         // wykonaj skan antywirusem
         if (0) {
         $output = Zefram_Os::exec('clamscan', escapeshellarg($tempname));
-        if (false !== stripos($output, 'SCAN SUMMARY') && 
+        if (false !== stripos($output, 'SCAN SUMMARY') &&
             false === stripos($output, 'Infected files: 0'))
         {
             unlink($tempname);
@@ -308,7 +308,7 @@ class ManipleDrive_DirController_UploadAction extends Maniple_Controller_Action_
             $fileSaveListener->invoke($file);
         }
 
-        $result = $this->$this->_driveHelper->getViewableData($file);
+        $result = $this->_driveHelper->getViewableData($file);
         $result['file'] = $file;
 
         return $result;
