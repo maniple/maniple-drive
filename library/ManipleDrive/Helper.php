@@ -8,9 +8,10 @@ class ManipleDrive_Helper
     protected $_view;
 
     /**
-     * @var Zefram_Db_Table_FactoryInterface
+     * @Inject
+     * @var Zefram_Db
      */
-    protected $_tableProvider;
+    protected $_db;
 
     /**
      * @Inject('user.model.userMapper')
@@ -100,10 +101,10 @@ class ManipleDrive_Helper
      * @param int|string $dir_id
      * @return ManipleDrive_Model_Dir
      */
-    public function getDir($dir_id) // {{{
+    public function getDir($dir_id)
     {
         return $this->getRepository()->getDirOrThrow($dir_id);
-    } // }}}
+    }
 
     /**
      * Pobiera z bazy rekord pliku i sprawdza, czy bieżący użytkownik ma
@@ -111,11 +112,13 @@ class ManipleDrive_Helper
      *
      * @param int $file_id
      * @return ManipleDrive_Model_File
+     * @throws Zend_Db_Table_Exception
+     * @throws Exception
      */
-    public function fetchFile($file_id) // {{{
+    public function fetchFile($file_id)
     {
         $file_id = (int) $file_id;
-        $file = $this->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Files::className)->findRow($file_id);
+        $file = $this->_db->getTable(ManipleDrive_Model_DbTable_Files::className)->findRow($file_id);
 
         if (empty($file)) {
             throw new Exception('Plik nie został znaleziony', 404);
@@ -126,7 +129,7 @@ class ManipleDrive_Helper
         }
 
         return $file;
-    } // }}}
+    }
 
     const READ   = 'read';
     const WRITE  = 'write';
@@ -142,7 +145,13 @@ class ManipleDrive_Helper
 
     protected $_dirPermissions = array();
 
-    public function getDirPermissions(ManipleDrive_Model_DirInterface $dir, $property = null) // {{{
+    /**
+     * @param ManipleDrive_Model_DirInterface $dir
+     * @param string $property
+     * @return mixed
+     * @throws Maniple_Security_Exception_InvalidStateException
+     */
+    public function getDirPermissions(ManipleDrive_Model_DirInterface $dir, $property = null)
     {
         $id = $dir->getId();
 
@@ -234,9 +243,14 @@ class ManipleDrive_Helper
         return isset($this->_dirPermissions[$dir_id][$property])
             ? $this->_dirPermissions[$dir_id][$property]
             : false;
-    } // }}}
+    }
 
-    public function getFilePermissions(ManipleDrive_Model_File $file, $property = null) // {{{
+    /**
+     * @param ManipleDrive_Model_File $file
+     * @return mixed
+     * @throws Maniple_Security_Exception_InvalidStateException
+     */
+    public function getFilePermissions(ManipleDrive_Model_File $file)
     {
         $user = $this->getSecurityContext()->getUser();
         $perms = $this->getDirPermissions($file->Dir);
@@ -253,18 +267,19 @@ class ManipleDrive_Helper
         }
 
         return $perms;
-    } // }}}
+    }
 
-    public function getDate($time) // {{{
+    public function getDate($time)
     {
         return (float) $time;
-    } // }}}
+    }
 
     /**
      * @param  ManipleDrive_Model_File $file
+     * @param  array $options
      * @return string
      */
-    public function getFileUrl(ManipleDrive_Model_File $file, array $options = null) // {{{
+    public function getFileUrl(ManipleDrive_Model_File $file, array $options = null)
     {
         $dir = $file->Dir;
         $path = array(urlencode($file->name));
@@ -280,7 +295,7 @@ class ManipleDrive_Helper
             return $url;
         }
         return $this->getView()->serverUrl() . $this->getView()->baseUrl($url);
-    } // }}}
+    }
 
     /**
      * Zwraca tablicę wartości, które wymagane są do poprawnego wyświetlenia
@@ -290,8 +305,9 @@ class ManipleDrive_Helper
      * @param ManipleDrive_Model_DirInterface|ManipleDrive_Model_File $row
      * @param bool $fetchUserData
      * @return array
+     * @throws Maniple_Security_Exception_InvalidStateException
      */
-    public function getViewableData($row, $fetchUserData = true, $type = null) // {{{
+    public function getViewableData($row, $fetchUserData = true, $type = null)
     {
         switch (true) {
             case $row instanceof ManipleDrive_Model_Dir:
@@ -350,7 +366,7 @@ class ManipleDrive_Helper
                     'created_by' => null,
                     'modified_by' => null,
                 );
-                break;                
+                break;
 
             default:
                 $data = null;
@@ -376,9 +392,9 @@ class ManipleDrive_Helper
         }
 
         return $data;
-    } // }}}
+    }
 
-    public function projectUserData(array $user) // {{{
+    public function projectUserData(array $user)
     {
         $columns = array(
             'user_id' => true,
@@ -400,14 +416,15 @@ class ManipleDrive_Helper
         }
 
         return null;
-    } // }}}
+    }
 
     /**
      * @param int|array|ManipleUser_Model_UserInterface
      * @return array
      */
-    public function fetchUserData($user_id) // {{{
+    public function fetchUserData($user_id)
     {
+        /** @var ManipleUser_Model_UserInterface $user */
         $user = $this->getUserMapper()->getUser($user_id);
         if ($user) {
             return $this->projectUserData(array(
@@ -417,7 +434,7 @@ class ManipleDrive_Helper
                 'mid_name' => method_exists($user, 'getMiddleName') ? $user->getMiddleName() : '',
             ));
         }
-    } // }}}
+    }
 
     protected function _isPseudoRootDir($name)
     {
@@ -430,13 +447,13 @@ class ManipleDrive_Helper
             case 'shared':
                 return new ManipleDrive_Model_SharedDir(
                     $this->getSecurityContext()->getUser()->getId(),
-                    $this->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Dirs::className)
+                    $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className)
                 );
 
             case 'public':
                 return new ManipleDrive_Model_PublicDir(
                     $this->getSecurityContext()->getUser()->getId(),
-                    $this->getTableProvider()->getTable(ManipleDrive_Model_DbTable_Dirs::className)
+                    $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className)
                 );
         }
 
@@ -456,7 +473,7 @@ class ManipleDrive_Helper
      * @return array
      * @throws Exception
      */
-    public function browseDir2(ManipleDrive_Model_DirInterface $dir, array $parents = null, $options = null) // {{{
+    public function browseDir2(ManipleDrive_Model_DirInterface $dir, array $parents = null, $options = null)
     {
         if (!$this->isDirReadable($dir)) {
             throw new Exception('You cannot read this directory');
@@ -608,7 +625,7 @@ class ManipleDrive_Helper
         }
 
         return $result;
-    } // }}}
+    }
 
     public function getUsageSummary(ManipleDrive_Model_Dir $dir)
     {
@@ -659,59 +676,60 @@ class ManipleDrive_Helper
     /**
      * @param ManipleDrive_Model_Dir $dir
      * @return bool
+     * @throws Maniple_Security_Exception_InvalidStateException
      */
-    public function isDirWritable(ManipleDrive_Model_Dir $dir) // {{{
+    public function isDirWritable(ManipleDrive_Model_Dir $dir)
     {
         return $this->getDirPermissions($dir, self::WRITE);
-    } // }}}
+    }
 
     /**
      * @param ManipleDrive_Model_DirInterface $dir
      * @return bool
      */
-    public function isDirReadable(ManipleDrive_Model_DirInterface $dir) // {{{
+    public function isDirReadable(ManipleDrive_Model_DirInterface $dir)
     {
         return $this->getDirPermissions($dir, self::READ);
-    } // }}}
+    }
 
     /**
      * @param ManipleDrive_Model_DirInterface $dir
      * @return bool
      */
-    public function isDirShareable(ManipleDrive_Model_DirInterface $dir) // {{{
+    public function isDirShareable(ManipleDrive_Model_DirInterface $dir)
     {
         return $this->getDirPermissions($dir, self::SHARE);
-    } // }}}
+    }
 
-    public function isDirRemovable(ManipleDrive_Model_DirInterface $dir) // {{{
+    public function isDirRemovable(ManipleDrive_Model_DirInterface $dir)
     {
         return $this->getDirPermissions($dir, self::REMOVE);
-    } // }}}
+    }
 
-    public function isDirChownable(ManipleDrive_Model_DirInterface $dir) // {{{
+    public function isDirChownable(ManipleDrive_Model_DirInterface $dir)
     {
         return $this->getDirPermissions($dir, self::CHOWN);
-    } // }}}
+    }
 
-    public function isFileRemovable(ManipleDrive_Model_File $file) // {{{
+    public function isFileRemovable(ManipleDrive_Model_File $file)
     {
         return $this->isDirWritable($file->Dir);
-    } // }}}
+    }
 
-    public function isFileReadable(ManipleDrive_Model_File $file) // {{{
+    public function isFileReadable(ManipleDrive_Model_File $file)
     {
         return $this->isDirReadable($file->Dir);
-    } // }}}
+    }
 
-    public function isFileWritable(ManipleDrive_Model_File $file) // {{{
+    public function isFileWritable(ManipleDrive_Model_File $file)
     {
         return $this->isDirWritable($file->Dir);
-    } // }}}
+    }
 
-    public function isFileChownable(ManipleDrive_Model_File $file) // {{{
+    public function isFileChownable(ManipleDrive_Model_File $file)
     {
         return $this->isDirChownable($file->Dir);
-    } // }}}
+    }
 
     // resources
 
@@ -721,24 +739,16 @@ class ManipleDrive_Helper
         return $this;
     }
 
-    /**
-     * @return Zefram_Db_Table_FactoryInterface
-     */
-    public function getTableProvider()
-    {
-        return $this->_tableProvider;
-    }
-
     public function setView(Zend_View_Abstract $view = null)
     {
         $this->_view = $view;
         return $this;
     }
 
-    public function getView() // {{{
+    public function getView()
     {
         return $this->_view;
-    } // }}}
+    }
 
     /**
      * @return Maniple_Security_ContextAbstract
@@ -802,6 +812,6 @@ class ManipleDrive_Helper
 
     public function getRepository()
     {
-        return new ManipleDrive_Model_Repository($this->getTableProvider());
+        return new ManipleDrive_Model_Repository($this->_db->getTableFactory());
     }
 }

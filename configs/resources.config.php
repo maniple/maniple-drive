@@ -4,7 +4,6 @@
         'args' => array(
             'db' => 'resource:Zefram_Db',
             'securityContext' => 'resource:user.sessionManager',
-            'security' => 'resource:drive.security',
         ),
     ),
     'drive.manager' => 'resource:ManipleDrive_DriveManager',
@@ -14,7 +13,6 @@
         'options' => array(
             'view'            => 'resource:view',
             'securityContext' => 'resource:user.sessionManager',
-            'tableProvider'   => 'resource:tableManager',
             'userSearchRoute' => null,
             'security'        => 'resource:drive.security',
         ),
