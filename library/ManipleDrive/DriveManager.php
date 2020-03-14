@@ -421,7 +421,7 @@ class ManipleDrive_DriveManager
      */
     public function getUploadTempName() // {{{
     {
-        $prefix = sprintf('%08d.', Zefram_Math_Rand::getInteger());
+        $prefix = sprintf('%08d.', Zefram_Random::getInteger());
         return Zefram_Os::getTempDir() . '/' . uniqid($prefix, true);
     } // }}}
 

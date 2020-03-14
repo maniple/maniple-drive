@@ -59,4 +59,15 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
             $config->addPath(__DIR__ . '/library/ManipleDrive/Entity');
         }
     }
+
+    protected function _initRequireJS()
+    {
+        /** @var ManipleRequirejs_Service $requirejs */
+        $requirejs = $this->getApplication()->getResource('RequireJS');
+        $requirejs->addPaths(array(
+            'handlebars.runtime'    => 'bower_components/handlebars/handlebars.runtime.amd.min',
+            'jquery'                => 'bower_components/jquery/dist/jquery.min',
+            'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
+        ));
+    }
 }
