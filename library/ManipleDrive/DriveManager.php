@@ -28,7 +28,7 @@ class ManipleDrive_DriveManager
     {
         $this->_db = $db;
         $this->_securityContext = $securityContext;
-        $this->_repository = new ManipleDrive_Model_Repository($db->getTableFactory());
+        $this->_repository = new ManipleDrive_Model_Repository($db);
     } // }}}
 
     /**
@@ -427,17 +427,17 @@ class ManipleDrive_DriveManager
 
     protected function _getDrivesTable()
     {
-        return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Drives');
+        return $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Drives::className);
     }
 
     protected function _getDirsTable()
     {
-        return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Dirs');
+        return $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Dirs::className);
     }
 
     protected function _getFilesTable()
     {
-        return $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Files');
+        return $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Files::className);
     }
 
     public function getSharedDirs()
@@ -449,13 +449,13 @@ class ManipleDrive_DriveManager
 
         $select = new Zefram_Db_Select($this->_db->getAdapter());
         $select->from(
-            $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_DirShares'),
+            $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_DirShares::className),
             'dir_id'
         );
         $select->where(array(
             'user_id = ?' => (int) $user->getId(),
         ));
-        $table = $this->_repository->getTableFactory()->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $table = $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Dirs::className);
         $rows = $table->fetchAll(array(
             'dir_id IN (?) OR visibility = \'usersonly\'' => $select,
         ), 'name');

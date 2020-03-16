@@ -812,6 +812,6 @@ class ManipleDrive_Helper
 
     public function getRepository()
     {
-        return new ManipleDrive_Model_Repository($this->_db->getTableFactory());
+        return new ManipleDrive_Model_Repository($this->_db);
     }
 }
