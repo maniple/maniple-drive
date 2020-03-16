@@ -427,17 +427,17 @@ class ManipleDrive_DriveManager
 
     protected function _getDrivesTable()
     {
-        return $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Drives::className);
+        return $this->_repository->getTable(ManipleDrive_Model_DbTable_Drives::className);
     }
 
     protected function _getDirsTable()
     {
-        return $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Dirs::className);
+        return $this->_repository->getTable(ManipleDrive_Model_DbTable_Dirs::className);
     }
 
     protected function _getFilesTable()
     {
-        return $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Files::className);
+        return $this->_repository->getTable(ManipleDrive_Model_DbTable_Files::className);
     }
 
     public function getSharedDirs()
@@ -449,13 +449,13 @@ class ManipleDrive_DriveManager
 
         $select = new Zefram_Db_Select($this->_db->getAdapter());
         $select->from(
-            $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_DirShares::className),
+            $this->_repository->getTable(ManipleDrive_Model_DbTable_DirShares::className),
             'dir_id'
         );
         $select->where(array(
             'user_id = ?' => (int) $user->getId(),
         ));
-        $table = $this->_repository->getTableFactory()->getTable(ManipleDrive_Model_DbTable_Dirs::className);
+        $table = $this->_repository->getTable(ManipleDrive_Model_DbTable_Dirs::className);
         $rows = $table->fetchAll(array(
             'dir_id IN (?) OR visibility = \'usersonly\'' => $select,
         ), 'name');
