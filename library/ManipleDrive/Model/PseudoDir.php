@@ -2,6 +2,8 @@
 
 abstract class ManipleDrive_Model_PseudoDir implements ManipleDrive_Model_DirInterface
 {
+    public $internal_name = null;
+
     public function isPseudo()
     {
         return true;
@@ -38,6 +40,21 @@ abstract class ManipleDrive_Model_PseudoDir implements ManipleDrive_Model_DirInt
     }
 
     public function getParentDir()
+    {
+        return null;
+    }
+
+    public function getParent()
+    {
+        return null;
+    }
+
+    public function getSharing()
+    {
+        return null;
+    }
+
+    public function getAccessType()
     {
         return null;
     }

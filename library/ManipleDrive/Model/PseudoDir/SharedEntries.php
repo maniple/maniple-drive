@@ -16,18 +16,18 @@ class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_Pseu
     protected $_userId;
 
     /**
-     * @var Zefram_Db_TableProvider
+     * @var Zefram_Db
      */
-    protected $_tableProvider;
+    protected $_db;
 
     /**
      * @param  int $userId
-     * @param  Zefram_Db_TableProvider $tableProvider
+     * @param  Zefram_Db $db
      */
-    public function __construct($userId, Zefram_Db_TableProvider $tableProvider) // {{{
+    public function __construct($userId, Zefram_Db $db) // {{{
     {
         $this->_userId = (int) $userId;
-        $this->_tableProvider = $tableProvider;
+        $this->_db = $db;
     } // }}}
 
     public function getId() // {{{
@@ -49,7 +49,7 @@ class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_Pseu
     public function getSubDirs() // {{{
     {
         $select = $this->_createSelect();
-        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $table = $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className);
 
         $subdirs = array();
         foreach ($table->fetchAll($select) as $row) {
@@ -68,7 +68,7 @@ class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_Pseu
         $select->where('dirs.dir_id = ?', (int) $dirId);
         $select->limit(1);
 
-        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $table = $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className);
         return $table->fetchRow($select);
     } // }}}
 
@@ -77,15 +77,15 @@ class ManipleDrive_Model_PseudoDir_SharedEntries extends ManipleDrive_Model_Pseu
      */
     protected function _createSelect() // {{{
     {
-        $tableProvider = $this->_tableProvider;
+        $tableProvider = $this->_db;
 
         $select = Zefram_Db_Select::factory($tableProvider->getAdapter());
         $select->from(array(
-            'dirs' => $tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs'),
+            'dirs' => $tableProvider->getTable(ManipleDrive_Model_DbTable_Dirs::className),
         ));
         $select->joinLeft(
             array(
-                'dir_shares' => $tableProvider->getTable('ManipleDrive_Model_DbTable_DirShares'),
+                'dir_shares' => $tableProvider->getTable(ManipleDrive_Model_DbTable_DirShares::className),
             ),
             array(
                 'dir_shares.dir_id = dirs.dir_id',

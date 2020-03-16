@@ -8,12 +8,18 @@ class ManipleDrive_DirBrowser
     protected $_userId;
 
     /**
+     * @var Zefram_Db
+     */
+    protected $_db;
+
+    /**
      * @var ManipleDrive_Helper
      */
     protected $_driveHelper;
 
     public function __construct(ManipleDrive_Helper $driveHelper, $userId = null) // {{{
     {
+        $this->_db = $driveHelper->getDb();
         $this->_driveHelper = $driveHelper;
 
         if (null !== $userId) {
@@ -61,14 +67,14 @@ class ManipleDrive_DirBrowser
                 if ($this->_userId) {
                     $dir = new ManipleDrive_Model_PseudoDir_SharedEntries(
                         $this->_userId,
-                        $this->_driveHelper->getTableProvider()
+                        $this->_db
                     );
                 }
                 break;
 
             case 'public':
                 $dir = new ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries(
-                    $this->_driveHelper->getTableProvider()
+                    $this->_db
                 );
                 break;
 

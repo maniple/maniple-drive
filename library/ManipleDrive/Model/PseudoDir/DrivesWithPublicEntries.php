@@ -10,16 +10,16 @@
 class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_Model_PseudoDir
 {
     /**
-     * @var Zefram_Db_TableProvider
+     * @var Zefram_Db
      */
-    protected $_tableProvider;
+    protected $_db;
 
     /**
-     * @param  Zefram_Db_TableProvider
+     * @param  Zefram_Db
      */
-    public function __construct(Zefram_Db_TableProvider $tableProvider) // {{{
+    public function __construct(Zefram_Db $db) // {{{
     {
-        $this->_tableProvider = $tableProvider;
+        $this->_db = $db;
     } // }}}
 
     /**
@@ -39,7 +39,7 @@ class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_
     } // }}}
 
     /**
-     * @return ManipleDrive_Model_PublicDir[]
+     * @return ManipleDrive_Model_DirInterface[]
      */
     public function getSubDirs() // {{{
     {
@@ -72,8 +72,8 @@ class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_
     {
         $select = $this->_selectDrivesWithRootDirs($where, $limit);
 
-        $drivesTable = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Drives');
-        $dirsTable = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $drivesTable = $this->_db->getTable(ManipleDrive_Model_DbTable_Drives::className);
+        $dirsTable = $this->_db->getTable(ManipleDrive_Model_DbTable_Dirs::className);
 
         $rows = array();
 
@@ -88,7 +88,7 @@ class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_
             $drive = $drivesTable->_createStoredRow($data['Drive']);
             $drive->RootDir = $dirsTable->_createStoredRow($data['Dir']);
 
-            $rows[] = new ManipleDrive_Model_PseudoDir_PublicEntriesInDrive($drive, $this->_tableProvider);
+            $rows[] = new ManipleDrive_Model_PseudoDir_PublicEntriesInDrive($drive, $this->_db);
         }
 
         return $rows;
@@ -101,11 +101,11 @@ class ManipleDrive_Model_PseudoDir_DrivesWithPublicEntries extends ManipleDrive_
     {
         // this SELECT chooses drives along with their root dirs
 
-        $tableProvider = $this->_tableProvider;
+        $tableProvider = $this->_db;
         $dbAdapter = $tableProvider->getAdapter();
 
-        $drivesTable = $tableProvider->getTable('ManipleDrive_Model_DbTable_Drives');
-        $dirsTable = $tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $drivesTable = $tableProvider->getTable(ManipleDrive_Model_DbTable_Drives::className);
+        $dirsTable = $tableProvider->getTable(ManipleDrive_Model_DbTable_Dirs::className);
 
         $select = Zefram_Db_Select::factory($dbAdapter);
         $select->from(

@@ -72,7 +72,7 @@ class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Mod
     public function getSubDirs() // {{{
     {
         $select = $this->_selectSubDirs();
-        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable(ManipleDrive_Model_DbTable_Dirs::className);
 
         $subdirs = array();
         foreach ($table->fetchAll($select) as $row) {
@@ -91,7 +91,7 @@ class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Mod
         $select->where('dir_id = ?', (int) $dirId);
         $select->limit(1);
 
-        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable(ManipleDrive_Model_DbTable_Dirs::className);
         return $table->fetchRow($select);
     } // }}}
 
@@ -105,7 +105,7 @@ class ManipleDrive_Model_PseudoDir_PublicEntriesInDrive extends ManipleDrive_Mod
     {
         $select = Zefram_Db_Select::factory($this->_tableProvider->getAdapter());
         $select->from(array(
-            'dirs' => $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs')
+            'dirs' => $this->_tableProvider->getTable(ManipleDrive_Model_DbTable_Dirs::className)
         ));
 
         $select->where('dir_id IN (?)', $this->_drive->RootDir->getSubdirIdentifiers());

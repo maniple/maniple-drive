@@ -40,6 +40,14 @@ class ManipleDrive_Helper
     }
 
     /**
+     * @return Zefram_Db
+     */
+    public function getDb()
+    {
+        return $this->_db;
+    }
+
+    /**
      * @param ManipleDrive_Access_Manager $security
      * @return $this
      */
