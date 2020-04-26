@@ -32,7 +32,7 @@ class ManipleDrive_DriveController_CreateAction extends Maniple_Controller_Actio
         $this->assertAccess($this->getSecurityContext()->isSuperUser());
 
         $form = new ManipleDrive_Form_Drive(array(
-            'tableProvider' => $this->_driveHelper->getTableProvider(),
+            'tableProvider' => $this->_db,
             'userMapper' => $this->_driveHelper->getUserMapper(),
         ));
 

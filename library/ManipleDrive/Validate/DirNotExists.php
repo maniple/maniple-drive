@@ -8,6 +8,8 @@
  */
 class ManipleDrive_Validate_DirNotExists extends Zend_Validate_Abstract
 {
+    const className = __CLASS__;
+
     const DIR_EXISTS = 'dirExists';
 
     protected $_messageTemplates = array(
@@ -62,7 +64,7 @@ class ManipleDrive_Validate_DirNotExists extends Zend_Validate_Abstract
         // istnieje katalog o takiej samej nazwie i pustym katalogu
         // nadrzednym.
         $valid = true;
-        $table = $this->_tableProvider->getTable('ManipleDrive_Model_DbTable_Dirs');
+        $table = $this->_tableProvider->getTable(ManipleDrive_Model_DbTable_Dirs::className);
 
         $cond = array('name = ?' => $value);
 

@@ -118,7 +118,7 @@ class ManipleDrive_Form_Drive extends Zefram_Form
         $this->setDefault('quota', intval($drive->quota / 1048576));
 
         $this->getElement('name')
-             ->getValidator('ManipleDrive_Validate_DirNotExists')
+             ->getValidator(ManipleDrive_Validate_DirNotExists::className)
              ->setAllowed($drive->getName());
 
         $this->_dir = $drive;
