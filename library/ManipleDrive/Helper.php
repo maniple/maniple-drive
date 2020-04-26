@@ -3,7 +3,7 @@
 class ManipleDrive_Helper
 {
     /**
-     * @var Zefram_View_Interface
+     * @var Zefram_View_Abstract
      */
     protected $_view;
 
