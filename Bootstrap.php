@@ -1,6 +1,7 @@
 <?php
 
 class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
+    implements Maniple_Menu_MenuManagerProviderInterface
 {
     public function getModuleDependencies()
     {
@@ -69,5 +70,23 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
             'jquery'                => 'bower_components/jquery/dist/jquery.min',
             'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
         ));
+    }
+
+    protected function _initViewAssets()
+    {
+        /** @var Zefram_View_Abstract $view */
+        $view = $this->getApplication()->bootstrap('View')->getResource('View');
+        if (!$view->headScript()->offsetExists('bower_components/jquery/dist/jquery.min.js')) {
+            $view->headScript()->appendFile($view->baseUrl('bower_components/jquery/dist/jquery.min.js'));
+        }
+    }
+
+    public function getMenuManagerConfig()
+    {
+        return array(
+            'builders' => array(
+                ManipleDrive_Menu_MenuBuilder::className,
+            ),
+        );
     }
 }

@@ -30,4 +30,9 @@
     'Are you sure you want to remove file <strong>%name%</strong>?' => 'Czy na pewno trwale usunąć plik <strong>%name%</strong>?',
     'You do not have permissions to perform this action' => 'Nie masz uprawnień do wykonania tej czynności',
     'Loading directory contents...' => 'Ładowanie zawartości katalogu...',
+
+    // maniple-drive/drive/admin.twig
+    'Drive management' => 'Zarządzanie dyskami',
+    'New drive' => 'Nowy dysk',
+    'Loading data...' => 'Wczytywanie danych...',
 );
