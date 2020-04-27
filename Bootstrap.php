@@ -1,7 +1,8 @@
 <?php
 
 class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
-    implements Maniple_Menu_MenuManagerProviderInterface
+    implements Maniple_Menu_MenuManagerProviderInterface, ManipleRequirejs_ConfigProviderInterface
+
 {
     public function getModuleDependencies()
     {
@@ -61,15 +62,15 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
         }
     }
 
-    protected function _initRequireJS()
+    public function getRequireJsConfig()
     {
-        /** @var ManipleRequirejs_Service $requirejs */
-        $requirejs = $this->getApplication()->getResource('RequireJS');
-        $requirejs->addPaths(array(
-            'handlebars.runtime'    => 'bower_components/handlebars/handlebars.runtime.amd.min',
-            'jquery'                => 'bower_components/jquery/dist/jquery.min',
-            'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
-        ));
+        return array(
+            'paths' => array(
+                'handlebars.runtime'    => 'bower_components/handlebars/handlebars.runtime.amd.min',
+                'jquery'                => 'bower_components/jquery/dist/jquery.min',
+                'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
+            ),
+        );
     }
 
     protected function _initViewAssets()
