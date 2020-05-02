@@ -307,9 +307,71 @@ class ManipleDrive_DriveManager
         return ($file = $this->_fileIdentityMap[$fileId]) ? $file : null;
     }
 
-    public function deleteFile(ManipleDrive_Model_File $file)
+    /**
+     * @param string|ManipleDrive_Model_File $file
+     * @param bool $check
+     * @return false|string
+     */
+    public function getFilePath($file, $check = true)
     {
-        $file->delete();
+        if ($file instanceof ManipleDrive_Model_File) {
+            $md5 = (string) $file->md5sum;
+        } else {
+            $md5 = (string) $file;
+        }
+
+        if (32 != strlen($md5) || !ctype_xdigit($md5)) {
+            return false;
+        }
+
+        $storagePath = ManipleDrive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2);
+
+        $paths = array(
+            $storagePath . '/' . $md5,
+            $storagePath . '/' . substr($md5, 2), // legacy
+        );
+
+        foreach ($paths as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        if ($check) {
+            return false;
+        }
+
+        return $paths[0];
+    }
+
+    /**
+     * @param string $md5
+     * @return bool
+     */
+    public function prepareFilePath($md5)
+    {
+        // creates a directory starting with two first characters of file's MD5 sum
+        $path = ManipleDrive_FileStorage::requireStorageDir('drive/' . substr($md5, 0, 2))
+            . $md5;
+
+        return $path;
+    }
+
+    public function deleteFile(ManipleDrive_Model_File $file, $purge = false)
+    {
+        $this->_db->beginTransaction();
+        try {
+            $file->delete();
+            $this->_db->commit();
+        } catch (Exception $e) {
+            $this->_db->rollBack();
+            throw $e;
+        }
+        if ($purge) {
+            if (false !== ($path = $this->getFilePath($file))) {
+                @unlink($path);
+            }
+        }
     }
 
     /**
