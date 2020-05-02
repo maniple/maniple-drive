@@ -11,28 +11,28 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
 
     public function getRoutesConfig()
     {
-        return require dirname(__FILE__) . '/configs/routes.config.php';
+        return require __DIR__ . '/configs/routes.config.php';
     }
 
     public function getResourcesConfig()
     {
-        return require dirname(__FILE__) . '/configs/resources.config.php';
+        return require __DIR__ . '/configs/resources.config.php';
     }
 
     public function getTranslationsConfig()
     {
         return array(
             'scan'    => Zend_Translate::LOCALE_DIRECTORY,
-            'content' => dirname(__FILE__) . '/languages',
+            'content' => __DIR__ . '/languages',
         );
     }
 
     public function getViewConfig()
     {
         return array(
-            'scriptPaths' => dirname(__FILE__) . '/views/scripts',
+            'scriptPaths' => __DIR__ . '/views/scripts',
             'helperPaths' => array(
-                'ManipleDrive_View_Helper_' => dirname(__FILE__) . '/library/ManipleDrive/View/Helper/',
+                'ManipleDrive_View_Helper_' => __DIR__ . '/library/ManipleDrive/View/Helper/',
             )
         );
     }
@@ -70,6 +70,9 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
                 'jquery'                => 'bower_components/jquery/dist/jquery.min',
                 'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
             ),
+            'shim' => array(
+                'jquery' => 'window.jQuery',
+            ),
         );
     }
 
@@ -77,9 +80,7 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
     {
         /** @var Zefram_View_Abstract $view */
         $view = $this->getApplication()->bootstrap('View')->getResource('View');
-        if (!$view->headScript()->offsetExists('bower_components/jquery/dist/jquery.min.js')) {
-            $view->headScript()->appendFile($view->baseUrl('bower_components/jquery/dist/jquery.min.js'));
-        }
+        $view->headScript()->appendFile($view->baseUrl('bower_components/jquery/dist/jquery.min.js'));
     }
 
     public function getMenuManagerConfig()
