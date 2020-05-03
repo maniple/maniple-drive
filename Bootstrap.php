@@ -67,11 +67,7 @@ class ManipleDrive_Bootstrap extends Maniple_Application_Module_Bootstrap
         return array(
             'paths' => array(
                 'handlebars.runtime'    => 'bower_components/handlebars/handlebars.runtime.amd.min',
-                'jquery'                => 'bower_components/jquery/dist/jquery.min',
                 'jquery.magnific-popup' => 'bower_components/magnific-popup/dist/jquery.magnific-popup.min',
-            ),
-            'shim' => array(
-                'jquery' => 'window.jQuery',
             ),
         );
     }
