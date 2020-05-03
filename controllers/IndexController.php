@@ -208,8 +208,10 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             throw new Exception('Directory not found');
         }
 
-        // TODO store somewhere this file for later use
+        $includeMetadata = (int) $this->getScalarParam('metadata');
+        $metadata = array();
 
+        // TODO store somewhere this file for later use
         $path = Zefram_Os::getTempDir() . '/' . md5(mt_rand());
         $zip = new Zefram_File_Archive_ZipWriter();
         $zip->open($path);
@@ -221,8 +223,21 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             }
             foreach ($d->getFiles() as $file) {
                 // full path
-                $zip->addFile($file->getPath(), $this->view->drive()->filePath($file, $dir));
+                $filePath = $this->view->drive()->filePath($file, $dir);
+                $metadata[$filePath] = array(
+                    'title'       => trim($file->title),
+                    'author'      => trim($file->author),
+                    'description' => trim($file->description),
+                );
+                $zip->addFile($file->getPath(), $filePath);
             }
+        }
+        if ($includeMetadata && $metadata) {
+            $zip->addFromString('metadata.json', Zefram_Json::encode($metadata, array(
+                'prettyPrint'      => true,
+                'unescapedSlashes' => true,
+                'unescapedUnicode' => true,
+            )));
         }
         $zip->close();
 
