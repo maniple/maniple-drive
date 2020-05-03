@@ -110,7 +110,7 @@ class ManipleDrive_Options_FileUpload
     }
 
     /**
-     * @param Zefram_Stdlib_CallbackHandler $fileSaveListener
+     * @param callable $fileSaveListener
      */
     public function setFileSaveListener($fileSaveListener)
     {
