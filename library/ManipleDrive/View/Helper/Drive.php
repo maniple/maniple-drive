@@ -102,19 +102,20 @@ class ManipleDrive_View_Helper_Drive extends Maniple_View_Helper_Abstract
     }
 
     /**
-     * @param  ManipleDrive_Model_File $file
+     * @param  ManipleDrive_Model_EntryInterface $file
+     * @param  ManipleDrive_Model_DirInterface $stopAtDir OPTIONAL
      * @return string
      */
-    public function filePath(ManipleDrive_Model_File $file, $stopAtDir = null)
+    public function filePath(ManipleDrive_Model_EntryInterface $file, $stopAtDir = null)
     {
-        $parts = array($file->name);
-        $dir = $file->Dir;
+        $parts = array();
+        $dir = $file;
         while ($dir) {
-            if ($stopAtDir && $dir->dir_id == $stopAtDir->dir_id) {
+            if ($stopAtDir && $dir->getId() == $stopAtDir->getId()) {
                 break;
             }
-            array_unshift($parts, $dir->name);
-            $dir = $dir->ParentDir;
+            array_unshift($parts, $dir->getName());
+            $dir = $dir->getParent();
         }
         $path = implode('/', $parts);
         return $path;

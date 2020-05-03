@@ -221,9 +221,14 @@ class ManipleDrive_IndexController extends ManipleDrive_Controller_Action
             foreach ($d->getSubDirs() as $dd) {
                 $dirs[] = $dd;
             }
+            $dirPath = $this->view->drive()->filePath($d, $dir);
+            $metadataDirPath = $dirPath === '' ? '.' : $dirPath;
+            $metadata[$metadataDirPath] = array(
+                'description' => isset($d->description) ? $d->description : '',
+            );
             foreach ($d->getFiles() as $file) {
                 // full path
-                $filePath = $this->view->drive()->filePath($file, $dir);
+                $filePath = (strlen($dirPath) ? $dirPath . '/' : '') . $file->name;
                 $metadata[$filePath] = array(
                     'title'       => trim($file->title),
                     'author'      => trim($file->author),
