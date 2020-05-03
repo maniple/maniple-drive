@@ -1660,6 +1660,10 @@ var Drive = {
                 prevTooltipText,
                 dragDirId;
 
+            if (self._options.disableGrab) {
+                return;
+            }
+
             // jezeli podany wpis jest katalogiem, przekaz jego id do funkcji
             // wyznaczajacej element docelowy upuszczenia (odpowiadajacy innemu
             // katalogowi)

@@ -25,7 +25,7 @@
  *           renaming directory with overriden name will be disabled
  * {string|object} [breadcrumbs=false]
  * {string|jQuery|Element} [breadcrumbs.selector]
- * {string} [breadcrumbs.separator="<span class=\"separator\"></span>"] 
+ * {string} [breadcrumbs.separator="<span class=\"separator\"></span>"]
  * {string} [breadcrumbs.currentClass="current"]
  */
 function DirBrowser(selector, options) { // {{{
@@ -173,7 +173,7 @@ DirBrowser.prototype._initMainView = function (selector) { // {{{
         // template
         var requiredHooks = ['dirContents', 'uploader'];
             // optional: dirName, diskUsage, auxMenu, displayMode
-       
+
         try {
             this._view = new Drive.View(this._element, requiredHooks);
         } catch (e) {
@@ -196,7 +196,7 @@ DirBrowser.prototype._initDisplayModeView = function () { // {{{
     if (!this._view.hooks.displayMode) {
         return;
     }
-    
+
     var self = this,
         str = Drive.Util.i18n('DirBrowser.displayMode'),
         element = self._renderTemplate('DirBrowser.displayMode', {str: str}),
@@ -520,7 +520,7 @@ DirBrowser.prototype._updateAuxmenu = function (dir) { // {{{
     // brak opRemoveDir bo nie mozna usunac biezacego katalogu
 
     var auxMenu = self._view && self._view.hooks.auxMenu;
-    
+
     if (auxMenu) {
         auxMenu.empty();
 
@@ -1079,7 +1079,7 @@ DirBrowser.prototype.opShareDir = function (dir) { // {{{
             // podepnij zawartosc okna do drzewa dokumentu, przed
             // inicjalizacja obslugi zdarzen
             // dialog.content(content).adjustHeight(true);
-            
+
             // dostosuj wielkosc okna dialogowego do zawartosci, w osobnym
             // watku, w przeciwnym razie jego rozmiar nie zostanie poprawnie
             // obliczony
@@ -1275,7 +1275,7 @@ DirBrowser.prototype._removeFile = function (file) { // {{{
     var currentDir = this._currentDir,
         files = currentDir.files,
         index = $.inArray(file, files);
- 
+
     if (index > -1) {
         currentDir.files = files.slice(0, index).concat(files.slice(index + 1));
     }
@@ -1655,6 +1655,10 @@ DirBrowser.prototype._addGrab = function (entry, isDir, element, callback) { // 
         prevTooltipText,
         dragDirId;
 
+    if (self._options.disableGrab) {
+        return;
+    }
+
     // jezeli podany wpis jest katalogiem, przekaz jego id do funkcji
     // wyznaczajacej element docelowy upuszczenia (odpowiadajacy innemu
     // katalogowi)
@@ -1825,7 +1829,7 @@ DirBrowser.prototype._bindOpHandler = function (element, ops) { // {{{
         if (op && typeof op.handler === 'function') {
             return op.handler();
         }
-    });    
+    });
 }; // }}}
 
 DirBrowser.prototype._renderFile = function (file, replace) { // {{{
