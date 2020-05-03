@@ -96,7 +96,7 @@ class ManipleDrive_View_Helper_Drive extends Maniple_View_Helper_Abstract
         $userSearchRoute = (string) $bootstrap->getResource('drive.helper')->getUserSearchRoute();
         $default['userSearchUrl'] = $userSearchRoute ? $this->view->url($userSearchRoute) : null;
 
-        $config = array_replace_recursive($default, $config);
+        $config = Zefram_Stdlib_ArrayUtils::merge($default, $config);
 
         return $config;
     }
