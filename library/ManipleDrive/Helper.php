@@ -625,7 +625,7 @@ class ManipleDrive_Helper
         $result['files']   = $files;
 
         $result['visibility'] = @$dir->visibility;
-        $result['can_inherit_visibility'] = !$dir->isPseudo() && $dir->parent_id;
+        $result['can_inherit_visibility'] = !$dir->isPseudo() && !empty($dir->parent_id);
 
         // dodaj dane dotyczace rozmiaru dysku i zajmowanego miejsca
         if ($dir instanceof ManipleDrive_Model_Dir) {
