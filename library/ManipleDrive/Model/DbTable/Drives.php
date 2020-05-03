@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @deprecated
  * @method ManipleDrive_Model_Drive findRow(mixed $id)
  * @method ManipleDrive_Model_Drive createRow(array $data = array(), string $defaultSource = null)
  */
@@ -36,55 +37,33 @@ class ManipleDrive_Model_DbTable_Drives extends Zefram_Db_Table
     );
 
     /**
+     * @return ManipleDrive_DriveManager
+     */
+    protected function _getDriveManager()
+    {
+        return Zend_Controller_Front::getInstance()->getParam('bootstrap')->getResource(ManipleDrive_DriveManager::className);
+    }
+
+    /**
      * @param string|ManipleDrive_Model_File $file
      * @param bool $check
      * @return false|string
+     * @deprecated
      */
-    public function getFilePath($file, $check = true) // {{{
+    public function getFilePath($file, $check = true)
     {
-        if ($file instanceof ManipleDrive_Model_File) {
-            $md5 = (string) $file->md5sum;
-        } else {
-            $md5 = (string) $file;
-        }
-
-        if (32 != strlen($md5) || !ctype_xdigit($md5)) {
-            return false;
-        }
-
-        $storagePath = ManipleDrive_FileStorage::requireStorageDir('drive') . substr($md5, 0, 2);
-
-        $paths = array(
-            $storagePath . '/' . $md5,
-            $storagePath . '/' . substr($md5, 2), // legacy
-        );
-
-        foreach ($paths as $path) {
-            if (is_file($path)) {
-                return $path;
-            }
-        }
-
-        if ($check) {
-            return false;
-        }
-
-        return $paths[0];
-    } // }}}
+        return $this->_getDriveManager()->getFilePath($file, $check);
+    }
 
     /**
      * @param string $md5
      * @return bool
+     * @deprecated
      */
-    public function prepareFilePath($md5) // {{{
+    public function prepareFilePath($md5)
     {
-        // roznica w stosunku do getFilePath() jest taka, ze utworzony zostaje
-        // katalog nazwany pierwszymi dwoma literami sumy MD5
-        $path = ManipleDrive_FileStorage::requireStorageDir('drive/' . substr($md5, 0, 2))
-              . $md5;
-
-        return $path;
-    } // }}}
+        return $this->_getDriveManager()->prepareFilePath($md5);
+    }
 
     /**
      * FIXME chyba fetchFileByPath

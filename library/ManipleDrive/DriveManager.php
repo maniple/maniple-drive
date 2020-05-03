@@ -5,6 +5,8 @@
  */
 class ManipleDrive_DriveManager
 {
+    const className = __CLASS__;
+
     /**
      * @var Zefram_Db
      */
@@ -22,14 +24,15 @@ class ManipleDrive_DriveManager
 
     /**
      * @param  Zefram_Db $db
+     * @param  Maniple_Security_ContextInterface $securityContext
      * @return void
      */
-    public function __construct(Zefram_Db $db, $securityContext) // {{{
+    public function __construct(Zefram_Db $db, $securityContext)
     {
         $this->_db = $db;
         $this->_securityContext = $securityContext;
         $this->_repository = new ManipleDrive_Model_Repository($db);
-    } // }}}
+    }
 
     /**
      * Create drive with given name and optional properties.
@@ -38,7 +41,7 @@ class ManipleDrive_DriveManager
      * @param  array $data OPTIONAL
      * @return ManipleDrive_Model_Drive
      */
-    public function createDrive($name, array $data = null) // {{{
+    public function createDrive($name, array $data = null)
     {
         $this->_db->beginTransaction();
 
@@ -65,7 +68,7 @@ class ManipleDrive_DriveManager
         }
 
         return $drive;
-    } // }}}
+    }
 
     public function getDrives()
     {
@@ -109,7 +112,7 @@ class ManipleDrive_DriveManager
      * @return ManipleDrive_Model_Dir
      * @throws InvalidArgumentException
      */
-    public function createDir(ManipleDrive_Model_Dir $parentDir = null, $name = 'New folder', array $data = null) // {{{
+    public function createDir(ManipleDrive_Model_Dir $parentDir = null, $name = 'New folder', array $data = null)
     {
         $data = (array) $data;
         $name = (string) $name;
@@ -160,14 +163,14 @@ class ManipleDrive_DriveManager
         }
 
         return $dir;
-    } // }}}
+    }
 
     /**
      * @param  ManipleDrive_Model_Dir $dir
      * @param  array $data OPTIONAL
      * @return ManipleDrive_Model_Dir
      */
-    public function saveDir(ManipleDrive_Model_Dir $dir, array $data = null) // {{{
+    public function saveDir(ManipleDrive_Model_Dir $dir, array $data = null)
     {
         $this->_db->beginTransaction();
 
@@ -184,7 +187,7 @@ class ManipleDrive_DriveManager
         }
 
         return $dir;
-    } // }}}
+    }
 
     public function getDir($dirId)
     {
@@ -200,7 +203,7 @@ class ManipleDrive_DriveManager
      * @param  bool $systemContext OPTIONAL
      * @return ManipleDrive_Model_Dir|null
      */
-    public function getDirByInternalName($internalName, $systemContext = false) // {{{
+    public function getDirByInternalName($internalName, $systemContext = false)
     {
         $dir = $this->_getDirsTable()->fetchRow(array(
             'internal_name = ?' => (string) $internalName,
@@ -212,7 +215,7 @@ class ManipleDrive_DriveManager
             return $dir;
         }
         return null;
-    } // }}}
+    }
 
     /**
      * @param  ManipleDrive_Model_DirInterface|ManipleDrive_Model_File $dirEntry
@@ -259,10 +262,9 @@ class ManipleDrive_DriveManager
      *
      * @param  ManipleDrive_Model_Dir $dir
      * @param  ManipleDrive_Model_File|Zefram_File_Download|Zend_File_Transfer_Adapter_Abstract $file
-     * @param  string $key OPTIONAL
      * @return ManipleDrive_Model_File
      */
-    public function saveFile(ManipleDrive_Model_Dir $dir, ManipleDrive_Model_File $file, $systemContext = false) // {{{
+    public function saveFile(ManipleDrive_Model_Dir $dir, ManipleDrive_Model_File $file, $systemContext = false)
     {
         if (!$systemContext) {
             // TODO dir must be writable
@@ -272,7 +274,7 @@ class ManipleDrive_DriveManager
         $file->save();
 
         return $file;
-    } // }}}
+    }
 
     /**
      * @param ManipleDrive_Model_Dir $dir
@@ -381,7 +383,7 @@ class ManipleDrive_DriveManager
      * @param  array $options OPTIONAL
      * @return ManipleDrive_Model_File
      */
-    public function saveFileFromTransfer(ManipleDrive_Model_Dir $dir, Zend_File_Transfer_Adapter_Abstract $transfer, $key, $options = null) // {{{
+    public function saveFileFromTransfer(ManipleDrive_Model_Dir $dir, Zend_File_Transfer_Adapter_Abstract $transfer, $key, $options = null)
     {
         $filename = $transfer->getFileName($key, false);
 
@@ -408,7 +410,7 @@ class ManipleDrive_DriveManager
             throw new Exception('Unable to receive file contents: ' . $key);
         }
         return $this->_saveFileInfo($dir, $fileinfo);
-    } // }}}
+    }
 
     /**
      * @param  ManipleDrive_Model_Dir $dir
@@ -416,7 +418,7 @@ class ManipleDrive_DriveManager
      * @param  bool $systemContext OPTIONAL
      * @return ManipleDrive_Model_File
      */
-    public function saveFileFromDownload(ManipleDrive_Model_Dir $dir, Zefram_File_Download $download, $systemContext = false) // {{{
+    public function saveFileFromDownload(ManipleDrive_Model_Dir $dir, Zefram_File_Download $download, $systemContext = false)
     {
         if (!$systemContext) {
             // TODO dir must be writable
@@ -428,7 +430,7 @@ class ManipleDrive_DriveManager
             throw new Exception('Unable to receive file contents');
         }
         return $this->_saveFileInfo($dir, $fileinfo);
-    } // }}}
+    }
 
     /**
      * @param ManipleDrive_Model_Dir $dir
@@ -481,11 +483,11 @@ class ManipleDrive_DriveManager
     /**
      * @return string
      */
-    public function getUploadTempName() // {{{
+    public function getUploadTempName()
     {
         $prefix = sprintf('%08d.', Zefram_Random::getInteger());
         return Zefram_Os::getTempDir() . '/' . uniqid($prefix, true);
-    } // }}}
+    }
 
     protected function _getDrivesTable()
     {
