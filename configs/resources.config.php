@@ -27,13 +27,16 @@
             ),
         ),
     ),
-    'drive.security' => array(
+
+    'ManipleDrive_Access_Manager' => array(
         'class' => 'ManipleDrive_Access_Manager',
         'args' => array(
             'securityContext' => 'resource:ManipleUser_Service_Security',
             'db' => 'resource:Zefram_Db',
         ),
     ),
+    'drive.security' => 'resource:ManipleDrive_Access_Manager',
+
     'ManipleDrive.JsBundle' => array(
         'class' => 'ManipleDrive_Service_JsBundle',
         'args' => array(
