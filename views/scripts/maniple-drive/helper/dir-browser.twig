@@ -1,0 +1,17 @@
+{{ renderScript(template[0], template[1]) | raw }}
+<script type="text/javascript">
+    jQuery(function() {
+        require([
+            '{{ drive().jsLib() }}',
+            '{{ moduleAsset('js/vendor/jquery.history-1.5.0a.min.js', 'maniple-drive') }}',
+            '{{ moduleAsset('js/vendor/jquery.eip-0.2.0.min.js', 'maniple-drive') }}',
+            '{{ moduleAsset('js/vendor/jquery.grab.min.js', 'maniple-drive') }}'
+        ], function (Drive) {
+            var dirBrowser = new Drive.DirBrowser('{{ selector }}', {{ dirBrowserConfig | json_encode | raw }});
+
+            {% if dir -%}
+            dirBrowser.setInitDir({{ dir | json_encode | raw }});
+            {%- endif %}
+        });
+    });
+</script>

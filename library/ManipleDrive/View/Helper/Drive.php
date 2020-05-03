@@ -1,7 +1,13 @@
 <?php
 
-class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
+class ManipleDrive_View_Helper_Drive extends Maniple_View_Helper_Abstract
 {
+    /**
+     * @var ManipleDrive_Helper
+     * @Inject
+     */
+    protected $_driveHelper;
+
     /**
      * @var bool
      */
@@ -59,6 +65,11 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 
     public function dirBrowserConfig(array $config)
     {
+        return Zefram_Json::encode($this->getDirBrowserConfig($config));
+    }
+
+    public function getDirBrowserConfig(array $config)
+    {
         $default = array();
         $default['uriTemplates'] = array(
             'dir' => array(
@@ -87,7 +98,7 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
 
         $config = array_replace_recursive($default, $config);
 
-        return Zefram_Json::encode($config);
+        return $config;
     }
 
     /**
@@ -133,5 +144,47 @@ class ManipleDrive_View_Helper_Drive extends Zend_View_Helper_Abstract
     {
         $bootstrap = Zend_Controller_Front::getInstance()->getParam('bootstrap');
         return $bootstrap->getResource($name);
+    }
+
+    /**
+     * @param ManipleDrive_Model_DirInterface|null $dir
+     * @param array|string $config
+     * @param string $template
+     * @return mixed
+     */
+    public function browser(ManipleDrive_Model_DirInterface $dir = null, $config = null, $template = null)
+    {
+        if (is_string($config)) {
+            $template = $config;
+            $config = array();
+        }
+
+        if (empty($template)) {
+            $template = array('maniple-drive/helper/dir-browser-template.twig', 'maniple-drive');
+        }
+
+        $template = (array) $template + array(1 => null);
+
+        if (!is_array($config)) {
+            $config = array();
+        }
+
+        $selector = isset($config['selector']) ? $config['selector'] : '#drive-dir-browser';
+        unset($config['selector']);
+
+        if ($dir) {
+            $dirBrowser = new ManipleDrive_DirBrowser($this->_driveHelper);
+            $dirViewModel = $dirBrowser->browseDir($dir);
+        } else {
+            $dirViewModel = null;
+        }
+
+        $this->drive();
+        return $this->view->renderScript('maniple-drive/helper/dir-browser.twig', 'maniple-drive', array(
+            'template' => $template,
+            'selector' => $selector,
+            'dir' => $dirViewModel,
+            'dirBrowserConfig' => $this->getDirBrowserConfig($config),
+        ));
     }
 }
