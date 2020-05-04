@@ -19,10 +19,16 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
     protected $_dir;
 
     /**
-     * @Inject
      * @var ManipleDrive_Helper
+     * @Inject
      */
     protected $_driveHelper;
+
+    /**
+     * @var Zefram_Db
+     * @Inject
+     */
+    protected $_db;
 
     protected function _prepare() // {{{
     {
@@ -45,7 +51,7 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
             $this->_driveHelper->isDirWritable($dir),
             $this->view->translate('You are not allowed to rename this directory')
         );
-    
+
         $form = new Zefram_Form(array('elements' => array(
             // new Form_Element_Token('token'),
             'name' => array(
@@ -57,9 +63,9 @@ class ManipleDrive_DirController_RenameAction extends Maniple_Controller_Action_
                     'validators' => array(
                         new ManipleDrive_Validate_FileName,
                         new ManipleDrive_Validate_DirNotExists(array(
-                            'tableProvider' => $this->_driveHelper->getTableProvider(),
+                            'tableProvider' => $this->_db,
                             'allowed'  => $dir->name,
-                            'parentId' => $dir->parent_id
+                            'parentId' => $dir->parent_id,
                         )),
                     ),
                     'value'      => $dir->name,

@@ -13,10 +13,16 @@ class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_
     protected $_dir;
 
     /**
-     * @Inject
      * @var ManipleDrive_Helper
+     * @Inject
      */
     protected $_driveHelper;
+
+    /**
+     * @var Zefram_Db
+     * @Inject
+     */
+    protected $_db;
 
     protected function _prepare() // {{{
     {
@@ -46,7 +52,7 @@ class ManipleDrive_DirController_CreateAction extends Maniple_Controller_Action_
                         ),
                         array(
                             new ManipleDrive_Validate_DirNotExists(array(
-                                'tableProvider' => $this->_driveHelper->getTableProvider(),
+                                'tableProvider' => $this->_db,
                                 'parentId' => $dir->dir_id
                             )),
                             true

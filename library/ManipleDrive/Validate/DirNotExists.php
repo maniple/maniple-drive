@@ -23,6 +23,10 @@ class ManipleDrive_Validate_DirNotExists extends Zend_Validate_Abstract
      */
     protected $_allowed;
     protected $_parentId;
+
+    /**
+     * @var Zefram_Db
+     */
     protected $_tableProvider;
 
     public function __construct(array $options = null)
@@ -44,7 +48,7 @@ class ManipleDrive_Validate_DirNotExists extends Zend_Validate_Abstract
         return $this;
     }
 
-    public function setTableProvider($tableProvider)
+    public function setTableProvider(Zefram_Db $tableProvider)
     {
         $this->_tableProvider = $tableProvider;
         return $this;
