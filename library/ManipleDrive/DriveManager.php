@@ -530,4 +530,27 @@ class ManipleDrive_DriveManager
         }
         return $dirs;
     }
+
+    /**
+     * @param string $path
+     * @return ManipleDrive_Model_DirInterface|null
+     */
+    public function getDirByPath($path)
+    {
+        $segments = explode('/', trim($path, '/'));
+        $segment = array_shift($segments);
+
+        /** @var ManipleDrive_Model_Dir $dir */
+        $dir = $this->_getDirsTable()->fetchRow(array(
+            'name = ?' => (string) $segment,
+            'parent_id IS NULL',
+        ));
+        if (!$dir) {
+            return null;
+        }
+        if (empty($segments)) {
+            return $dir;
+        }
+        return $dir->getDirByPath(implode('/', $segments));
+    }
 }
